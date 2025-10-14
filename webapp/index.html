@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Магазин одежды</title>
+  <!-- JS API Telegram WebApp -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root {
+      --pad: 14px;
+      --radius: 16px;
+      --shadow: 0 6px 24px rgba(0,0,0,.08);
+      --muted: #666;
+      --bg: #fff;
+    }
+    html,body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; background: var(--bg); }
+    header { position: sticky; top: 0; backdrop-filter: blur(6px); padding: var(--pad); font-weight: 700; box-shadow: var(--shadow); }
+    .wrap { padding: var(--pad); max-width: 1000px; margin: 0 auto; }
+    .filters { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0 16px; }
+    .filters select, .filters input { padding: 10px; border-radius: 10px; border: 1px solid #ddd; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px,1fr)); gap: 14px; }
+    .card { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; display: flex; flex-direction: column; }
+    .card img { width: 100%; aspect-ratio: 4/3; object-fit: cover; background: #f3f3f3; }
+    .card .info { padding: 10px 12px; display: grid; gap: 6px; }
+    .price { font-weight: 700; }
+    .muted { color: var(--muted); font-size: 14px; }
+    .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .row select, .row button { padding: 10px; border-radius: 10px; border: 1px solid #ddd; }
+    .row button { cursor: pointer; border: none; background: #111; color: #fff; }
+    .empty { text-align: center; color: var(--muted); padding: 40px 10px; }
+  </style>
+</head>
+<body>
+  <header class="wrap">Магазин одежды</header>
+  <div class="wrap">
+    <div class="filters">
+      <input id="q" placeholder="Поиск по названию…">
+      <select id="category">
+        <option value="">Все категории</option>
+        <option>Футболки</option>
+        <option>Худи</option>
+        <option>Штаны</option>
+        <option>Платья</option>
+      </select>
+    </div>
+
+    <div id="grid" class="grid"></div>
+    <div id="empty" class="empty" style="display:none;">Ничего не найдено</div>
+  </div>
+
+  <script>
+    // 1) Инициализация Telegram WebApp
+    const tg = window.Telegram?.WebApp;
+    tg?.expand(); // раскрыть webview на всю высоту
+    // Цвет фона по теме клиента Telegram (тёмная/светлая)
+    if (tg?.themeParams?.bg_color) {
+      document.documentElement.style.setProperty('--bg', tg.themeParams.bg_color);
+    }
+
+    // 2) Товары (моки). Позже заменим на API.
+    const PRODUCTS = [
+      {id:1, name:"Футболка Basic", price:1990, category:"Футболки", colors:["Белый","Чёрный"], sizes:["S","M","L"], img:"https://placehold.co/600x450?text=Футболка"},
+      {id:2, name:"Худи Soft",    price:4490, category:"Худи",     colors:["Серый","Чёрный"], sizes:["M","L","XL"], img:"https://placehold.co/600x450?text=Худи"},
+      {id:3, name:"Штаны Relax",  price:3990, category:"Штаны",    colors:["Синий","Чёрный"], sizes:["M","L"],     img:"https://placehold.co/600x450?text=Штаны"},
+      {id:4, name:"Платье Summer",price:5490, category:"Платья",   colors:["Красный","Белый"],sizes:["S","M"],      img:"https://placehold.co/600x450?text=Платье"},
+    ];
+
+    // 3) Корзина в localStorage
+    const CART_KEY = "tg_shop_cart";
+    const loadCart = () => JSON.parse(localStorage.getItem(CART_KEY) || "[]");
+    const saveCart = (cart) => localStorage.setItem(CART_KEY, JSON.stringify(cart));
+    const cart = loadCart();
+
+    // 4) Фильтры и состояние
+    const state = { q: "", category: "" };
+    const byId = (id) => document.getElementById(id);
+    const grid = byId("grid");
+    const empty = byId("empty");
+    const qInput = byId("q");
+    const catSel = byId("category");
+
+    qInput.addEventListener("input", () => { state.q = qInput.value.trim().toLowerCase(); render(); });
+    catSel.addEventListener("change", () => { state.category = catSel.value; render(); });
+
+    function priceFmt(n) { return n.toLocaleString('ru-RU') + " ₽"; }
+
+    function filtered() {
+      return PRODUCTS.filter(p => {
+        const okCat = !state.category || p.category === state.category;
+        const okQ = !state.q || p.name.toLowerCase().includes(state.q);
+        return okCat && okQ;
+      });
+    }
+
+    function addToCart(product, size, color) {
+      if (!size || !color) {
+        alert("Выберите размер и цвет");
+        return;
+      }
+      cart.push({ id: product.id, name: product.name, price: product.price, size, color, qty: 1 });
+      saveCart(cart);
+      updateMainButton();
+    }
+
+    // 5) MainButton Telegram — показываем сумму заказа
+    function updateMainButton() {
+      if (!tg) return;
+      const totalQty = cart.reduce((s, i) => s + i.qty, 0);
+      const totalSum = cart.reduce((s, i) => s + i.qty * i.price, 0);
+      if (totalQty > 0) {
+        tg.MainButton.setText(`Оформить (${totalQty} • ${priceFmt(totalSum)})`).show();
+      } else {
+        tg.MainButton.hide();
+      }
+    }
+
+    function render() {
+      const items = filtered();
+      grid.innerHTML = "";
+      if (items.length === 0) {
+        empty.style.display = "block";
+        return;
+      }
+      empty.style.display = "none";
+
+      for (const p of items) {
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+          <img alt="${p.name}" src="${p.img}">
+          <div class="info">
+            <div>${p.name}</div>
+            <div class="price">${priceFmt(p.price)}</div>
+            <div class="muted">${p.category}</div>
+            <div class="row">
+              <select class="size">
+                <option value="">Размер</option>
+                ${p.sizes.map(s=>`<option>${s}</option>`).join("")}
+              </select>
+              <select class="color">
+                <option value="">Цвет</option>
+                ${p.colors.map(c=>`<option>${c}</option>`).join("")}
+              </select>
+              <button class="add">В корзину</button>
+            </div>
+          </div>
+        `;
+        const sizeSel = card.querySelector(".size");
+        const colorSel = card.querySelector(".color");
+        card.querySelector(".add").addEventListener("click", () => {
+          addToCart(p, sizeSel.value, colorSel.value);
+        });
+        grid.appendChild(card);
+      }
+    }
+
+    // 6) Отправка корзины обратно боту при клике на MainButton
+    tg?.MainButton.onClick(() => {
+      const payload = {
+        cart,
+        total_qty: cart.reduce((s, i) => s + i.qty, 0),
+        total_sum: cart.reduce((s, i) => s + i.qty * i.price, 0),
+        ts: Date.now()
+      };
+      tg.sendData(JSON.stringify(payload)); // прилетит боту как message.web_app_data.data
+    });
+
+    render();
+    updateMainButton();
+  </script>
+</body>
+</html>
