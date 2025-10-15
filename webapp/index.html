@@ -7,58 +7,65 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     :root {
-      --pad: 14px;
-      --radius: 16px;
-      --shadow: 0 6px 24px rgba(0,0,0,.08);
-      --muted: #666;
-      --bg: #fff;
-      --card: #fff;
-      --line: #eaeaea;
+      --pad: 14px; --radius: 16px; --shadow: 0 6px 24px rgba(0,0,0,.08);
+      --muted:#666; --bg:#fff; --card:#fff; --line:#eaeaea; --accent:#111; --danger:#d00;
     }
-    html,body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; background: var(--bg); }
-    header { position: sticky; top: 0; backdrop-filter: blur(6px); padding: var(--pad); font-weight: 700; box-shadow: var(--shadow); background: var(--bg); z-index: 10; }
-    .wrap { padding: var(--pad); max-width: 1000px; margin: 0 auto; }
+    html,body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg)}
+    header{position:sticky;top:0;backdrop-filter:blur(6px);padding:var(--pad);font-weight:700;box-shadow:var(--shadow);background:var(--bg);z-index:10}
+    .wrap{padding:var(--pad);max-width:1000px;margin:0 auto}
 
-    /* навигация */
-    .tabs { display: flex; gap: 8px; margin: 0 0 12px; }
-    .tab { padding: 10px 14px; border: 1px solid var(--line); border-radius: 999px; background: var(--card); cursor: pointer; }
-    .tab.active { border-color: #111; }
+    .tabs{display:flex;gap:8px;margin:0 0 12px}
+    .tab{padding:10px 14px;border:1px solid var(--line);border-radius:999px;background:var(--card);cursor:pointer}
+    .tab.active{border-color:var(--accent)}
 
-    /* каталог */
-    .filters { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0 16px; }
-    .filters select, .filters input { padding: 10px; border-radius: 10px; border: 1px solid #ddd; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px,1fr)); gap: 14px; }
-    .card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; display: flex; flex-direction: column; }
-    .card img { width: 100%; aspect-ratio: 4/3; object-fit: cover; background: #f3f3f3; }
-    .card .info { padding: 10px 12px; display: grid; gap: 6px; }
-    .price { font-weight: 700; }
-    .muted { color: var(--muted); font-size: 14px; }
-    .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-    .row select, .row button { padding: 10px; border-radius: 10px; border: 1px solid #ddd; }
-    .row button { cursor: pointer; border: none; background: #111; color: #fff; }
+    .filters{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0 16px}
+    .filters select,.filters input{padding:10px;border-radius:10px;border:1px solid #ddd}
 
-    .empty { text-align: center; color: var(--muted); padding: 40px 10px; }
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px}
+    .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column;position:relative}
+    .fav{position:absolute;top:10px;right:10px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 9px;cursor:pointer;user-select:none}
+    .fav.active{background:#ffecee;border-color:#f5a}
+    .card img{width:100%;aspect-ratio:4/3;object-fit:cover;background:#f3f3f3}
+    .info{padding:10px 12px;display:grid;gap:6px}
+    .price{font-weight:700}
+    .muted{color:var(--muted);font-size:14px}
+    .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .row select,.row button{padding:10px;border-radius:10px;border:1px solid #ddd}
+    .row button{cursor:pointer;border:none;background:var(--accent);color:#fff}
+    .title-link{cursor:pointer;text-decoration:underline}
 
-    /* корзина */
-    .cart-list { display: grid; gap: 10px; }
-    .cart-item { display: grid; grid-template-columns: 90px 1fr auto; gap: 10px; padding: 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); align-items: center; }
-    .cart-item img { width: 90px; height: 70px; object-fit: cover; border-radius: 8px; background: #f3f3f3; }
-    .cart-title { font-weight: 600; }
-    .cart-meta { color: var(--muted); font-size: 13px; }
-    .qty { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line); border-radius: 10px; padding: 6px 8px; }
-    .qty button { border: none; background: #111; color: #fff; border-radius: 8px; padding: 4px 8px; cursor: pointer; }
-    .remove { background: transparent; border: 1px solid #f00; color: #f00; border-radius: 8px; padding: 6px 10px; cursor: pointer; }
-    .cart-summary { display: flex; justify-content: space-between; align-items: center; padding: 12px; border: 1px dashed var(--line); border-radius: 12px; margin-top: 12px; background: var(--card); }
-    .cart-total { font-size: 16px; font-weight: 700; }
+    .empty{text-align:center;color:var(--muted);padding:40px 10px}
+
+    .cart-list{display:grid;gap:10px}
+    .cart-item{display:grid;grid-template-columns:90px 1fr auto;gap:10px;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--card);align-items:center}
+    .cart-item img{width:90px;height:70px;object-fit:cover;border-radius:8px;background:#f3f3f3}
+    .cart-title{font-weight:600}
+    .cart-meta{color:var(--muted);font-size:13px}
+    .qty{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:10px;padding:6px 8px}
+    .qty button{border:none;background:var(--accent);color:#fff;border-radius:8px;padding:4px 8px;cursor:pointer}
+    .remove{background:transparent;border:1px solid var(--danger);color:var(--danger);border-radius:8px;padding:6px 10px;cursor:pointer}
+    .cart-summary{display:flex;justify-content:space-between;align-items:center;padding:12px;border:1px dashed var(--line);border-radius:12px;margin-top:12px;background:var(--card)}
+    .cart-total{font-size:16px;font-weight:700}
+
+    /* Модалка карточки товара */
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;align-items:center;justify-content:center;padding:16px;z-index:50}
+    .modal-card{max-width:860px;width:100%;background:#fff;border-radius:16px;box-shadow:var(--shadow);display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:16px}
+    .modal img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:12px;background:#f3f3f3}
+    .badge{display:inline-block;padding:4px 8px;border:1px solid var(--line);border-radius:999px;margin:6px 6px 6px 0;font-size:12px}
+    .x{position:absolute;top:10px;right:14px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 9px;cursor:pointer}
+    .similar{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:10px}
+    .similar .sm{border:1px solid var(--line);border-radius:10px;overflow:hidden;cursor:pointer;background:#fff}
+    .similar img{width:100%;height:100px;object-fit:cover}
+    .rev{border-top:1px solid var(--line);padding-top:8px;margin-top:8px}
   </style>
 </head>
 <body>
   <header class="wrap">Магазин одежды</header>
   <div class="wrap">
-    <!-- вкладки -->
     <div class="tabs">
       <div id="tab-catalog" class="tab active">Каталог</div>
       <div id="tab-cart" class="tab">Корзина</div>
+      <div id="tab-fav" class="tab">Избранное</div>
     </div>
 
     <!-- КАТАЛОГ -->
@@ -67,13 +74,9 @@
         <input id="q" placeholder="Поиск по названию…">
         <select id="category">
           <option value="">Все категории</option>
-          <option>Футболки</option>
-          <option>Худи</option>
-          <option>Штаны</option>
-          <option>Платья</option>
+          <option>Футболки</option><option>Худи</option><option>Штаны</option><option>Платья</option>
         </select>
       </div>
-
       <div id="grid" class="grid"></div>
       <div id="empty" class="empty" style="display:none;">Ничего не найдено</div>
     </section>
@@ -87,228 +90,273 @@
         <div class="muted">Нажмите «Оформить» внизу</div>
       </div>
     </section>
+
+    <!-- ИЗБРАННОЕ -->
+    <section id="view-fav" style="display:none;">
+      <div id="fav-empty" class="empty" style="display:none;">В избранном пусто</div>
+      <div id="fav-grid" class="grid"></div>
+    </section>
+  </div>
+
+  <!-- МОДАЛЬНАЯ КАРТОЧКА ТОВАРА -->
+  <div id="modal" class="modal" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <div style="position:relative">
+        <button class="x" id="modal-close">✕</button>
+        <img id="m-img" src="" alt="">
+      </div>
+      <div>
+        <div id="m-name" style="font-size:20px;font-weight:700"></div>
+        <div id="m-cat" class="muted" style="margin:4px 0 10px"></div>
+        <div id="m-price" class="price" style="font-size:18px"></div>
+
+        <div style="margin-top:10px">
+          <div class="muted">Размер</div>
+          <div id="m-sizes"></div>
+          <div class="muted" style="margin-top:8px">Цвет</div>
+          <div id="m-colors"></div>
+        </div>
+
+        <div style="margin-top:12px;display:flex;gap:8px;align-items:center">
+          <button id="m-add" style="padding:10px 14px;border:none;border-radius:10px;background:var(--accent);color:#fff;cursor:pointer">Добавить в корзину</button>
+          <button id="m-fav" class="fav" style="position:static">♡</button>
+        </div>
+
+        <div class="rev">
+          <div style="font-weight:600;margin:8px 0 4px">Отзывы</div>
+          <div id="m-reviews" class="muted"></div>
+        </div>
+
+        <div class="rev">
+          <div style="font-weight:600;margin:8px 0 6px">Похожие товары</div>
+          <div id="m-similar" class="similar"></div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script>
-    const tg = window.Telegram?.WebApp;
-    tg?.expand();
+    const tg = window.Telegram?.WebApp; tg?.expand();
     if (tg?.themeParams?.bg_color) document.documentElement.style.setProperty('--bg', tg.themeParams.bg_color);
 
+    // --- Данные (моки) ---
     const PRODUCTS = [
-      {id:1, name:"Футболка Basic", price:1990, category:"Футболки", colors:["Белый","Чёрный"], sizes:["S","M","L"], img:"https://placehold.co/600x450?text=Футболка"},
-      {id:2, name:"Худи Soft",    price:4490, category:"Худи",     colors:["Серый","Чёрный"], sizes:["M","L","XL"], img:"https://placehold.co/600x450?text=Худи"},
-      {id:3, name:"Штаны Relax",  price:3990, category:"Штаны",    colors:["Синий","Чёрный"], sizes:["M","L"],     img:"https://placehold.co/600x450?text=Штаны"},
-      {id:4, name:"Платье Summer",price:5490, category:"Платья",   colors:["Красный","Белый"],sizes:["S","M"],      img:"https://placehold.co/600x450?text=Платье"},
+      {id:1,name:"Футболка Basic",price:1990,category:"Футболки",colors:["Белый","Чёрный"],sizes:["S","M","L"],img:"https://placehold.co/640x480?text=Футболка",reviews:[
+        {u:"Анна",t:"Хлопок приятный, села по размеру."},{u:"Павел",t:"Отличная за свои деньги!"}
+      ]},
+      {id:2,name:"Худи Soft",price:4490,category:"Худи",colors:["Серый","Чёрный"],sizes:["M","L","XL"],img:"https://placehold.co/640x480?text=Худи",reviews:[
+        {u:"Игорь",t:"Тёплое и мягкое!"}
+      ]},
+      {id:3,name:"Штаны Relax",price:3990,category:"Штаны",colors:["Синий","Чёрный"],sizes:["M","L"],img:"https://placehold.co/640x480?text=Штаны",reviews:[]},
+      {id:4,name:"Платье Summer",price:5490,category:"Платья",colors:["Красный","Белый"],sizes:["S","M"],img:"https://placehold.co/640x480?text=Платье",reviews:[
+        {u:"Мария",t:"Цвет как на фото, ткань лёгкая."}
+      ]},
     ];
+    const BY_ID = Object.fromEntries(PRODUCTS.map(p=>[p.id,p]));
 
-    const CART_KEY = "tg_shop_cart";
-    const loadCart = () => JSON.parse(localStorage.getItem(CART_KEY) || "[]");
-    const saveCart = (cart) => localStorage.setItem(CART_KEY, JSON.stringify(cart));
-    const cart = loadCart();
+    // --- Хранилище ---
+    const CART_KEY="tg_shop_cart", FAV_KEY="tg_shop_fav";
+    const load = k => JSON.parse(localStorage.getItem(k)||"[]");
+    const save = (k,v) => localStorage.setItem(k,JSON.stringify(v));
+    const cart = load(CART_KEY);
+    const fav = load(FAV_KEY); // массив product.id
 
-    const state = { q: "", category: "", view: "catalog" }; // catalog | cart
+    // --- Состояние UI ---
+    const state = { q:"", category:"", view:"catalog", modalId:null, selSize:null, selColor:null };
 
-    // DOM refs
-    const byId = (id) => document.getElementById(id);
-    const grid = byId("grid");
-    const empty = byId("empty");
-    const qInput = byId("q");
-    const catSel = byId("category");
+    // --- Утилиты ---
+    const $ = id => document.getElementById(id);
+    const priceFmt = n => n.toLocaleString('ru-RU')+" ₽";
+    const inFav = id => fav.includes(id);
+    const toggleFav = id => { const i=fav.indexOf(id); if(i>=0) fav.splice(i,1); else fav.push(id); save(FAV_KEY,fav); };
 
-    const tabCatalog = byId("tab-catalog");
-    const tabCart = byId("tab-cart");
-    const viewCatalog = byId("view-catalog");
-    const viewCart = byId("view-cart");
-    const cartList = byId("cart-list");
-    const cartEmpty = byId("cart-empty");
-    const cartSummary = byId("cart-summary");
-    const cartTotalEl = cartSummary.querySelector(".cart-total");
+    // --- DOM refs ---
+    const tabCatalog=$("tab-catalog"), tabCart=$("tab-cart"), tabFav=$("tab-fav");
+    const viewCatalog=$("view-catalog"), viewCart=$("view-cart"), viewFav=$("view-fav");
+    const qInput=$("q"), catSel=$("category"), grid=$("grid"), empty=$("empty");
+    const cartList=$("cart-list"), cartEmpty=$("cart-empty"), cartSummary=$("cart-summary"), cartTotalEl=cartSummary.querySelector(".cart-total");
+    const favGrid=$("fav-grid"), favEmpty=$("fav-empty");
+    const modal=$("modal"), mImg=$("m-img"), mName=$("m-name"), mCat=$("m-cat"), mPrice=$("m-price"), mSizes=$("m-sizes"), mColors=$("m-colors"), mAdd=$("m-add"), mFav=$("m-fav"), mReviews=$("m-reviews"), mSimilar=$("m-similar");
 
-    // --- навигация между вкладками ---
-    function setView(name) {
-      state.view = name; // "catalog" | "cart"
-      // вкладки
-      tabCatalog.classList.toggle("active", name === "catalog");
-      tabCart.classList.toggle("active", name === "cart");
-      // секции
-      viewCatalog.style.display = (name === "catalog") ? "" : "none";
-      viewCart.style.display = (name === "cart") ? "" : "none";
-
-      if (name === "catalog") {
-        renderCatalog();
-      } else {
-        renderCart();
-      }
-      updateMainButton(); // чтобы обновить надпись/видимость
+    // --- Навигация вкладок ---
+    function setView(v){
+      state.view=v;
+      tabCatalog.classList.toggle("active",v==="catalog");
+      tabCart.classList.toggle("active",v==="cart");
+      tabFav.classList.toggle("active",v==="fav");
+      viewCatalog.style.display=v==="catalog"?"":"none";
+      viewCart.style.display=v==="cart"?"":"none";
+      viewFav.style.display=v==="fav"?"":"none";
+      if(v==="catalog") renderCatalog();
+      if(v==="cart") renderCart();
+      if(v==="fav") renderFav();
+      updateMainButton();
     }
+    tabCatalog.onclick=()=>setView("catalog");
+    tabCart.onclick=()=>setView("cart");
+    tabFav.onclick=()=>setView("fav");
 
-    tabCatalog.addEventListener("click", () => setView("catalog"));
-    tabCart.addEventListener("click", () => setView("cart"));
+    // --- Фильтры каталога ---
+    qInput.oninput=()=>{state.q=qInput.value.trim().toLowerCase();renderCatalog();}
+    catSel.onchange=()=>{state.category=catSel.value;renderCatalog();}
 
-    // --- фильтры каталога ---
-    qInput.addEventListener("input", () => { state.q = qInput.value.trim().toLowerCase(); renderCatalog(); });
-    catSel.addEventListener("change", () => { state.category = catSel.value; renderCatalog(); });
-
-    function priceFmt(n) { return n.toLocaleString('ru-RU') + " ₽"; }
-
-    function filtered() {
-      return PRODUCTS.filter(p => {
-        const okCat = !state.category || p.category === state.category;
-        const okQ = !state.q || p.name.toLowerCase().includes(state.q);
-        return okCat && okQ;
+    function filtered(){
+      return PRODUCTS.filter(p=>{
+        const okCat=!state.category||p.category===state.category;
+        const okQ=!state.q||p.name.toLowerCase().includes(state.q);
+        return okCat&&okQ;
       });
     }
 
-    // --- Каталог ---
-    function addToCart(product, size, color) {
-      if (!size || !color) {
-        alert("Выберите размер и цвет");
-        return;
-      }
-      // если такая позиция уже есть (id+size+color) — увеличим qty вместо push
-      const exist = cart.find(i => i.id === product.id && i.size === size && i.color === color);
-      if (exist) {
-        exist.qty += 1;
-      } else {
-        cart.push({ id: product.id, name: product.name, price: product.price, size, color, qty: 1, img: product.img });
-      }
-      saveCart(cart);
-      updateMainButton();
-    }
-
-    function renderCatalog() {
-      const items = filtered();
-      grid.innerHTML = "";
-      if (items.length === 0) {
-        empty.style.display = "block";
-        return;
-      }
-      empty.style.display = "none";
-
-      for (const p of items) {
-        const card = document.createElement("div");
-        card.className = "card";
-        card.innerHTML = `
-          <img alt="${p.name}" src="${p.img}">
-          <div class="info">
-            <div>${p.name}</div>
-            <div class="price">${priceFmt(p.price)}</div>
-            <div class="muted">${p.category}</div>
-            <div class="row">
-              <select class="size">
-                <option value="">Размер</option>
-                ${p.sizes.map(s=>`<option>${s}</option>`).join("")}
-              </select>
-              <select class="color">
-                <option value="">Цвет</option>
-                ${p.colors.map(c=>`<option>${c}</option>`).join("")}
-              </select>
-              <button class="add">В корзину</button>
-            </div>
-          </div>
-        `;
-        const sizeSel = card.querySelector(".size");
-        const colorSel = card.querySelector(".color");
-        card.querySelector(".add").addEventListener("click", () => {
-          addToCart(p, sizeSel.value, colorSel.value);
-        });
-        grid.appendChild(card);
-      }
-    }
-
     // --- Корзина ---
-    function cartTotals() {
-      const totalQty = cart.reduce((s, i) => s + i.qty, 0);
-      const totalSum = cart.reduce((s, i) => s + i.qty * i.price, 0);
-      return { totalQty, totalSum };
+    function cartTotals(){
+      const totalQty=cart.reduce((s,i)=>s+i.qty,0);
+      const totalSum=cart.reduce((s,i)=>s+i.qty*i.price,0);
+      return {totalQty,totalSum};
     }
-
-    function changeQty(item, delta) {
-      item.qty += delta;
-      if (item.qty <= 0) {
-        const idx = cart.indexOf(item);
-        if (idx >= 0) cart.splice(idx, 1);
-      }
-      saveCart(cart);
-      renderCart();
-      updateMainButton();
+    function addToCart(product,size,color){
+      if(!size||!color){alert("Выберите размер и цвет");return;}
+      const ex=cart.find(i=>i.id===product.id&&i.size===size&&i.color===color);
+      if(ex) ex.qty+=1; else cart.push({id:product.id,name:product.name,price:product.price,size,color,qty:1,img:product.img});
+      save(CART_KEY,cart); updateMainButton();
     }
-
-    function removeItem(item) {
-      const idx = cart.indexOf(item);
-      if (idx >= 0) cart.splice(idx, 1);
-      saveCart(cart);
-      renderCart();
-      updateMainButton();
+    function changeQty(item,delta){
+      item.qty+=delta; if(item.qty<=0){const i=cart.indexOf(item); if(i>=0) cart.splice(i,1);}
+      save(CART_KEY,cart); renderCart(); updateMainButton();
     }
+    function removeItem(item){const i=cart.indexOf(item); if(i>=0) cart.splice(i,1); save(CART_KEY,cart); renderCart(); updateMainButton();}
 
-    function renderCart() {
-      cartList.innerHTML = "";
-      if (cart.length === 0) {
-        cartEmpty.style.display = "block";
-        cartSummary.style.display = "none";
-        return;
-      }
-      cartEmpty.style.display = "none";
-
-      for (const item of cart) {
-        const row = document.createElement("div");
-        row.className = "cart-item";
-        row.innerHTML = `
-          <img src="${item.img || 'https://placehold.co/160x120'}" alt="">
-          <div>
-            <div class="cart-title">${item.name}</div>
-            <div class="cart-meta">Размер: ${item.size} · Цвет: ${item.color}</div>
-            <div class="cart-meta">${priceFmt(item.price)} за шт.</div>
+    // --- Рендер каталога ---
+    function productCard(p){
+      const card=document.createElement("div"); card.className="card";
+      card.innerHTML=`
+        <button class="fav ${inFav(p.id)?'active':''}" title="Избранное">${inFav(p.id)?'♥':'♡'}</button>
+        <img alt="${p.name}" src="${p.img}">
+        <div class="info">
+          <div class="title-link" data-id="${p.id}">${p.name}</div>
+          <div class="price">${priceFmt(p.price)}</div>
+          <div class="muted">${p.category}</div>
+          <div class="row">
+            <select class="size"><option value="">Размер</option>${p.sizes.map(s=>`<option>${s}</option>`).join("")}</select>
+            <select class="color"><option value="">Цвет</option>${p.colors.map(c=>`<option>${c}</option>`).join("")}</select>
+            <button class="add">В корзину</button>
           </div>
-          <div style="display:grid; gap:8px; justify-items:end;">
+        </div>`;
+      const sizeSel=card.querySelector(".size"), colorSel=card.querySelector(".color");
+      card.querySelector(".add").onclick=()=>addToCart(p,sizeSel.value,colorSel.value);
+      const favBtn=card.querySelector(".fav");
+      favBtn.onclick=()=>{
+        toggleFav(p.id);
+        favBtn.classList.toggle("active",inFav(p.id));
+        favBtn.textContent=inFav(p.id)?'♥':'♡';
+        if(state.view==="fav") renderFav();
+      };
+      // открыть модалку по клику на название/картинку
+      card.querySelector(".title-link").onclick=()=>openModal(p.id);
+      card.querySelector("img").onclick=()=>openModal(p.id);
+      return card;
+    }
+
+    function renderCatalog(){
+      const items=filtered(); grid.innerHTML=""; empty.style.display=items.length?"none":"block";
+      for(const p of items) grid.appendChild(productCard(p));
+    }
+
+    // --- Рендер корзины ---
+    function renderCart(){
+      cartList.innerHTML="";
+      if(cart.length===0){cartEmpty.style.display="block"; cartSummary.style.display="none"; return;}
+      cartEmpty.style.display="none";
+      for(const it of cart){
+        const row=document.createElement("div"); row.className="cart-item";
+        row.innerHTML=`
+          <img src="${it.img||'https://placehold.co/160x120'}" alt="">
+          <div>
+            <div class="cart-title">${it.name}</div>
+            <div class="cart-meta">Размер: ${it.size} · Цвет: ${it.color}</div>
+            <div class="cart-meta">${priceFmt(it.price)} за шт.</div>
+          </div>
+          <div style="display:grid;gap:8px;justify-items:end">
             <div class="qty">
-              <button class="dec">−</button>
-              <span>${item.qty}</span>
-              <button class="inc">+</button>
+              <button class="dec">−</button><span>${it.qty}</span><button class="inc">+</button>
             </div>
             <button class="remove">Удалить</button>
-          </div>
-        `;
-        row.querySelector(".dec").addEventListener("click", () => changeQty(item, -1));
-        row.querySelector(".inc").addEventListener("click", () => changeQty(item, +1));
-        row.querySelector(".remove").addEventListener("click", () => removeItem(item));
+          </div>`;
+        row.querySelector(".dec").onclick=()=>changeQty(it,-1);
+        row.querySelector(".inc").onclick=()=>changeQty(it,+1);
+        row.querySelector(".remove").onclick=()=>removeItem(it);
         cartList.appendChild(row);
       }
-
-      const { totalQty, totalSum } = cartTotals();
-      cartTotalEl.textContent = `Итого: ${totalQty} шт • ${priceFmt(totalSum)}`;
-      cartSummary.style.display = "";
+      const {totalQty,totalSum}=cartTotals();
+      cartTotalEl.textContent=`Итого: ${totalQty} шт • ${priceFmt(totalSum)}`;
+      cartSummary.style.display="";
     }
 
-    // --- MainButton (оформление) ---
-    function updateMainButton() {
-      if (!tg) return;
-      const { totalQty, totalSum } = cartTotals();
-      if (totalQty > 0) {
-        const text = state.view === "cart"
+    // --- Рендер избранного ---
+    function renderFav(){
+      favGrid.innerHTML="";
+      if(fav.length===0){favEmpty.style.display="block"; return;}
+      favEmpty.style.display="none";
+      for(const id of fav){
+        const p=BY_ID[id]; if(!p) continue;
+        favGrid.appendChild(productCard(p));
+      }
+    }
+
+    // --- Модалка карточки товара ---
+    function openModal(id){
+      const p=BY_ID[id]; if(!p) return;
+      state.modalId=id; state.selSize=p.sizes[0]; state.selColor=p.colors[0];
+      mImg.src=p.img; mName.textContent=p.name; mCat.textContent=p.category; mPrice.textContent=priceFmt(p.price);
+      // размеры/цвета — бэйджи с выбором
+      mSizes.innerHTML=p.sizes.map(s=>`<span class="badge size" data-v="${s}">${s}</span>`).join("");
+      mColors.innerHTML=p.colors.map(c=>`<span class="badge color" data-v="${c}">${c}</span>`).join("");
+      [...mSizes.querySelectorAll(".size")].forEach(el=>{ if(el.dataset.v===state.selSize) el.style.borderColor="#111";
+        el.onclick=()=>{state.selSize=el.dataset.v;[...mSizes.children].forEach(x=>x.style.borderColor="var(--line)"); el.style.borderColor="#111";}
+      });
+      [...mColors.querySelectorAll(".color")].forEach(el=>{ if(el.dataset.v===state.selColor) el.style.borderColor="#111";
+        el.onclick=()=>{state.selColor=el.dataset.v;[...mColors.children].forEach(x=>x.style.borderColor="var(--line)"); el.style.borderColor="#111";}
+      });
+
+      mFav.classList.toggle("active",inFav(id));
+      mFav.textContent=inFav(id)?'♥':'♡';
+      mFav.onclick=()=>{toggleFav(id); mFav.classList.toggle("active",inFav(id)); mFav.textContent=inFav(id)?'♥':'♡'; if(state.view==="fav") renderFav();};
+
+      mAdd.onclick=()=>{addToCart(p,state.selSize,state.selColor); updateMainButton();};
+
+      // отзывы
+      mReviews.innerHTML = p.reviews.length
+        ? p.reviews.map(r=>`<div>⭐ ${r.u}: ${r.t}</div>`).join("")
+        : "Пока нет отзывов";
+
+      // похожие (та же категория, кроме текущего)
+      const sim=PRODUCTS.filter(x=>x.category===p.category&&x.id!==p.id);
+      mSimilar.innerHTML = sim.length
+        ? sim.map(s=>`<div class="sm" data-id="${s.id}"><img src="${s.img}"><div style="padding:6px 8px;font-size:13px">${s.name}<br><b>${priceFmt(s.price)}</b></div></div>`).join("")
+        : `<div class="muted">Не найдено</div>`;
+      [...mSimilar.querySelectorAll(".sm")].forEach(el=>el.onclick=()=>openModal(+el.dataset.id));
+
+      modal.style.display="flex";
+    }
+    function closeModal(){modal.style.display="none"; state.modalId=null;}
+    $("modal-close").onclick=closeModal;
+    modal.onclick=e=>{ if(e.target===modal) closeModal(); };
+
+    // --- MainButton ---
+    function updateMainButton(){
+      if(!tg) return;
+      const {totalQty,totalSum}=cartTotals();
+      if(totalQty>0){
+        const text = state.view==="cart"
           ? `Оформить (${totalQty} • ${priceFmt(totalSum)})`
           : `В корзине: ${totalQty} • ${priceFmt(totalSum)}`;
         tg.MainButton.setText(text).show();
-      } else {
-        tg.MainButton.hide();
-      }
+      } else tg.MainButton.hide();
     }
+    tg?.MainButton.onClick(()=>{ const payload={cart,...cartTotals(),ts:Date.now()}; tg.sendData(JSON.stringify(payload)); });
 
-    // отправка корзины боту
-    tg?.MainButton.onClick(() => {
-      const payload = {
-        cart,
-        ...cartTotals(),
-        ts: Date.now()
-      };
-      tg.sendData(JSON.stringify(payload));
-    });
-
-    // init
-    renderCatalog();
-    setView("catalog");
-    updateMainButton();
+    // --- init ---
+    renderCatalog(); setView("catalog"); updateMainButton();
   </script>
 </body>
 </html>
