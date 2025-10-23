@@ -80,15 +80,53 @@
     .sheet.open{transform:translateX(0)}
     .sheet .head{padding:calc(8px + var(--safe-top)) 16px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
     .sheet .list{padding:10px 12px;overflow:auto;flex:1;display:grid;gap:10px}
-    .item{display:grid;grid-template-columns:56px 1fr auto;gap:10px;align-items:center;background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:8px}
-    .item .ph{width:56px;height:56px;border-radius:10px;background:var(--muted);display:block;object-fit:cover}
-    .item .meta .t{font-weight:700}
-    .item .meta .s{font-size:12px;color:var(--subtext)}
-    .item .act{display:grid;gap:6px;justify-items:end}
-    .qtyctrl{display:flex;align-items:center;gap:6px}
-    .btnsq{width:28px;height:28px;border-radius:8px;border:1px solid var(--border);background:var(--muted);display:grid;place-items:center;cursor:pointer}
-    .qtymini{width:44px;text-align:center;padding:6px;border:1px solid var(--border);border-radius:8px;background:var(--muted);color:var(--text)}
-    .item .rmv{padding:6px 10px;border-radius:10px;border:1px solid var(--border);background:var(--muted);cursor:pointer}
+    /* Карточка позиции в корзине: 2 строки
+   1-я: мини-изображение + мета
+   2-я: actions (qty/убрать слева, сумма справа) */
+.item{
+  display:grid;
+  grid-template-columns:56px 1fr;
+  grid-template-rows:auto auto;
+  grid-template-areas:
+    "ph meta"
+    "actions actions";
+  gap:10px;
+  align-items:start;
+  background:var(--bg);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:8px;
+}
+.item .ph{ grid-area:ph; width:56px;height:56px;border-radius:10px;background:var(--muted);display:block;object-fit:cover }
+.item .meta{ grid-area:meta; }
+.item .meta .t{ font-weight:700 }
+.item .meta .s{ font-size:12px;color:var(--subtext) }
+
+/* Нижняя строка с действиями */
+.item .actions{
+  grid-area:actions;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-top:4px;
+}
+.item .actions .left{
+  display:flex;
+  align-items:center;
+  gap:8px;            /* между qtyctrl и кнопкой "Убрать" */
+}
+
+/* Контролы количества */
+.qtyctrl{ display:flex; align-items:center; gap:6px }
+.btnsq{ width:28px;height:28px;border-radius:8px;border:1px solid var(--border);background:var(--muted);display:grid;place-items:center;cursor:pointer }
+.qtymini{ width:44px;text-align:center;padding:6px;border:1px solid var(--border);border-radius:8px;background:var(--muted);color:var(--text) }
+
+/* Кнопка "Убрать" */
+.item .rmv{ padding:6px 10px;border-radius:10px;border:1px solid var(--border);background:var(--muted);cursor:pointer }
+
+/* Сумма справа остаётся .sum (класс уже есть) */
+
     .foot{border-top:1px solid var(--border);padding:12px 16px calc(12px + var(--safe-bottom));display:grid;gap:10px}
     .total{display:flex;justify-content:space-between;font-weight:800}
 
@@ -238,22 +276,28 @@
     function setQty(k,val){const it=cart.find(x=>keyOf(x)===k); if(!it) return; it.qty=Math.max(1, val|0); updateCartUI();}
     function calcTotal(){return cart.reduce((s,x)=>s+x.price*x.qty,0);}
 
-    function renderCartItem(x){
-      const row=document.createElement('div'); row.className='item'; row.dataset.key=keyOf(x);
-      row.innerHTML=`
-        <img class="ph" src="${x.img}" alt="">
-        <div class="meta"><div class="t">${x.name}</div><div class="s">Размер: ${x.size}</div></div>
-        <div class="act">
-          <div class="qtyctrl">
-            <button class="btnsq minus">−</button>
-            <input class="qtymini" type="number" min="1" value="${x.qty}">
-            <button class="btnsq plus">+</button>
-          </div>
-          <div class="t sum">${money(x.price*x.qty)}</div>
-          <button class="rmv">Убрать</button>
-        </div>`;
-      return row;
-    }
+   function renderCartItem(x){
+  const row=document.createElement('div'); row.className='item'; row.dataset.key=`${x.sku}:${x.size}`;
+  row.innerHTML=`
+    <img class="ph" src="${x.img}" alt="">
+    <div class="meta">
+      <div class="t">${x.name}</div>
+      <div class="s">Размер: ${x.size}</div>
+    </div>
+    <div class="actions">
+      <div class="left">
+        <div class="qtyctrl">
+          <button class="btnsq minus">−</button>
+          <input class="qtymini" type="number" min="1" value="${x.qty}">
+          <button class="btnsq plus">+</button>
+        </div>
+        <button class="rmv">Убрать</button>
+      </div>
+      <div class="t sum">${money(x.price*x.qty)}</div>
+    </div>`;
+  return row;
+}
+
 
     function updateCartUI(){
       cartList.innerHTML='';
