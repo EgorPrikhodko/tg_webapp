@@ -6,37 +6,24 @@
   <title>Магазин одежды</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    :root {
-      --bg:#fff; --text:#111; --subtext:#5b5b5b; --card:#fff; --muted:#f1f1f4;
-      --accent:#2a85ff; --accent-contrast:#fff; --border:rgba(0,0,0,.08);
-      --shadow:0 6px 24px rgba(0,0,0,.08);
-      --radius:16px; --radius-sm:12px; --safe-top:env(safe-area-inset-top,0px); --safe-bottom:env(safe-area-inset-bottom,0px);
-      --trans-fast:160ms cubic-bezier(.2,.8,.2,1);
-    }
-    @media (prefers-color-scheme: dark){
-      :root{--bg:#0f1113;--text:#f3f4f6;--subtext:#a1a1aa;--card:#15181b;--muted:#1b1f24;--border:rgba(255,255,255,.06);--shadow:0 6px 24px rgba(0,0,0,.35);}
-    }
+    :root{--bg:#fff;--text:#111;--subtext:#5b5b5b;--card:#fff;--muted:#f1f1f4;--accent:#2a85ff;--accent-contrast:#fff;--border:rgba(0,0,0,.08);--shadow:0 6px 24px rgba(0,0,0,.08);--radius:16px;--radius-sm:12px;--safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px);--trans-fast:160ms cubic-bezier(.2,.8,.2,1)}
+    @media (prefers-color-scheme: dark){:root{--bg:#0f1113;--text:#f3f4f6;--subtext:#a1a1aa;--card:#15181b;--muted:#1b1f24;--border:rgba(255,255,255,.06);--shadow:0 6px 24px rgba(0,0,0,.35)}}
     *{box-sizing:border-box}
     body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;padding-bottom:calc(72px + var(--safe-bottom))}
-
-    /* AppBar */
     .appbar{position:sticky;top:0;z-index:20;background:linear-gradient(180deg,rgba(0,0,0,.04),transparent);padding:calc(12px + var(--safe-top)) 12px 8px;backdrop-filter:saturate(120%) blur(8px);border-bottom:1px solid var(--border)}
     .row{display:flex;align-items:center;gap:10px}
     .grow{flex:1}
     .brand{display:flex;align-items:center;gap:10px;font-weight:700}
     .brand .logo{width:32px;height:32px;border-radius:10px;background:var(--muted);display:grid;place-items:center;box-shadow:var(--shadow);font-size:18px}
 
-    /* Search with clear + cancel */
+    /* search (убрал кнопку Отмена) */
     .search{position:relative;display:flex;gap:8px;align-items:center}
     .search .field{position:relative;flex:1}
     .search input{width:100%;padding:10px 36px 10px 36px;background:var(--muted);color:var(--text);border:1px solid var(--border);border-radius:12px;outline:none}
     .search svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);opacity:.7}
     .search .clear{position:absolute;right:8px;top:50%;transform:translateY(-50%);opacity:.6;border:none;background:transparent;font-size:18px;line-height:1;cursor:pointer}
-    .cancel{padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--muted)}
 
-    .iconbtn{display:grid;place-items:center;width:40px;height:40px;border-radius:12px;background:var(--muted);border:1px solid var(--border);transition:transform var(--trans-fast)}
-    .iconbtn:active{transform:scale(.96)}
-
+    .iconbtn{display:grid;place-items:center;width:40px;height:40px;border-radius:12px;background:var(--muted);border:1px solid var(--border)}
     .wrap{max-width:1100px;margin:0 auto;padding:12px}
     .grid{display:grid;gap:12px;grid-template-columns:repeat(2,minmax(0,1fr))}
     @media(min-width:760px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
@@ -46,21 +33,19 @@
     .img{aspect-ratio:1/1;width:100%;background:var(--muted);display:grid;place-items:center;font-weight:700;letter-spacing:.5px;user-select:none}
     .body{padding:12px;display:grid;gap:10px}
     .title{font-weight:800}
-    .muted{color:var(--subtext);font-size:13px}
     .price{font-weight:900;margin-top:2px}
 
-    /* Size chips row */
+    /* sizes chips */
     .sizes{display:flex;flex-wrap:wrap;gap:8px}
     .chip{padding:8px 10px;border-radius:10px;background:var(--muted);border:1px solid var(--border);cursor:pointer;user-select:none}
     .chip.active{background:var(--accent);color:var(--accent-contrast);border-color:transparent}
 
-    /* Qty small + Add button normalized */
+    /* qty small + add button fixed height */
     .controls{display:flex;gap:8px;align-items:center}
     .qty{width:56px;padding:8px 6px;text-align:center;background:var(--muted);color:var(--text);border:1px solid var(--border);border-radius:10px}
-    .add{flex:1;height:44px;border:none;border-radius:12px;background:var(--accent);color:var(--accent-contrast);font-weight:800;cursor:pointer;transition:transform var(--trans-fast),opacity var(--trans-fast)}
-    .add:active{transform:translateY(1px);opacity:.9}
+    .add{flex:1;height:44px;border:none;border-radius:12px;background:var(--accent);color:var(--accent-contrast);font-weight:800;cursor:pointer}
 
-    /* Sheet / FAB / Toast остались как были */
+    /* sheet header без текста */
     .sheet{position:fixed;right:0;top:0;height:100%;width:min(92vw,380px);background:var(--card);border-left:1px solid var(--border);box-shadow:var(--shadow);transform:translateX(100%);transition:transform var(--trans-fast);z-index:50;display:flex;flex-direction:column}
     .sheet.open{transform:translateX(0)}
     .sheet .head{padding:calc(8px + var(--safe-top)) 16px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
@@ -73,6 +58,7 @@
     .item .rmv{padding:6px 10px;border-radius:10px;border:1px solid var(--border);background:var(--muted);cursor:pointer}
     .foot{border-top:1px solid var(--border);padding:12px 16px calc(12px + var(--safe-bottom));display:grid;gap:10px}
     .total{display:flex;justify-content:space-between;font-weight:800}
+
     .fab{position:fixed;right:16px;bottom:calc(16px + var(--safe-bottom));display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);padding:10px 14px;border-radius:999px;z-index:40}
     .badge{min-width:22px;height:22px;border-radius:999px;background:var(--accent);color:var(--accent-contrast);display:grid;place-items:center;font-size:12px;font-weight:800;padding:0 6px}
     .toast{position:fixed;left:50%;bottom:calc(90px + var(--safe-bottom));transform:translateX(-50%) translateY(20px);background:var(--text);color:var(--bg);padding:10px 14px;border-radius:12px;opacity:0;transition:opacity var(--trans-fast),transform var(--trans-fast);z-index:60;font-weight:600}
@@ -84,13 +70,13 @@
     <div class="row">
       <div class="brand"><div class="logo">TS</div><div>TG Shop</div></div>
 
+      <!-- поиск: поле + крестик, без кнопки "Отмена" -->
       <div class="grow search">
         <div class="field">
-          <input id="q" inputmode="search" autocomplete="off" autocapitalize="none" placeholder="Поиск по каталогу…" />
+          <input id="q" inputmode="search" autocomplete="off" autocapitalize="none" placeholder="Поиск по каталогу…"/>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21 21l-4.2-4.2M10.8 18a7.2 7.2 0 1 1 0-14.4 7.2 7.2 0 0 1 0 14.4Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
           <button id="clearSearch" class="clear" aria-label="Очистить">×</button>
         </div>
-        <button id="cancelSearch" class="cancel">Отмена</button>
       </div>
 
       <button id="openCart" class="iconbtn" title="Корзина">🛒</button>
@@ -105,8 +91,9 @@
     <span>Корзина</span><span class="badge" id="cartCount">0</span>
   </div>
 
+  <!-- хедер корзины с одной кнопкой назад, без текста -->
   <aside class="sheet" id="sheet">
-    <div class="head"><button id="closeCart" class="iconbtn" title="Назад">←</button><div class="title">Ваш заказ</div></div>
+    <div class="head"><button id="closeCart" class="iconbtn" title="Назад">←</button></div>
     <div class="list" id="cartList"></div>
     <div class="foot"><div class="total"><span>Итого</span><span id="total">0 ₽</span></div><button id="checkout" class="add">Оформить заказ</button></div>
   </aside>
@@ -114,7 +101,7 @@
   <div class="toast" id="toast">Добавлено в корзину</div>
 
   <script>
-    const tg = window.Telegram.WebApp; tg.expand();
+    const tg=window.Telegram.WebApp; tg.expand();
     function applyTheme(){const p=tg.themeParams||{};const map={'--bg':p.bg_color,'--text':p.text_color,'--subtext':p.hint_color,'--card':p.secondary_bg_color,'--muted':p.section_bg_color,'--accent':p.button_color,'--accent-contrast':p.button_text_color,'--border':p.section_separator_color?hexToRgba(p.section_separator_color,.6):null};for(const k in map) if(map[k]) document.documentElement.style.setProperty(k,map[k]);}
     function hexToRgba(hex,a=1){const h=hex?.replace('#','')||'000000';const bi=parseInt(h,16)||0;return`rgba(${bi>>16&255},${bi>>8&255},${bi&255},${a})`;}
     applyTheme(); tg.onEvent('themeChanged',applyTheme);
@@ -152,7 +139,7 @@
         const b=document.createElement('button');
         b.type='button'; b.className='chip'+(i===0?' active':''); b.textContent=s;
         if(i===0) selectedSize.set(p.sku,s);
-        b.onclick=()=>{wrap.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));b.classList.add('active');selectedSize.set(p.sku,s);}
+        b.onclick=()=>{wrap.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));b.classList.add('active');selectedSize.set(p.sku,s); hideKeyboard();}
         wrap.appendChild(b);
       });
       return wrap;
@@ -170,15 +157,18 @@
             <button class="add">В корзину</button>
           </div>
         </div>`;
-      // вставляем ряд размеров
+      // вставляем размеры
       const body=el.querySelector('.body');
       body.insertBefore(sizeRow(p), body.querySelector('.controls'));
 
       const qtyEl=el.querySelector('.qty');
+      // любое взаимодействие с карточкой скрывает клавиатуру поиска
+      el.addEventListener('pointerdown', hideKeyboard);
       el.querySelector('.add').onclick=()=>{
         const size=selectedSize.get(p.sku)||p.sizes?.[0]||'';
         addToCart({sku:p.sku,name:p.name,price:p.price,size,qty:Number(qtyEl.value)||1});
         showToast('Товар добавлен в корзину');
+        hideKeyboard();
       };
       return el;
     }
@@ -196,7 +186,8 @@
       tg.MainButton.setParams({text:`Оплатить · ${money(calcTotal())}`});
       if(count) tg.MainButton.show(); else tg.MainButton.hide();
     }
-    const openCart=()=>sheet.classList.add('open'); const closeCart=()=>sheet.classList.remove('open');
+    const openCart=()=>{sheet.classList.add('open'); hideKeyboard();};
+    const closeCart=()=>sheet.classList.remove('open');
     document.getElementById('openCart').onclick=openCart; document.getElementById('closeCart').onclick=closeCart; document.getElementById('fabCart').onclick=openCart;
 
     document.getElementById('checkout').onclick=tryCheckout; tg.MainButton.onClick(tryCheckout);
@@ -209,21 +200,23 @@
     }
     function setLoading(v){tg.MainButton.setParams({is_active:!v}); if(v) tg.HapticFeedback.impactOccurred('light');}
 
-    // Поиск: Enter/Отмена скрывают клавиатуру, тап вне поля — тоже
-    const q=document.getElementById('q');
-    const clearBtn=document.getElementById('clearSearch'); const cancelBtn=document.getElementById('cancelSearch');
+    // Поиск: скрываем клавиатуру по Enter/очистке/тапу вне поля/скроллу
+    const q=document.getElementById('q'); const clearBtn=document.getElementById('clearSearch');
     function applyFilter(){
       const s=(q.value||'').trim().toLowerCase();
       grid.querySelectorAll('.card').forEach((card,i)=>{
-        const p=products[i]; const hit=!s || p.name.toLowerCase().includes(s) || p.sku.toLowerCase().includes(s); // sku можно оставить для фильтра, но не показываем на карточке
+        const p=products[i]; const hit=!s || p.name.toLowerCase().includes(s) || p.sku.toLowerCase().includes(s);
         card.style.display=hit?'':'none';
       });
     }
+    function hideKeyboard(){ if(document.activeElement===q){ q.blur(); } }
     q.addEventListener('input',applyFilter);
-    q.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); q.blur(); }});
-    cancelBtn.onclick=()=>{ q.blur(); };
-    clearBtn.onclick=()=>{ q.value=''; applyFilter(); q.focus(); };
-    document.addEventListener('touchstart',e=>{ if(!e.target.closest('.search')) q.blur(); },{passive:true});
+    q.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); hideKeyboard(); }});
+    clearBtn.onclick=()=>{ q.value=''; applyFilter(); hideKeyboard(); };
+    // глобально: тап по сетке или прокрутка — скрываем клавиатуру поиска
+    grid.addEventListener('pointerdown', hideKeyboard);
+    document.addEventListener('scroll', hideKeyboard, {passive:true});
+    document.addEventListener('touchstart',e=>{ if(!e.target.closest('.search')) hideKeyboard(); },{passive:true});
 
     // Toast
     const toast=document.getElementById('toast'); let toastTid;
