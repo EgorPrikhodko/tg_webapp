@@ -80,13 +80,16 @@
     .sheet.open{transform:translateX(0)}
     .sheet .head{padding:calc(8px + var(--safe-top)) 16px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
     .sheet .list{padding:10px 12px;overflow:auto;flex:1;display:grid;gap:10px}
-    /* Карточка позиции в корзине: 2 строки
-   1-я: мини-изображение + мета
-   2-я: actions (qty/убрать слева, сумма справа) */
+    /* ===== КОРЗИНА: одинаковая высота карточек ===== */
+
+/* единая высота для всех карточек корзины */
+:root { --cart-item-h: 112px; }  /* можно подстроить: 104–128px */
+
+/* сама карточка товара в корзине */
 .item{
   display:grid;
   grid-template-columns:56px 1fr;
-  grid-template-rows:auto auto;
+  grid-template-rows:auto 1fr;          /* верхняя зона + нижняя растяжимая */
   grid-template-areas:
     "ph meta"
     "actions actions";
@@ -96,36 +99,43 @@
   border:1px solid var(--border);
   border-radius:12px;
   padding:8px;
-}
-.item .ph{ grid-area:ph; width:56px;height:56px;border-radius:10px;background:var(--muted);display:block;object-fit:cover }
-.item .meta{ grid-area:meta; }
-.item .meta .t{ font-weight:700 }
-.item .meta .s{ font-size:12px;color:var(--subtext) }
 
-/* Нижняя строка с действиями */
+  height:var(--cart-item-h);            /* фиксируем высоту */
+  overflow:hidden;                      /* лишнее прячем */
+}
+
+/* изображение — как было */
+.item .ph{ grid-area:ph; width:56px;height:56px;border-radius:10px;background:var(--muted);display:block;object-fit:cover }
+
+/* заголовок и подзаголовок — режем до 1–2 строк, чтобы не растягивали карточку */
+.item .meta{ grid-area:meta; min-width:0; }
+.item .meta .t{
+  font-weight:700;
+  display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical;
+  overflow:hidden; text-overflow:ellipsis; white-space:normal;
+}
+.item .meta .s{
+  font-size:12px;color:var(--subtext);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+
+/* нижняя строка действий — фиксируем у низа карточки */
 .item .actions{
   grid-area:actions;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-  margin-top:4px;
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  margin-top:auto;                      /* прижать вниз */
 }
-.item .actions .left{
-  display:flex;
-  align-items:center;
-  gap:8px;            /* между qtyctrl и кнопкой "Убрать" */
-}
+.item .actions .left{ display:flex; align-items:center; gap:8px; }
 
-/* Контролы количества */
-.qtyctrl{ display:flex; align-items:center; gap:6px }
-.btnsq{ width:28px;height:28px;border-radius:8px;border:1px solid var(--border);background:var(--muted);display:grid;place-items:center;cursor:pointer }
-.qtymini{ width:44px;text-align:center;padding:6px;border:1px solid var(--border);border-radius:8px;background:var(--muted);color:var(--text) }
+/* контролы количества — компактные */
+.qtyctrl{ display:flex; align-items:center; gap:6px; flex-shrink:0; }
+.btnsq{ width:28px;height:28px;border-radius:8px;border:1px solid var(--border);background:var(--muted);display:grid;place-items:center;cursor:pointer; flex-shrink:0; }
+.qtymini{ width:44px;text-align:center;padding:6px;border:1px solid var(--border);border-radius:8px;background:var(--muted);color:var(--text); flex-shrink:0; }
 
-/* Кнопка "Убрать" */
-.item .rmv{ padding:6px 10px;border-radius:10px;border:1px solid var(--border);background:var(--muted);cursor:pointer }
+/* кнопка Убрать и сумма — не переносим строки */
+.item .rmv{ padding:6px 10px;border-radius:10px;border:1px solid var(--border);background:var(--muted);cursor:pointer; white-space:nowrap; }
+.item .sum{ white-space:nowrap; }
 
-/* Сумма справа остаётся .sum (класс уже есть) */
 
     .foot{border-top:1px solid var(--border);padding:12px 16px calc(12px + var(--safe-bottom));display:grid;gap:10px}
     .total{display:flex;justify-content:space-between;font-weight:800}
@@ -297,7 +307,6 @@
     </div>`;
   return row;
 }
-
 
     function updateCartUI(){
       cartList.innerHTML='';
