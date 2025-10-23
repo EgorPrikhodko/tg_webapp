@@ -6,7 +6,7 @@
   <title>Магазин одежды</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    :root{--bg:#fff;--text:#111;--subtext:#5b5b5b;--card:#fff;--muted:#f1f1f4;--accent:#2a85ff;--accent-contrast:#fff;--border:rgba(0,0,0,.08);--shadow:0 6px 24px rgba(0,0,0,.08);--radius:16px;--radius-sm:12px;--safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px);--trans-fast:160ms cubic-bezier(.2,.8,.2,1)}
+    :root{--bg:#fff;--text:#111;--subtext:#5b5b5b;--card:#fff;--muted:#f1f1f4;--accent:#2a85ff;--accent-contrast:#fff;--border:rgba(0,0,0,.08);--shadow:0 6px 24px rgba(0,0,0,.08);--radius:16px;--safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px);--trans-fast:160ms cubic-bezier(.2,.8,.2,1)}
     @media (prefers-color-scheme: dark){:root{--bg:#0f1113;--text:#f3f4f6;--subtext:#a1a1aa;--card:#15181b;--muted:#1b1f24;--border:rgba(255,255,255,.06);--shadow:0 6px 24px rgba(0,0,0,.35)}}
     *{box-sizing:border-box}
     body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;padding-bottom:calc(72px + var(--safe-bottom))}
@@ -16,10 +16,10 @@
     .brand{display:flex;align-items:center;gap:10px;font-weight:700}
     .brand .logo{width:32px;height:32px;border-radius:10px;background:var(--muted);display:grid;place-items:center;box-shadow:var(--shadow);font-size:18px}
 
-    /* search (убрал кнопку Отмена) */
+    /* search */
     .search{position:relative;display:flex;gap:8px;align-items:center}
     .search .field{position:relative;flex:1}
-    .search input{width:100%;padding:10px 36px 10px 36px;background:var(--muted);color:var(--text);border:1px solid var(--border);border-radius:12px;outline:none}
+    .search input{width:100%;padding:10px 36px;background:var(--muted);color:var(--text);border:1px solid var(--border);border-radius:12px;outline:none}
     .search svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);opacity:.7}
     .search .clear{position:absolute;right:8px;top:50%;transform:translateY(-50%);opacity:.6;border:none;background:transparent;font-size:18px;line-height:1;cursor:pointer}
 
@@ -30,7 +30,7 @@
     @media(min-width:992px){.grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
 
     .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);display:flex;flex-direction:column}
-    .img{aspect-ratio:1/1;width:100%;background:var(--muted);display:grid;place-items:center;font-weight:700;letter-spacing:.5px;user-select:none}
+    .img{aspect-ratio:1/1;width:100%;background:var(--muted);display:block;object-fit:cover}
     .body{padding:12px;display:grid;gap:10px}
     .title{font-weight:800}
     .price{font-weight:900;margin-top:2px}
@@ -40,21 +40,24 @@
     .chip{padding:8px 10px;border-radius:10px;background:var(--muted);border:1px solid var(--border);cursor:pointer;user-select:none}
     .chip.active{background:var(--accent);color:var(--accent-contrast);border-color:transparent}
 
-    /* qty small + add button fixed height */
+    /* qty + add */
     .controls{display:flex;gap:8px;align-items:center}
     .qty{width:56px;padding:8px 6px;text-align:center;background:var(--muted);color:var(--text);border:1px solid var(--border);border-radius:10px}
     .add{flex:1;height:44px;border:none;border-radius:12px;background:var(--accent);color:var(--accent-contrast);font-weight:800;cursor:pointer}
 
-    /* sheet header без текста */
+    /* sheet */
     .sheet{position:fixed;right:0;top:0;height:100%;width:min(92vw,380px);background:var(--card);border-left:1px solid var(--border);box-shadow:var(--shadow);transform:translateX(100%);transition:transform var(--trans-fast);z-index:50;display:flex;flex-direction:column}
     .sheet.open{transform:translateX(0)}
     .sheet .head{padding:calc(8px + var(--safe-top)) 16px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
     .sheet .list{padding:10px 12px;overflow:auto;flex:1;display:grid;gap:10px}
     .item{display:grid;grid-template-columns:56px 1fr auto;gap:10px;align-items:center;background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:8px}
-    .item .ph{width:56px;height:56px;border-radius:10px;background:var(--muted);display:grid;place-items:center;font-size:12px}
+    .item .ph{width:56px;height:56px;border-radius:10px;background:var(--muted);display:block;object-fit:cover}
     .item .meta .t{font-weight:700}
     .item .meta .s{font-size:12px;color:var(--subtext)}
     .item .act{display:grid;gap:6px;justify-items:end}
+    .qtyctrl{display:flex;align-items:center;gap:6px}
+    .btnsq{width:28px;height:28px;border-radius:8px;border:1px solid var(--border);background:var(--muted);display:grid;place-items:center;cursor:pointer}
+    .qtymini{width:44px;text-align:center;padding:6px;border:1px solid var(--border);border-radius:8px;background:var(--muted);color:var(--text)}
     .item .rmv{padding:6px 10px;border-radius:10px;border:1px solid var(--border);background:var(--muted);cursor:pointer}
     .foot{border-top:1px solid var(--border);padding:12px 16px calc(12px + var(--safe-bottom));display:grid;gap:10px}
     .total{display:flex;justify-content:space-between;font-weight:800}
@@ -69,8 +72,6 @@
   <header class="appbar">
     <div class="row">
       <div class="brand"><div class="logo">TS</div><div>TG Shop</div></div>
-
-      <!-- поиск: поле + крестик, без кнопки "Отмена" -->
       <div class="grow search">
         <div class="field">
           <input id="q" inputmode="search" autocomplete="off" autocapitalize="none" placeholder="Поиск по каталогу…"/>
@@ -78,7 +79,6 @@
           <button id="clearSearch" class="clear" aria-label="Очистить">×</button>
         </div>
       </div>
-
       <button id="openCart" class="iconbtn" title="Корзина">🛒</button>
     </div>
   </header>
@@ -91,7 +91,6 @@
     <span>Корзина</span><span class="badge" id="cartCount">0</span>
   </div>
 
-  <!-- хедер корзины с одной кнопкой назад, без текста -->
   <aside class="sheet" id="sheet">
     <div class="head"><button id="closeCart" class="iconbtn" title="Назад">←</button></div>
     <div class="list" id="cartList"></div>
@@ -116,23 +115,34 @@
       return res.json();
     }
 
+    // каталог с картинками (unsplash)
     const products=[
-      { sku:'ts-basic', name:'Футболка Basic', price:1290, sizes:['S','M','L','XL'] },
-      { sku:'hd-classic', name:'Худи Classic', price:3290, sizes:['S','M','L','XL'] },
-      { sku:'js-urban', name:'Джинсы Urban', price:3990, sizes:['28','30','32','34','36'] },
-      { sku:'jk-bomber', name:'Бомбер Air', price:5490, sizes:['S','M','L'] },
-      { sku:'sk-midi', name:'Юбка Midi', price:2790, sizes:['XS','S','M','L'] },
-      { sku:'sh-chino', name:'Брюки Chino', price:3490, sizes:['30','32','34','36'] },
-      { sku:'cs-oversize', name:'Лонгслив Oversize', price:1890, sizes:['S','M','L','XL'] },
-      { sku:'ct-rain', name:'Плащ Rain', price:5990, sizes:['S','M','L'] },
+      { sku:'ts-basic', name:'Футболка Basic', price:1290, sizes:['S','M','L','XL'], img:'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?q=80&w=800&auto=format&fit=crop' },
+      { sku:'hd-classic', name:'Худи Classic', price:3290, sizes:['S','M','L','XL'], img:'https://images.unsplash.com/photo-1520974735194-7b1c9a8d4a9a?q=80&w=800&auto=format&fit=crop' },
+      { sku:'js-urban', name:'Джинсы Urban', price:3990, sizes:['28','30','32','34','36'], img:'https://images.unsplash.com/photo-1520975916090-3105956dac38?q=80&w=800&auto=format&fit=crop' },
+      { sku:'jk-bomber', name:'Бомбер Air', price:5490, sizes:['S','M','L'], img:'https://images.unsplash.com/photo-1551024709-8f23befc6cf7?q=80&w=800&auto=format&fit=crop' },
+      { sku:'sk-midi', name:'Юбка Midi', price:2790, sizes:['XS','S','M','L'], img:'https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=800&auto=format&fit=crop' },
+      { sku:'sh-chino', name:'Брюки Chino', price:3490, sizes:['30','32','34','36'], img:'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?q=80&w=800&auto=format&fit=crop' },
+      { sku:'cs-oversize', name:'Лонгслив Oversize', price:1890, sizes:['S','M','L','XL'], img:'https://images.unsplash.com/photo-1516826957135-700dedea698c?q=80&w=800&auto=format&fit=crop' },
+      { sku:'ct-rain', name:'Плащ Rain', price:5990, sizes:['S','M','L'], img:'https://images.unsplash.com/photo-1520975657286-5d99a4721f85?q=80&w=800&auto=format&fit=crop' },
     ];
 
     const grid=document.getElementById('grid');
     function money(v){return v.toLocaleString('ru-RU')+' ₽';}
 
-    // выбранные размеры по sku
-    const selectedSize=new Map();
+    // глобальное сворачивание клавиатуры
+    function hideKeyboard(){
+      const el=document.activeElement;
+      if(!el) return;
+      const ed = el.tagName==='INPUT' || el.tagName==='TEXTAREA' || el.isContentEditable;
+      if(ed) el.blur();
+    }
+    document.addEventListener('pointerdown',e=>{ if(!e.target.closest('input,textarea')) hideKeyboard(); },{passive:true});
+    document.addEventListener('touchend',e=>{ if(!e.target.closest('input,textarea')) hideKeyboard(); },{passive:true});
+    document.addEventListener('scroll',hideKeyboard,{passive:true});
 
+    // выбранные размеры
+    const selectedSize=new Map();
     function sizeRow(p){
       const wrap=document.createElement('div'); wrap.className='sizes';
       (p.sizes||[]).forEach((s,i)=>{
@@ -147,28 +157,22 @@
 
     function createCard(p){
       const el=document.createElement('div'); el.className='card';
-      el.innerHTML=`
-        <div class="img">IMG</div>
-        <div class="body">
-          <div class="title">${p.name}</div>
-          <div class="price">${money(p.price)}</div>
-          <div class="controls">
-            <input class="qty" type="number" min="1" value="1" aria-label="Кол-во" />
-            <button class="add">В корзину</button>
-          </div>
-        </div>`;
-      // вставляем размеры
-      const body=el.querySelector('.body');
-      body.insertBefore(sizeRow(p), body.querySelector('.controls'));
+      const img=document.createElement('img'); img.className='img'; img.loading='lazy'; img.alt=p.name; img.src=p.img;
+      el.appendChild(img);
+      const body=document.createElement('div'); body.className='body';
+      body.innerHTML=`<div class="title">${p.name}</div><div class="price">${money(p.price)}</div>`;
+      body.appendChild(sizeRow(p));
+      const controls=document.createElement('div'); controls.className='controls';
+      controls.innerHTML=`<input class="qty" type="number" min="1" value="1" aria-label="Кол-во"/><button class="add">В корзину</button>`;
+      body.appendChild(controls);
+      el.appendChild(body);
 
-      const qtyEl=el.querySelector('.qty');
-      // любое взаимодействие с карточкой скрывает клавиатуру поиска
+      const qtyEl=controls.querySelector('.qty');
       el.addEventListener('pointerdown', hideKeyboard);
-      el.querySelector('.add').onclick=()=>{
+      controls.querySelector('.add').onclick=()=>{
         const size=selectedSize.get(p.sku)||p.sizes?.[0]||'';
-        addToCart({sku:p.sku,name:p.name,price:p.price,size,qty:Number(qtyEl.value)||1});
-        showToast('Товар добавлен в корзину');
-        hideKeyboard();
+        addToCart({sku:p.sku,name:p.name,price:p.price,size,qty:Math.max(1,Number(qtyEl.value)||1),img:p.img});
+        showToast('Товар добавлен в корзину'); hideKeyboard();
       };
       return el;
     }
@@ -176,16 +180,58 @@
 
     // корзина
     let cart=[]; const sheet=document.getElementById('sheet'); const cartList=document.getElementById('cartList'); const cartCount=document.getElementById('cartCount'); const totalEl=document.getElementById('total'); const fab=document.getElementById('fabCart');
-    function addToCart(item){const key=`${item.sku}:${item.size}`;const f=cart.find(x=>`${x.sku}:${x.size}`===key);if(f)f.qty+=item.qty;else cart.push(item);updateCartUI();}
-    function removeFromCart(key){cart=cart.filter(x=>`${x.sku}:${x.size}`!==key);updateCartUI();}
+    function keyOf(x){return `${x.sku}:${x.size}`;}
+    function addToCart(item){const k=keyOf(item);const f=cart.find(x=>keyOf(x)===k);if(f)f.qty+=item.qty;else cart.push(item);updateCartUI();}
+    function removeFromCart(k){cart=cart.filter(x=>keyOf(x)!==k);updateCartUI();}
+    function setQty(k,val){const it=cart.find(x=>keyOf(x)===k); if(!it) return; it.qty=Math.max(1, val|0); updateCartUI();}
     function calcTotal(){return cart.reduce((s,x)=>s+x.price*x.qty,0);}
+
+    function renderCartItem(x){
+      const row=document.createElement('div'); row.className='item'; row.dataset.key=keyOf(x);
+      row.innerHTML=`
+        <img class="ph" src="${x.img}" alt="">
+        <div class="meta"><div class="t">${x.name}</div><div class="s">Размер: ${x.size}</div></div>
+        <div class="act">
+          <div class="qtyctrl">
+            <button class="btnsq minus">−</button>
+            <input class="qtymini" type="number" min="1" value="${x.qty}">
+            <button class="btnsq plus">+</button>
+          </div>
+          <div class="t sum">${money(x.price*x.qty)}</div>
+          <button class="rmv">Убрать</button>
+        </div>`;
+      return row;
+    }
+
     function updateCartUI(){
-      cartList.innerHTML=''; cart.forEach(x=>{const row=document.createElement('div');row.className='item';row.innerHTML=`<div class="ph">IMG</div><div class="meta"><div class="t">${x.name}</div><div class="s">Размер: ${x.size} · ${x.qty} шт.</div></div><div class="act"><div class="t">${money(x.price*x.qty)}</div><button class="rmv">Убрать</button></div>`; row.querySelector('.rmv').onclick=()=>removeFromCart(`${x.sku}:${x.size}`); cartList.appendChild(row);});
-      const count=cart.reduce((s,x)=>s+x.qty,0); cartCount.textContent=count; totalEl.textContent=money(calcTotal());
+      cartList.innerHTML='';
+      cart.forEach(x=>cartList.appendChild(renderCartItem(x)));
+      const count=cart.reduce((s,x)=>s+x.qty,0);
+      cartCount.textContent=count; totalEl.textContent=money(calcTotal());
       fab.style.display=count?'flex':'none';
       tg.MainButton.setParams({text:`Оплатить · ${money(calcTotal())}`});
       if(count) tg.MainButton.show(); else tg.MainButton.hide();
     }
+
+    // делегирование событий внутри корзины
+    cartList.addEventListener('click', (e)=>{
+      const row=e.target.closest('.item'); if(!row) return;
+      const k=row.dataset.key;
+      if(e.target.classList.contains('rmv')) { removeFromCart(k); return; }
+      if(e.target.classList.contains('minus')) {
+        const it=cart.find(x=>keyOf(x)===k); if(!it) return; it.qty=Math.max(1,it.qty-1); updateCartUI(); return;
+      }
+      if(e.target.classList.contains('plus')) {
+        const it=cart.find(x=>keyOf(x)===k); if(!it) return; it.qty+=1; updateCartUI(); return;
+      }
+    });
+    cartList.addEventListener('change', (e)=>{
+      if(e.target.classList.contains('qtymini')){
+        const row=e.target.closest('.item'); const k=row.dataset.key; setQty(k, Number(e.target.value)||1);
+      }
+    });
+    cartList.addEventListener('pointerdown', hideKeyboard);
+
     const openCart=()=>{sheet.classList.add('open'); hideKeyboard();};
     const closeCart=()=>sheet.classList.remove('open');
     document.getElementById('openCart').onclick=openCart; document.getElementById('closeCart').onclick=closeCart; document.getElementById('fabCart').onclick=openCart;
@@ -200,25 +246,21 @@
     }
     function setLoading(v){tg.MainButton.setParams({is_active:!v}); if(v) tg.HapticFeedback.impactOccurred('light');}
 
-    // Поиск: скрываем клавиатуру по Enter/очистке/тапу вне поля/скроллу
+    // поиск
     const q=document.getElementById('q'); const clearBtn=document.getElementById('clearSearch');
     function applyFilter(){
       const s=(q.value||'').trim().toLowerCase();
-      grid.querySelectorAll('.card').forEach((card,i)=>{
+      const cards=[...grid.children];
+      cards.forEach((card,i)=>{
         const p=products[i]; const hit=!s || p.name.toLowerCase().includes(s) || p.sku.toLowerCase().includes(s);
         card.style.display=hit?'':'none';
       });
     }
-    function hideKeyboard(){ if(document.activeElement===q){ q.blur(); } }
     q.addEventListener('input',applyFilter);
     q.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); hideKeyboard(); }});
     clearBtn.onclick=()=>{ q.value=''; applyFilter(); hideKeyboard(); };
-    // глобально: тап по сетке или прокрутка — скрываем клавиатуру поиска
-    grid.addEventListener('pointerdown', hideKeyboard);
-    document.addEventListener('scroll', hideKeyboard, {passive:true});
-    document.addEventListener('touchstart',e=>{ if(!e.target.closest('.search')) hideKeyboard(); },{passive:true});
 
-    // Toast
+    // toast
     const toast=document.getElementById('toast'); let toastTid;
     function showToast(msg){toast.textContent=msg; toast.classList.add('show'); clearTimeout(toastTid); toastTid=setTimeout(()=>toast.classList.remove('show'),1400); tg.HapticFeedback.notificationOccurred('success');}
   </script>
