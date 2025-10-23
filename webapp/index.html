@@ -2,54 +2,421 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>Магазин одежды</title>
-  <link rel="stylesheet" href="/static/styles.css" />
-  <!-- Скрипт Telegram WebApp -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root {
+      /* Базовые цвета — подхватываем из темы Telegram */
+      --bg: #ffffff;
+      --text: #111111;
+      --subtext: #5b5b5b;
+      --card: #ffffff;
+      --muted: #f1f1f4;
+      --accent: #2a85ff;
+      --accent-contrast: #ffffff;
+      --border: rgba(0,0,0,.08);
+      --shadow: 0 6px 24px rgba(0,0,0,.08);
+      --radius: 16px;
+      --radius-sm: 12px;
+      --radius-lg: 22px;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --trans-fast: 160ms cubic-bezier(.2,.8,.2,1);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0f1113;
+        --text: #f3f4f6;
+        --subtext: #a1a1aa;
+        --card: #15181b;
+        --muted: #1b1f24;
+        --accent: #2a85ff;
+        --accent-contrast: #ffffff;
+        --border: rgba(255,255,255,.06);
+        --shadow: 0 6px 24px rgba(0,0,0,.35);
+      }
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 15px/1.5 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      padding-bottom: calc(72px + var(--safe-bottom));
+    }
+
+    /* Шапка */
+    .appbar {
+      position: sticky; top: 0; z-index: 20;
+      background: linear-gradient(180deg, rgba(0,0,0,.04), transparent);
+      padding: calc(12px + var(--safe-top)) 16px 8px;
+      backdrop-filter: saturate(120%) blur(8px);
+      border-bottom: 1px solid var(--border);
+    }
+    .row { display: flex; align-items: center; gap: 12px; }
+    .grow { flex: 1; }
+    .brand {
+      display: flex; align-items: center; gap: 10px;
+      font-weight: 700; letter-spacing: .2px;
+    }
+    .brand .logo {
+      width: 32px; height: 32px; border-radius: 10px;
+      background: var(--muted); display: grid; place-items: center;
+      box-shadow: var(--shadow); font-size: 18px;
+    }
+    .search {
+      position: relative;
+    }
+    .search input {
+      width: 100%; padding: 10px 12px 10px 36px;
+      background: var(--muted); color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 12px; outline: none;
+    }
+    .search svg {
+      position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+      opacity: .7;
+    }
+    .iconbtn {
+      display: grid; place-items: center;
+      width: 40px; height: 40px; border-radius: 12px;
+      background: var(--muted); border: 1px solid var(--border);
+      transition: transform var(--trans-fast);
+    }
+    .iconbtn:active { transform: scale(.96); }
+
+    /* Грид карточек */
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 16px; }
+    .grid {
+      display: grid; gap: 16px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    @media (min-width: 760px) {
+      .grid { grid-template-columns: repeat(3, minmax(0,1fr)); }
+    }
+    @media (min-width: 992px) {
+      .grid { grid-template-columns: repeat(4, minmax(0,1fr)); }
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      display: flex; flex-direction: column;
+      transition: transform var(--trans-fast), box-shadow var(--trans-fast);
+    }
+    .card:hover { transform: translateY(-2px); }
+    .img {
+      aspect-ratio: 1/1; width: 100%;
+      background: var(--muted);
+      display: grid; place-items: center;
+      font-weight: 700; letter-spacing: .5px;
+      user-select: none;
+    }
+    .body { padding: 12px; display: grid; gap: 8px; }
+    .title { font-weight: 700; }
+    .muted { color: var(--subtext); font-size: 13px; }
+    .price { font-weight: 800; margin-top: 2px; }
+    .controls { display: flex; gap: 8px; align-items: center; margin-top: 4px; }
+    select, .qty {
+      flex: 1;
+      padding: 8px 10px;
+      background: var(--muted); color: var(--text);
+      border: 1px solid var(--border); border-radius: 10px;
+    }
+    .add {
+      padding: 10px 12px; border: none; border-radius: 12px;
+      background: var(--accent); color: var(--accent-contrast);
+      font-weight: 700; cursor: pointer;
+      transition: transform var(--trans-fast), opacity var(--trans-fast);
+    }
+    .add:active { transform: translateY(1px); opacity: .9; }
+
+    /* Корзина (сайд-слой) */
+    .sheet {
+      position: fixed; right: 0; top: 0; height: 100%; width: min(92vw, 380px);
+      background: var(--card); border-left: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      transform: translateX(100%); transition: transform var(--trans-fast);
+      z-index: 50; display: flex; flex-direction: column;
+    }
+    .sheet.open { transform: translateX(0); }
+    .sheet .head {
+      padding: calc(8px + var(--safe-top)) 16px 10px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .sheet .list {
+      padding: 10px 12px; overflow: auto; flex: 1; display: grid; gap: 10px;
+    }
+    .item {
+      display: grid; grid-template-columns: 56px 1fr auto; gap: 10px; align-items: center;
+      background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 8px;
+    }
+    .item .ph { width: 56px; height: 56px; border-radius: 10px; background: var(--muted); display: grid; place-items: center; font-size: 12px; }
+    .item .meta .t { font-weight: 700; }
+    .item .meta .s { font-size: 12px; color: var(--subtext); }
+    .item .act { display: grid; gap: 6px; justify-items: end; }
+    .item .rmv {
+      padding: 6px 10px; border-radius: 10px; border: 1px solid var(--border); background: var(--muted); cursor: pointer;
+    }
+    .foot {
+      border-top: 1px solid var(--border);
+      padding: 12px 16px calc(12px + var(--safe-bottom));
+      display: grid; gap: 10px;
+    }
+    .total { display: flex; justify-content: space-between; font-weight: 800; }
+
+    /* Плавающая кнопка корзины */
+    .fab {
+      position: fixed; right: 16px; bottom: calc(16px + var(--safe-bottom));
+      display: flex; align-items: center; gap: 10px;
+      background: var(--card); border: 1px solid var(--border); box-shadow: var(--shadow);
+      padding: 10px 14px; border-radius: 999px; z-index: 40;
+    }
+    .badge {
+      min-width: 22px; height: 22px; border-radius: 999px;
+      background: var(--accent); color: var(--accent-contrast); display: grid; place-items: center;
+      font-size: 12px; font-weight: 800; padding: 0 6px;
+    }
+
+    /* Тост */
+    .toast {
+      position: fixed; left: 50%; bottom: calc(90px + var(--safe-bottom));
+      transform: translateX(-50%) translateY(20px);
+      background: var(--text); color: var(--bg);
+      padding: 10px 14px; border-radius: 12px;
+      opacity: 0; transition: opacity var(--trans-fast), transform var(--trans-fast);
+      z-index: 60; font-weight: 600;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
 </head>
 <body>
-  <main class="container">
-    <h1>Магазин одежды</h1>
+  <!-- Шапка -->
+  <header class="appbar">
+    <div class="row">
+      <div class="brand">
+        <div class="logo">TS</div>
+        <div>TG Shop</div>
+      </div>
+      <div class="grow search">
+        <input id="q" placeholder="Поиск по каталогу…" />
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21 21l-4.2-4.2M10.8 18a7.2 7.2 0 1 1 0-14.4 7.2 7.2 0 0 1 0 14.4Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      </div>
+      <button id="openCart" class="iconbtn" title="Корзина">
+        🛒
+      </button>
+    </div>
+  </header>
 
-    <section class="card">
-      <h2>Футболка «Basic»</h2>
-      <p>100% хлопок, размеры S–XL</p>
-      <label>Размер:
-        <select id="size">
-          <option>S</option><option>M</option><option>L</option><option>XL</option>
-        </select>
-      </label>
-      <label>Количество:
-        <input id="qty" type="number" min="1" value="1" />
-      </label>
-      <button id="buy">Оформить заказ</button>
-    </section>
+  <!-- Контент -->
+  <main class="wrap">
+    <div id="grid" class="grid"></div>
   </main>
 
+  <!-- Плавающая кнопка корзины -->
+  <div class="fab" id="fabCart" style="display:none;">
+    <span>Корзина</span>
+    <span class="badge" id="cartCount">0</span>
+  </div>
+
+  <!-- Сайд-слой корзины -->
+  <aside class="sheet" id="sheet">
+    <div class="head">
+      <button id="closeCart" class="iconbtn" title="Назад">←</button>
+      <div class="title">Ваш заказ</div>
+    </div>
+    <div class="list" id="cartList"></div>
+    <div class="foot">
+      <div class="total"><span>Итого</span><span id="total">0 ₽</span></div>
+      <button id="checkout" class="add">Оформить заказ</button>
+    </div>
+  </aside>
+
+  <!-- Тост -->
+  <div class="toast" id="toast">Добавлено в корзину</div>
+
   <script>
+    // --- Telegram Theme → CSS vars ---
     const tg = window.Telegram.WebApp;
-    tg.expand(); // раскрыть WebApp на весь экран
-    tg.MainButton.setParams({ text: "Отправить заказ", is_visible: false });
-
-    const buyBtn = document.getElementById('buy');
-    const sizeEl = document.getElementById('size');
-    const qtyEl  = document.getElementById('qty');
-
-    buyBtn.addEventListener('click', () => {
-      const order = {
-        item: "Футболка Basic",
-        size: sizeEl.value,
-        qty: Number(qtyEl.value),
-        user: tg.initDataUnsafe?.user || null
+    tg.expand();
+    function applyTheme() {
+      const p = tg.themeParams || {};
+      const map = {
+        '--bg': p.bg_color,
+        '--text': p.text_color,
+        '--subtext': p.hint_color,
+        '--card': p.secondary_bg_color,
+        '--muted': p.section_bg_color,
+        '--accent': p.button_color,
+        '--accent-contrast': p.button_text_color,
+        '--border': p.section_separator_color ? hexToRgba(p.section_separator_color, .6) : null
       };
-      // показываем главную кнопку Telegram
-      tg.MainButton.show();
-      tg.MainButton.onClick(() => {
-        tg.sendData(JSON.stringify(order)); // улетит боту в handle_webapp_data
+      for (const k in map) if (map[k]) document.documentElement.style.setProperty(k, map[k]);
+    }
+    function hexToRgba(hex, a=1){const h=hex.replace('#','');const bi=parseInt(h,16);return`rgba(${bi>>16&255},${bi>>8&255},${bi&255},${a})`;}
+    applyTheme();
+    tg.onEvent('themeChanged', applyTheme);
+
+    // --- Конфиг API ---
+    const FALLBACK_API = ''; // опционально: сюда можно поставить прод-API
+    const API_BASE = (new URLSearchParams(location.search).get('api') || FALLBACK_API).replace(/\/+$/,'');
+    async function callCreateOrder(order){
+      if(!API_BASE){ throw new Error('API не настроен. Запустите бэкенд и передайте ?api=...'); }
+      const body = JSON.stringify({ items: order.items, total: order.total, init_data: tg.initData || "" });
+      const res = await fetch(`${API_BASE}/api/order`, { method:'POST', headers:{'Content-Type':'application/json'}, body });
+      if(!res.ok){ const e = await res.json().catch(()=>({detail:`HTTP ${res.status}`})); throw new Error(e.detail || 'Ошибка API'); }
+      return res.json();
+    }
+
+    // --- Демо-каталог (можно заменить на запрос к /api/products) ---
+    const products = [
+      { sku:'ts-basic', name:'Футболка Basic', price: 1290, sizes:['S','M','L','XL'] },
+      { sku:'hd-classic', name:'Худи Classic', price: 3290, sizes:['S','M','L','XL'] },
+      { sku:'js-urban', name:'Джинсы Urban', price: 3990, sizes:['28','30','32','34','36'] },
+      { sku:'jk-bomber', name:'Бомбер Air', price: 5490, sizes:['S','M','L'] },
+      { sku:'sk-midi', name:'Юбка Midi', price: 2790, sizes:['XS','S','M','L'] },
+      { sku:'sh-chino', name:'Брюки Chino', price: 3490, sizes:['30','32','34','36'] },
+      { sku:'cs-oversize', name:'Лонгслив Oversize', price: 1890, sizes:['S','M','L','XL'] },
+      { sku:'ct-rain', name:'Плащ Rain', price: 5990, sizes:['S','M','L'] },
+    ];
+
+    // --- Рендер карточек ---
+    const grid = document.getElementById('grid');
+    function money(v){ return v.toLocaleString('ru-RU') + ' ₽'; }
+    function createCard(p){
+      const el = document.createElement('div');
+      el.className = 'card';
+      el.innerHTML = `
+        <div class="img">IMG</div>
+        <div class="body">
+          <div class="title">${p.name}</div>
+          <div class="muted">Артикул: ${p.sku}</div>
+          <div class="price">${money(p.price)}</div>
+          <div class="controls">
+            <select aria-label="Размер">
+              ${p.sizes.map(s=>`<option>${s}</option>`).join('')}
+            </select>
+            <input class="qty" type="number" min="1" value="1" aria-label="Кол-во" />
+          </div>
+          <button class="add">В корзину</button>
+        </div>`;
+      const sizeEl = el.querySelector('select');
+      const qtyEl  = el.querySelector('.qty');
+      el.querySelector('.add').onclick = () => {
+        addToCart({ sku:p.sku, name:p.name, price:p.price, size:sizeEl.value, qty: Number(qtyEl.value) || 1 });
+        showToast('Товар добавлен в корзину');
+      };
+      return el;
+    }
+    products.forEach(p => grid.appendChild(createCard(p)));
+
+    // --- Корзина ---
+    let cart = [];
+    const sheet = document.getElementById('sheet');
+    const cartList = document.getElementById('cartList');
+    const cartCount = document.getElementById('cartCount');
+    const totalEl = document.getElementById('total');
+    const fab = document.getElementById('fabCart');
+
+    function addToCart(item){
+      const key = `${item.sku}:${item.size}`;
+      const found = cart.find(x => `${x.sku}:${x.size}` === key);
+      if(found) found.qty += item.qty; else cart.push(item);
+      updateCartUI();
+    }
+    function removeFromCart(key){
+      cart = cart.filter(x => `${x.sku}:${x.size}` !== key);
+      updateCartUI();
+    }
+    function calcTotal(){
+      return cart.reduce((s,x)=> s + x.price * x.qty, 0);
+    }
+    function updateCartUI(){
+      cartList.innerHTML = '';
+      cart.forEach(x => {
+        const row = document.createElement('div');
+        row.className = 'item';
+        row.innerHTML = `
+          <div class="ph">IMG</div>
+          <div class="meta">
+            <div class="t">${x.name}</div>
+            <div class="s">Размер: ${x.size} · ${x.qty} шт.</div>
+          </div>
+          <div class="act">
+            <div class="t">${money(x.price * x.qty)}</div>
+            <button class="rmv">Убрать</button>
+          </div>`;
+        row.querySelector('.rmv').onclick = () => removeFromCart(`${x.sku}:${x.size}`);
+        cartList.appendChild(row);
+      });
+      const count = cart.reduce((s,x)=>s+x.qty,0);
+      cartCount.textContent = count;
+      totalEl.textContent = money(calcTotal());
+      fab.style.display = count ? 'flex' : 'none';
+      tg.MainButton.setParams({ text: `Оплатить · ${money(calcTotal())}` });
+      if(count) tg.MainButton.show(); else tg.MainButton.hide();
+    }
+
+    // Открытие/закрытие корзины
+    const openCart = () => sheet.classList.add('open');
+    const closeCart = () => sheet.classList.remove('open');
+    document.getElementById('openCart').onclick = openCart;
+    document.getElementById('closeCart').onclick = closeCart;
+    document.getElementById('fabCart').onclick = openCart;
+
+    // --- Оформление заказа ---
+    document.getElementById('checkout').onclick = tryCheckout;
+    tg.MainButton.onClick(tryCheckout);
+
+    async function tryCheckout(){
+      if(!cart.length) return;
+      const order = {
+        items: cart.map(x => ({ sku:x.sku, name:x.name, size:x.size, qty:x.qty, price:x.price })),
+        total: calcTotal()
+      };
+      setLoading(true);
+      try {
+        const res = await callCreateOrder(order); // сохраняем на бэке (initData валидируется там)
+        // по желанию — шлём данные боту для мгновенного ответа
+        tg.sendData(JSON.stringify({ order_id: res.order_id, ...order }));
         tg.close();
+      } catch (e) {
+        setLoading(false);
+        alert(e.message || 'Не удалось оформить заказ');
+      }
+    }
+
+    function setLoading(v){
+      tg.MainButton.setParams({ is_active: !v });
+      if(v) tg.HapticFeedback.impactOccurred('light');
+    }
+
+    // --- Поиск (клиентский фильтр) ---
+    document.getElementById('q').addEventListener('input', (e)=>{
+      const q = e.target.value.trim().toLowerCase();
+      grid.querySelectorAll('.card').forEach((card,i)=>{
+        const p = products[i];
+        const hit = !q || p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q);
+        card.style.display = hit ? '' : 'none';
       });
     });
+
+    // --- Тост ---
+    const toast = document.getElementById('toast');
+    let toastTid;
+    function showToast(msg){
+      toast.textContent = msg;
+      toast.classList.add('show');
+      clearTimeout(toastTid);
+      toastTid = setTimeout(()=> toast.classList.remove('show'), 1400);
+      tg.HapticFeedback.notificationOccurred('success');
+    }
   </script>
 </body>
 </html>
