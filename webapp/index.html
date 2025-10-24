@@ -235,6 +235,11 @@
 
   <script>
     const tg=window.Telegram.WebApp; tg.expand();
+    
+    console.log("tg platform:", tg.platform, "initData length:", (tg.initData||"").length);
+if (!(tg.initData && tg.initData.length > 10)) {
+  alert("Приложение открыто не через Telegram. Откройте из бота.");
+}
 
     /* ---------- THEME ---------- */
     function applyTheme(){
