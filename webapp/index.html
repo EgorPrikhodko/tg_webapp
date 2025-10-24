@@ -28,20 +28,19 @@
     .brand .logo{width:32px;height:32px;border-radius:10px;background:var(--muted);display:grid;place-items:center;box-shadow:var(--shadow);font-size:18px}
     .iconbtn{display:grid;place-items:center;width:40px;height:40px;border-radius:12px;background:var(--muted);border:1px solid var(--border);cursor:pointer}
 
-    /* Search */
+    /* Поиск */
     .search{position:relative;display:flex;gap:8px;align-items:center}
     .search .field{position:relative;flex:1}
     .search input{width:100%;padding:10px 36px;background:var(--muted);color:var(--text);border:1px solid var(--border);border-radius:12px;outline:none}
     .search svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);opacity:.7}
     .search .clear{position:absolute;right:8px;top:50%;transform:translateY(-50%);opacity:.6;border:none;background:transparent;font-size:18px;line-height:1;cursor:pointer}
 
-    /* GRID каталога */
+    /* Каталог */
     .wrap{max-width:1100px;margin:0 auto;padding:12px}
     .grid{display:grid;gap:12px;grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:1fr}
     @media(min-width:760px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
     @media(min-width:992px){.grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
 
-    /* CARD каталога */
     .card{
       background:var(--card);border:1px solid var(--border);
       border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);
@@ -59,25 +58,23 @@
     .desc{font-size:13px;color:var(--subtext);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
     .price{font-weight:900;margin-top:2px}
 
-    /* SIZES */
     .sizes{display:grid;grid-auto-flow:column;grid-auto-columns:calc((100% - 3*8px)/4);gap:8px;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;padding-bottom:2px;scrollbar-width:none}
     .sizes::-webkit-scrollbar{display:none}
     .chip{display:grid;place-items:center;white-space:nowrap;padding:8px 10px;border-radius:10px;background:var(--muted);border:1px solid var(--border);cursor:pointer;user-select:none}
     .chip.active{background:var(--accent);color:var(--accent-contrast);border-color:transparent}
 
-    /* Низ карточки каталога */
     .controls{display:flex;gap:8px;align-items:center;margin-top:auto}
     .qty{width:56px;padding:8px 6px;text-align:center;background:var(--muted);color:var(--text);border:1px solid var(--border);border-radius:10px}
     .add{flex:1;height:44px;border:none;border-radius:12px;background:var(--accent);color:var(--accent-contrast);font-weight:800;cursor:pointer}
 
-    /* SHEETS */
+    /* Панели */
     .sheet{position:fixed;right:0;top:0;height:100%;width:min(92vw,420px);background:var(--card);border-left:1px solid var(--border);box-shadow:var(--shadow);transform:translateX(100%);transition:transform var(--trans-fast);z-index:50;display:flex;flex-direction:column}
     .sheet.open{transform:translateX(0)}
     .sheet .head{padding:calc(8px + var(--safe-top)) 16px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
     .sheet .head .title{font-weight:800}
-    .sheet .list{padding:0;margin:0;overflow:auto;flex:1;display:block} /* НЕТ зазоров между .item */
+    .sheet .list{padding:0;margin:0;overflow:auto;flex:1;display:block}
 
-    /* Карточки в корзине/избранном/модерации */
+    /* Карточки списков (корзина/избранное/модерация) — без зазоров, мягкие углы */
     .item{
       display:grid;
       grid-template-columns:56px 1fr;
@@ -89,12 +86,12 @@
       align-items:start;
       background:var(--card);
       border:1px solid var(--border);
-      border-radius:var(--radius);      /* мягкие углы */
+      border-radius:var(--radius);
       padding:8px 10px;
       margin:0;
-      border-bottom:1px solid var(--border); /* слитная колонка */
+      border-bottom:1px solid var(--border);
     }
-    .sheet .list .item + .item{border-top:0}
+    .sheet .list .item + .item{border-top:0} /* слитная колонка */
 
     .item .ph{ grid-area:ph; width:56px;height:56px;border-radius:10px;background:var(--muted);display:block;object-fit:cover }
     .item .meta{ grid-area:meta; min-width:0; align-self:center}
@@ -112,17 +109,15 @@
     .foot{border-top:1px solid var(--border);padding:12px 16px calc(12px + var(--safe-bottom));display:grid;gap:10px}
     .total{display:flex;justify-content:space-between;font-weight:800}
 
-    /* Модерация: кнопка добавить */
+    /* Модерация */
     .bar{padding:10px 16px;border-bottom:1px solid var(--border);display:flex;gap:10px}
     .btn{height:40px;padding:0 14px;border-radius:12px;border:1px solid var(--border);background:var(--muted);cursor:pointer}
     .btn.primary{background:var(--accent);color:var(--accent-contrast);border-color:transparent}
 
-    /* Форма редактирования */
     .form{padding:12px 16px;display:grid;gap:10px;overflow:auto}
     .field label{display:block;font-size:12px;color:var(--subtext);margin-bottom:6px}
     .field input[type="text"],.field input[type="number"],.field textarea{
-      width:100%;padding:10px;border:1px solid var(--border);background:var(--muted);color:var(--text);
-      border-radius:10px;resize:vertical
+      width:100%;padding:10px;border:1px solid var(--border);background:var(--muted);color:var(--text);border-radius:10px;resize:vertical
     }
     .imgpick{display:flex;gap:10px;align-items:center}
     .imgpick img{width:64px;height:64px;border-radius:10px;object-fit:cover;background:var(--muted);border:1px solid var(--border)}
@@ -193,7 +188,7 @@
     <div class="list" id="modList"></div>
   </aside>
 
-  <!-- Модерация: форма редактирования -->
+  <!-- Модерация: форма -->
   <aside class="sheet" id="editSheet">
     <div class="head">
       <button id="closeEdit" class="iconbtn" title="Назад">←</button>
@@ -236,7 +231,7 @@
     </div>
   </aside>
 
-  <div class="toast" id="toast">Добавлено в корзину</div>
+  <div class="toast" id="toast">Готово</div>
 
   <script>
     const tg=window.Telegram.WebApp; tg.expand();
@@ -250,11 +245,28 @@
     function hexToRgba(hex,a=1){const h=hex?.replace('#','')||'000000';const bi=parseInt(h,16)||0;return`rgba(${bi>>16&255},${bi>>8&255},${bi&255},${a})`;}
     applyTheme(); tg.onEvent('themeChanged',applyTheme);
 
-    /* ---------- PARAMS ---------- */
-    const qs=new URLSearchParams(location.search);
-    const FALLBACK_API='';
-    const API_BASE=(qs.get('api')||FALLBACK_API).replace(/\/+$/,'');
-    const MOD_IDS=(qs.get('mods')||'').split(',').filter(Boolean).map(x=>x.trim());
+    /* ---------- API / FLAGS ---------- */
+    const API_BASE=(new URLSearchParams(location.search).get('api')||'').replace(/\/+$/,'');
+    let IS_MODERATOR=false;
+
+    async function fetchModeratorFlag(){
+      try{
+        if(!API_BASE) return false;
+        const res=await fetch(`${API_BASE}/api/auth/me`,{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({init_data: tg.initData || ''})
+        });
+        if(!res.ok) return false;
+        const data=await res.json();
+        return !!data.is_moderator;
+      }catch{return false}
+    }
+    async function showIfModerator(){
+      IS_MODERATOR=await fetchModeratorFlag();
+      document.getElementById('openMod').style.display = IS_MODERATOR ? '' : 'none';
+    }
+    showIfModerator();
 
     /* ---------- STORAGE KEYS ---------- */
     const STORE_PRODUCTS='tgshop_products_v1';
@@ -322,12 +334,8 @@
     function loadCart(){ try{ return JSON.parse(localStorage.getItem(STORE_CART)||'[]'); }catch{ return []; } }
     function saveFav(){ try{ localStorage.setItem(STORE_FAV, JSON.stringify(fav)); }catch{} }
     function loadFav(){ try{ return JSON.parse(localStorage.getItem(STORE_FAV)||'[]'); }catch{ return []; } }
-    function userIsModerator(){
-      const uid=String(tg?.initDataUnsafe?.user?.id||'');
-      return uid && MOD_IDS.includes(uid);
-    }
 
-    /* ---------- KEYBOARD BLUR ---------- */
+    /* ---------- BLUR KEYBOARD ---------- */
     function hideKeyboard(){
       const el=document.activeElement;
       if(!el) return;
@@ -361,9 +369,7 @@
           <div class="s">Артикул: ${p.sku}</div>
         </div>
         <div class="actions">
-          <div class="left">
-            <button class="rmv">Убрать</button>
-          </div>
+          <div class="left"><button class="rmv">Убрать</button></div>
           <button class="add tocart">В корзину</button>
         </div>`;
       return row;
@@ -496,11 +502,6 @@
     cartList.addEventListener('pointerdown', hideKeyboard);
 
     /* ---------- MODERATION ---------- */
-    function showIfModerator(){
-      if(userIsModerator()) openModBtn.style.display='';
-    }
-    showIfModerator();
-
     function modItemRow(p){
       const row=document.createElement('div'); row.className='item'; row.dataset.sku=p.sku;
       row.innerHTML=`
@@ -560,15 +561,9 @@
         products=[...products,{sku,name,price,sizes,desc,img}];
       }else{
         products=products.map(p=>p.sku===oldSku?{...p,sku,name,price,sizes,desc,img}:p);
-        // если SKU/цена/название поменялись — обновим позиции в корзине
-        cart = cart.map(it=>{
-          if(it.sku===oldSku){
-            const np = products.find(pp=>pp.sku===sku) || {name,price,img};
-            return {...it, sku, name:np.name, price:np.price, img:np.img};
-          }
-          return it;
-        });
-        fav = fav.map(s=> s===oldSku ? sku : s);
+        // Обновим корзину/избранное если поменяли SKU/имя/цену/картинку
+        cart = cart.map(it=> it.sku===oldSku ? {...it, sku, name, price, img} : it);
+        fav  = fav.map(s => s===oldSku ? sku : s);
         saveCart(); saveFav();
       }
       saveProducts();
@@ -579,7 +574,6 @@
     function deleteProduct(sku){
       products=products.filter(p=>p.sku!==sku);
       saveProducts();
-      // убрать из корзины/избранного
       cart = cart.filter(it=>it.sku!==sku); saveCart(); updateCartUI();
       fav  = fav.filter(s=>s!==sku); saveFav(); updateFavUI();
       renderCatalog(); renderModList();
@@ -594,19 +588,12 @@
       if(e.target.classList.contains('rm')){ if(confirm('Удалить товар?')) deleteProduct(sku); }
     });
 
-    btnAdd.onclick=()=>openEditForm(null);
-    btnExport.onclick=()=>{
-      const blob=new Blob([JSON.stringify(products,null,2)],{type:'application/json'});
-      const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='products.json'; a.click();
-      URL.revokeObjectURL(a.href);
-    };
-
-    /* ---------- OPEN/CLOSE PANELS ---------- */
+    /* ---------- OPEN/CLOSE ---------- */
     const openCart =()=>{sheet.classList.add('open'); favSheet.classList.remove('open'); modSheet.classList.remove('open'); editSheet.classList.remove('open'); hideKeyboard();}
     const closeCart=()=>sheet.classList.remove('open');
     const openFav  =()=>{favSheet.classList.add('open'); sheet.classList.remove('open'); modSheet.classList.remove('open'); editSheet.classList.remove('open'); hideKeyboard();}
     const closeFav =()=>favSheet.classList.remove('open');
-    const openMod  =()=>{if(!userIsModerator()) return; modSheet.classList.add('open'); sheet.classList.remove('open'); favSheet.classList.remove('open'); editSheet.classList.remove('open'); renderModList(); hideKeyboard();}
+    const openMod  =()=>{if(!IS_MODERATOR) return; modSheet.classList.add('open'); sheet.classList.remove('open'); favSheet.classList.remove('open'); editSheet.classList.remove('open'); renderModList(); hideKeyboard();}
     const closeMod =()=>modSheet.classList.remove('open');
     const closeEdit=()=>editSheet.classList.remove('open');
 
@@ -651,6 +638,14 @@
     q.addEventListener('input',applyFilter);
     q.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); hideKeyboard(); }});
     clearBtn.onclick=()=>{ q.value=''; applyFilter(); hideKeyboard(); };
+
+    /* ---------- EXPORT ---------- */
+    btnAdd.onclick=()=>openEditForm(null);
+    btnExport.onclick=()=>{
+      const blob=new Blob([JSON.stringify(products,null,2)],{type:'application/json'});
+      const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='products.json'; a.click();
+      URL.revokeObjectURL(a.href);
+    };
 
     /* ---------- TOAST ---------- */
     let toastTid;
