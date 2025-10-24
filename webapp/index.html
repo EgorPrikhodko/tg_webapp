@@ -33,7 +33,7 @@
     .search svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);opacity:.7}
     .search .clear{position:absolute;right:8px;top:50%;transform:translateY(-50%);opacity:.6;border:none;background:transparent;font-size:18px;line-height:1;cursor:pointer}
 
-    .iconbtn{display:grid;place-items:center;width:40px;height:40px;border-radius:12px;background:var(--muted);border:1px solid var(--border)}
+    .iconbtn{display:grid;place-items:center;width:40px;height:40px;border-radius:12px;background:var(--muted);border:1px solid var(--border);cursor:pointer}
 
     /* GRID — одинаковая высота карточек в строке */
     .wrap{max-width:1100px;margin:0 auto;padding:12px}
@@ -45,18 +45,24 @@
     @media(min-width:760px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
     @media(min-width:992px){.grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
 
-    /* CARD — тело растягивается, низ прижат */
+    /* CARD */
     .card{
       background:var(--card);border:1px solid var(--border);
       border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);
-      display:flex;flex-direction:column;height:100%;
+      display:flex;flex-direction:column;height:100%;position:relative;
     }
+    .fav-toggle{
+      position:absolute;right:10px;top:10px;z-index:1;
+      width:36px;height:36px;border-radius:999px;border:1px solid var(--border);
+      background:var(--card);display:grid;place-items:center;user-select:none
+    }
+    .fav-toggle.active{background:var(--accent);color:var(--accent-contrast);border-color:transparent}
     .img{aspect-ratio:1/1;width:100%;background:var(--muted);display:block;object-fit:cover}
     .body{padding:12px;display:flex;flex-direction:column;gap:10px;flex:1}
     .title{font-weight:800}
     .price{font-weight:900;margin-top:2px}
 
-    /* SIZES — одна строка, 4 видимых «клетки», остальное скроллится вбок */
+    /* SIZES */
     .sizes{
       display:grid;grid-auto-flow:column;
       grid-auto-columns:calc((100% - 3*8px)/4);
@@ -70,72 +76,63 @@
     }
     .chip.active{background:var(--accent);color:var(--accent-contrast);border-color:transparent}
 
-    /* НИЗ КАРТОЧКИ — всегда у нижнего края */
+    /* bottom controls */
     .controls{display:flex;gap:8px;align-items:center;margin-top:auto}
     .qty{width:56px;padding:8px 6px;text-align:center;background:var(--muted);color:var(--text);border:1px solid var(--border);border-radius:10px}
     .add{flex:1;height:44px;border:none;border-radius:12px;background:var(--accent);color:var(--accent-contrast);font-weight:800;cursor:pointer}
 
-    /* SHEET / CART */
+    /* SHEET / PANELS */
     .sheet{position:fixed;right:0;top:0;height:100%;width:min(92vw,380px);background:var(--card);border-left:1px solid var(--border);box-shadow:var(--shadow);transform:translateX(100%);transition:transform var(--trans-fast);z-index:50;display:flex;flex-direction:column}
     .sheet.open{transform:translateX(0)}
     .sheet .head{padding:calc(8px + var(--safe-top)) 16px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
-    .sheet .list{padding:10px 12px;overflow:auto;flex:1;display:grid;gap:10px}
-    /* ===== КОРЗИНА: одинаковая высота карточек ===== */
+    .sheet .head .title{font-weight:800}
+    .sheet .list{padding:0; /* убрали внутренние поля */ overflow:auto;flex:1;display:grid;gap:0} /* НОЛЬ ОТСТУПОВ МЕЖДУ КАРТОЧКАМИ */
 
-/* единая высота для всех карточек корзины */
-:root { --cart-item-h: 112px; }  /* можно подстроить: 104–128px */
+    /* ===== КОРЗИНА/ИЗБРАННОЕ: единая высота карточек ===== */
+    :root { --cart-item-h: 112px; }
 
-/* сама карточка товара в корзине */
-.item{
-  display:grid;
-  grid-template-columns:56px 1fr;
-  grid-template-rows:auto 1fr;          /* верхняя зона + нижняя растяжимая */
-  grid-template-areas:
-    "ph meta"
-    "actions actions";
-  gap:10px;
-  align-items:start;
-  background:var(--bg);
-  border:1px solid var(--border);
-  border-radius:12px;
-  padding:8px;
+    .item{
+      display:grid;
+      grid-template-columns:56px 1fr;
+      grid-template-rows:auto 1fr;
+      grid-template-areas:
+        "ph meta"
+        "actions actions";
+      gap:10px;
+      align-items:start;
+      background:var(--bg);
+      border:1px solid var(--border);
+      padding:8px;
 
-  height:var(--cart-item-h);            /* фиксируем высоту */
-  overflow:hidden;                      /* лишнее прячем */
-}
-
-/* изображение — как было */
-.item .ph{ grid-area:ph; width:56px;height:56px;border-radius:10px;background:var(--muted);display:block;object-fit:cover }
-
-/* заголовок и подзаголовок — режем до 1–2 строк, чтобы не растягивали карточку */
-.item .meta{ grid-area:meta; min-width:0; }
-.item .meta .t{
-  font-weight:700;
-  display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical;
-  overflow:hidden; text-overflow:ellipsis; white-space:normal;
-}
-.item .meta .s{
-  font-size:12px;color:var(--subtext);
-  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-}
-
-/* нижняя строка действий — фиксируем у низа карточки */
-.item .actions{
-  grid-area:actions;
-  display:flex; align-items:center; justify-content:space-between; gap:12px;
-  margin-top:auto;                      /* прижать вниз */
-}
-.item .actions .left{ display:flex; align-items:center; gap:8px; }
-
-/* контролы количества — компактные */
-.qtyctrl{ display:flex; align-items:center; gap:6px; flex-shrink:0; }
-.btnsq{ width:28px;height:28px;border-radius:8px;border:1px solid var(--border);background:var(--muted);display:grid;place-items:center;cursor:pointer; flex-shrink:0; }
-.qtymini{ width:44px;text-align:center;padding:6px;border:1px solid var(--border);border-radius:8px;background:var(--muted);color:var(--text); flex-shrink:0; }
-
-/* кнопка Убрать и сумма — не переносим строки */
-.item .rmv{ padding:6px 10px;border-radius:10px;border:1px solid var(--border);background:var(--muted);cursor:pointer; white-space:nowrap; }
-.item .sum{ white-space:nowrap; }
-
+      height:var(--cart-item-h);
+      overflow:hidden;
+      /* чтобы не было «зазоров» между соседями */
+      border-radius:0;
+      border-bottom:none;
+    }
+    .list .item:last-child{border-bottom:1px solid var(--border)}
+    .item .ph{ grid-area:ph; width:56px;height:56px;border-radius:10px;background:var(--muted);display:block;object-fit:cover }
+    .item .meta{ grid-area:meta; min-width:0; }
+    .item .meta .t{
+      font-weight:700;
+      display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical;
+      overflow:hidden; text-overflow:ellipsis; white-space:normal;
+    }
+    .item .meta .s{
+      font-size:12px;color:var(--subtext);
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    .item .actions{
+      grid-area:actions;
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      margin-top:auto;
+    }
+    .item .actions .left{ display:flex; align-items:center; gap:8px; }
+    .qtyctrl{ display:flex; align-items:center; gap:6px; flex-shrink:0; }
+    .btnsq{ width:28px;height:28px;border-radius:8px;border:1px solid var(--border);background:var(--muted);display:grid;place-items:center;cursor:pointer; flex-shrink:0; }
+    .qtymini{ width:44px;text-align:center;padding:6px;border:1px solid var(--border);border-radius:8px;background:var(--muted);color:var(--text); flex-shrink:0; }
+    .item .rmv{ padding:6px 10px;border-radius:10px;border:1px solid var(--border);background:var(--muted);cursor:pointer; white-space:nowrap; }
+    .item .sum{ white-space:nowrap; }
 
     .foot{border-top:1px solid var(--border);padding:12px 16px calc(12px + var(--safe-bottom));display:grid;gap:10px}
     .total{display:flex;justify-content:space-between;font-weight:800}
@@ -158,6 +155,7 @@
           <button id="clearSearch" class="clear" aria-label="Очистить">×</button>
         </div>
       </div>
+      <button id="openFav" class="iconbtn" title="Избранное">♥</button>
       <button id="openCart" class="iconbtn" title="Корзина">🛒</button>
     </div>
   </header>
@@ -170,22 +168,38 @@
     <span>Корзина</span><span class="badge" id="cartCount">0</span>
   </div>
 
+  <!-- Корзина -->
   <aside class="sheet" id="sheet">
-    <div class="head"><button id="closeCart" class="iconbtn" title="Назад">←</button></div>
+    <div class="head">
+      <button id="closeCart" class="iconbtn" title="Назад">←</button>
+      <div class="title">Корзина</div>
+    </div>
     <div class="list" id="cartList"></div>
     <div class="foot"><div class="total"><span>Итого</span><span id="total">0 ₽</span></div><button id="checkout" class="add">Оформить заказ</button></div>
+  </aside>
+
+  <!-- Избранное -->
+  <aside class="sheet" id="favSheet">
+    <div class="head">
+      <button id="closeFav" class="iconbtn" title="Назад">←</button>
+      <div class="title">Избранное</div>
+    </div>
+    <div class="list" id="favList"></div>
   </aside>
 
   <div class="toast" id="toast">Добавлено в корзину</div>
 
   <script>
+    // Очистка возможной старой корзины в localStorage (на всякий случай)
+    try { localStorage.removeItem('cart'); } catch(e) {}
+
     // Telegram theme
     const tg=window.Telegram.WebApp; tg.expand();
     function applyTheme(){const p=tg.themeParams||{};const map={'--bg':p.bg_color,'--text':p.text_color,'--subtext':p.hint_color,'--card':p.secondary_bg_color,'--muted':p.section_bg_color,'--accent':p.button_color,'--accent-contrast':p.button_text_color,'--border':p.section_separator_color?hexToRgba(p.section_separator_color,.6):null};for(const k in map) if(map[k]) document.documentElement.style.setProperty(k,map[k]);}
     function hexToRgba(hex,a=1){const h=hex?.replace('#','')||'000000';const bi=parseInt(h,16)||0;return`rgba(${bi>>16&255},${bi>>8&255},${bi&255},${a})`;}
     applyTheme(); tg.onEvent('themeChanged',applyTheme);
 
-    // Backend URL (?api=...), с запасным FALLBACK_API при желании
+    // Backend URL
     const FALLBACK_API='';
     const API_BASE=(new URLSearchParams(location.search).get('api')||FALLBACK_API).replace(/\/+$/,'');
     async function callCreateOrder(order){
@@ -196,7 +210,7 @@
       return res.json();
     }
 
-    // Каталог (замени пути на свои картинки в /img, если нужно)
+    // Каталог
     const products=[
       { sku:'ts-basic', name:'Футболка Basic', price:1290, sizes:['S','M','L','XL'], img:'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?q=80&w=800&auto=format&fit=crop' },
       { sku:'hd-classic', name:'Худи Classic', price:3290, sizes:['S','M','L','XL'], img:'https://images.unsplash.com/photo-1520974735194-7b1c9a8d4a9a?q=80&w=800&auto=format&fit=crop' },
@@ -219,9 +233,15 @@
     const fab=document.getElementById('fabCart');
     const toast=document.getElementById('toast');
 
+    const favSheet=document.getElementById('favSheet');
+    const favList=document.getElementById('favList');
+
+    const openFavBtn=document.getElementById('openFav');
+    const openCartBtn=document.getElementById('openCart');
+
     function money(v){return v.toLocaleString('ru-RU')+' ₽';}
 
-    // Глобальное сворачивание клавиатуры (для любых инпутов)
+    // Глобальное сворачивание клавиатуры
     function hideKeyboard(){
       const el=document.activeElement;
       if(!el) return;
@@ -246,9 +266,70 @@
       return wrap;
     }
 
-    // Карточка
+    // Избранное
+    let fav=[]; // массив sku
+    function isFav(sku){return fav.includes(sku);}
+    function toggleFav(sku){
+      if(isFav(sku)) fav=fav.filter(x=>x!==sku); else fav=[...fav, sku];
+      updateFavUI(); updateFavIcons();
+    }
+    function addFavItemRow(p){
+      const row=document.createElement('div'); row.className='item'; row.dataset.sku=p.sku;
+      row.innerHTML=`
+        <img class="ph" src="${p.img}" alt="">
+        <div class="meta">
+          <div class="t">${p.name}</div>
+          <div class="s">Артикул: ${p.sku}</div>
+        </div>
+        <div class="actions">
+          <div class="left">
+            <button class="rmv">Убрать</button>
+          </div>
+          <div>
+            <button class="add">В корзину</button>
+          </div>
+        </div>`;
+      return row;
+    }
+    function updateFavUI(){
+      favList.innerHTML='';
+      fav.forEach(sku=>{
+        const p=products.find(x=>x.sku===sku);
+        if(p) favList.appendChild(addFavItemRow(p));
+      });
+      // бейдж на кнопке избранного (простая визуальная обратная связь)
+      openFavBtn.textContent = fav.length ? `♥ ${fav.length}` : '♥';
+    }
+    favList.addEventListener('click',(e)=>{
+      const row=e.target.closest('.item'); if(!row) return;
+      const sku=row.dataset.sku;
+      const p=products.find(x=>x.sku===sku); if(!p) return;
+      if(e.target.classList.contains('rmv')){ toggleFav(sku); return; }
+      if(e.target.classList.contains('add')){
+        // добавим в корзину товар из избранного с дефолтным размером
+        const size=p.sizes?.[0]||'';
+        addToCart({sku:p.sku,name:p.name,price:p.price,size,qty:1,img:p.img});
+        showToast('Товар добавлен в корзину');
+      }
+    });
+    function updateFavIcons(){
+      document.querySelectorAll('[data-favsku]').forEach(btn=>{
+        const sku=btn.getAttribute('data-favsku');
+        btn.classList.toggle('active', isFav(sku));
+        btn.innerHTML = isFav(sku) ? '♥' : '♡';
+      });
+    }
+
+    // Карточка товара
     function createCard(p){
       const el=document.createElement('div'); el.className='card';
+
+      // кнопка избранного
+      const heart=document.createElement('button');
+      heart.className='fav-toggle'; heart.setAttribute('data-favsku', p.sku);
+      heart.type='button'; heart.innerHTML='♡';
+      heart.onclick=()=>{toggleFav(p.sku);};
+      el.appendChild(heart);
 
       const img=document.createElement('img');
       img.className='img'; img.decoding='async'; img.loading='eager'; img.referrerPolicy='no-referrer';
@@ -277,36 +358,37 @@
 
     // Рендер каталога
     products.forEach(p=>grid.appendChild(createCard(p)));
+    updateFavIcons();
 
     // Корзина
-    let cart=[];
+    let cart=[]; // НЕ сохраняем, при перезагрузке очищается
     function keyOf(x){return `${x.sku}:${x.size}`;}
     function addToCart(item){const k=keyOf(item);const f=cart.find(x=>keyOf(x)===k);if(f)f.qty+=item.qty;else cart.push(item);updateCartUI();}
     function removeFromCart(k){cart=cart.filter(x=>keyOf(x)!==k);updateCartUI();}
     function setQty(k,val){const it=cart.find(x=>keyOf(x)===k); if(!it) return; it.qty=Math.max(1, val|0); updateCartUI();}
     function calcTotal(){return cart.reduce((s,x)=>s+x.price*x.qty,0);}
 
-   function renderCartItem(x){
-  const row=document.createElement('div'); row.className='item'; row.dataset.key=`${x.sku}:${x.size}`;
-  row.innerHTML=`
-    <img class="ph" src="${x.img}" alt="">
-    <div class="meta">
-      <div class="t">${x.name}</div>
-      <div class="s">Размер: ${x.size}</div>
-    </div>
-    <div class="actions">
-      <div class="left">
-        <div class="qtyctrl">
-          <button class="btnsq minus">−</button>
-          <input class="qtymini" type="number" min="1" value="${x.qty}">
-          <button class="btnsq plus">+</button>
+    function renderCartItem(x){
+      const row=document.createElement('div'); row.className='item'; row.dataset.key=`${x.sku}:${x.size}`;
+      row.innerHTML=`
+        <img class="ph" src="${x.img}" alt="">
+        <div class="meta">
+          <div class="t">${x.name}</div>
+          <div class="s">Размер: ${x.size}</div>
         </div>
-        <button class="rmv">Убрать</button>
-      </div>
-      <div class="t sum">${money(x.price*x.qty)}</div>
-    </div>`;
-  return row;
-}
+        <div class="actions">
+          <div class="left">
+            <div class="qtyctrl">
+              <button class="btnsq minus">−</button>
+              <input class="qtymini" type="number" min="1" value="${x.qty}">
+              <button class="btnsq plus">+</button>
+            </div>
+            <button class="rmv">Убрать</button>
+          </div>
+          <div class="t sum">${money(x.price*x.qty)}</div>
+        </div>`;
+      return row;
+    }
 
     function updateCartUI(){
       cartList.innerHTML='';
@@ -333,12 +415,18 @@
     });
     cartList.addEventListener('pointerdown', hideKeyboard);
 
-    // Открытие/закрытие корзины
-    const openCart=()=>{sheet.classList.add('open'); hideKeyboard();};
+    // Открытие/закрытие корзины и избранного
+    const openCart=()=>{sheet.classList.add('open'); favSheet.classList.remove('open'); hideKeyboard();};
     const closeCart=()=>sheet.classList.remove('open');
-    document.getElementById('openCart').onclick=openCart;
+    const openFav =()=>{favSheet.classList.add('open'); sheet.classList.remove('open'); hideKeyboard();};
+    const closeFav =()=>favSheet.classList.remove('open');
+
+    openCartBtn.onclick=openCart;
     document.getElementById('closeCart').onclick=closeCart;
     document.getElementById('fabCart').onclick=openCart;
+
+    openFavBtn.onclick=openFav;
+    document.getElementById('closeFav').onclick=closeFav;
 
     // Оформление
     document.getElementById('checkout').onclick=tryCheckout; tg.MainButton.onClick(tryCheckout);
