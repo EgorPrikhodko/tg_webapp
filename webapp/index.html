@@ -235,7 +235,7 @@
 
   <script>
     const tg=window.Telegram.WebApp; tg.expand();
-    
+
     console.log("tg platform:", tg.platform, "initData length:", (tg.initData||"").length);
 if (!(tg.initData && tg.initData.length > 10)) {
   alert("Приложение открыто не через Telegram. Откройте из бота.");
@@ -656,5 +656,15 @@ if (!(tg.initData && tg.initData.length > 10)) {
     let toastTid;
     function showToast(msg){toast.textContent=msg; toast.classList.add('show'); clearTimeout(toastTid); toastTid=setTimeout(()=>toast.classList.remove('show'),1400); tg.HapticFeedback.notificationOccurred('success');}
   </script>
+<script>
+  // сразу после объявления API_BASE
+  const RAW_API = new URLSearchParams(location.search).get('api') || '';
+  const API_BASE = RAW_API.replace(/\/+$/,'');
+  // ФОЛБЭК: если ?api= не передали (например, из списка диалогов), берём запасной:
+  const FALLBACK_API = 'https://doctrinal-maren-reelingly.ngrok-free.dev'; // <— твой бек
+  const API = API_BASE || FALLBACK_API;
+  // и далее вместо API_BASE используем API
+  // fetch(`${API}/api/auth/me`, ...)
+</script>
 </body>
 </html>
