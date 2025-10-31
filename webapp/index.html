@@ -19,29 +19,23 @@
     }
     *{box-sizing:border-box}
     body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;padding-bottom:calc(72px + var(--safe-bottom))}
-
-    /* AppBar */
+    /* AppBar без бренда — ровные кнопки */
     .appbar{position:sticky;top:0;z-index:20;background:linear-gradient(180deg,rgba(0,0,0,.04),transparent);padding:calc(12px + var(--safe-top)) 12px 8px;backdrop-filter:saturate(120%) blur(8px);border-bottom:1px solid var(--border)}
     .row{display:flex;align-items:center;gap:10px}
     .grow{flex:1}
-    .brand{display:flex;align-items:center;gap:10px;font-weight:700}
-    .brand .logo{width:32px;height:32px;border-radius:10px;background:var(--muted);display:grid;place-items:center;box-shadow:var(--shadow);font-size:18px}
     .iconbtn{display:grid;place-items:center;width:40px;height:40px;border-radius:12px;background:var(--muted);border:1px solid var(--border);cursor:pointer}
     .pillbtn{height:40px;padding:0 14px;border-radius:12px;border:1px solid var(--border);background:var(--muted);cursor:pointer;font-weight:600}
-
     /* Поиск */
     .search{position:relative;display:flex;gap:8px;align-items:center}
     .search .field{position:relative;flex:1}
     .search input{width:100%;padding:10px 36px;background:var(--muted);color:var(--text);border:1px solid var(--border);border-radius:12px;outline:none}
     .search svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);opacity:.7}
     .search .clear{position:absolute;right:8px;top:50%;transform:translateY(-50%);opacity:.6;border:none;background:transparent;font-size:18px;line-height:1;cursor:pointer}
-
-    /* Основной контент */
+    /* Контент/карточки */
     .wrap{max-width:1100px;margin:0 auto;padding:12px}
     .grid{display:grid;gap:12px;grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:1fr}
     @media(min-width:760px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
     @media(min-width:992px){.grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
-
     .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);display:flex;flex-direction:column;height:100%;position:relative}
     .fav-toggle{position:absolute;right:10px;top:10px;z-index:2;width:36px;height:36px;border-radius:999px;border:1px solid var(--border);background:var(--card);display:grid;place-items:center;user-select:none}
     .fav-toggle.active{background:var(--accent);color:var(--accent-contrast);border-color:transparent}
@@ -51,24 +45,19 @@
     .title{font-weight:800}
     .desc{font-size:13px;color:var(--subtext);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
     .price{font-weight:900;margin-top:2px}
-    .cat{position:absolute;left:10px;bottom:10px;z-index:2;background:var(--card);border:1px solid var(--border);border-radius:999px;padding:4px 8px;font-size:12px;opacity:.9}
-
     .sizes{display:grid;grid-auto-flow:column;grid-auto-columns:calc((100% - 3*8px)/4);gap:8px;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;padding-bottom:2px;scrollbar-width:none}
     .sizes::-webkit-scrollbar{display:none}
     .chip{display:grid;place-items:center;white-space:nowrap;padding:8px 10px;border-radius:10px;background:var(--muted);border:1px solid var(--border);cursor:pointer;user-select:none}
     .chip.active{background:var(--accent);color:var(--accent-contrast);border-color:transparent}
-
     .controls{display:flex;gap:8px;align-items:center;margin-top:auto}
     .qty{width:56px;padding:8px 6px;text-align:center;background:var(--muted);color:var(--text);border:1px solid var(--border);border-radius:10px}
     .add{flex:1;height:44px;border:none;border-radius:12px;background:var(--accent);color:var(--accent-contrast);font-weight:800;cursor:pointer}
-
-    /* Боковые панели (sheets) */
+    /* Боковые панели */
     .sheet{position:fixed;right:0;top:0;height:100%;width:min(92vw,420px);background:var(--card);border-left:1px solid var(--border);box-shadow:var(--shadow);transform:translateX(100%);transition:transform var(--trans-fast);z-index:50;display:flex;flex-direction:column}
     .sheet.open{transform:translateX(0)}
     .sheet .head{padding:calc(8px + var(--safe-top)) 16px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
     .sheet .head .title{font-weight:800}
     .sheet .list{padding:0;margin:0;overflow:auto;flex:1;display:block}
-
     /* Список элементов без зазоров */
     .item{display:grid;grid-template-columns:56px 1fr;grid-template-rows:auto auto;grid-template-areas:"ph meta" "actions actions";column-gap:10px;row-gap:6px;align-items:start;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:8px 10px;margin:0;border-bottom:1px solid var(--border)}
     .sheet .list .item + .item{border-top:0}
@@ -78,39 +67,37 @@
     .item .meta .s{font-size:12px;color:var(--subtext);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .item .actions{grid-area:actions;display:flex;align-items:center;justify-content:space-between;gap:12px}
     .item .actions .left{display:flex;align-items:center;gap:8px;flex-wrap:nowrap}
-
     .qtyctrl{display:flex;align-items:center;gap:6px;flex-shrink:0}
     .btnsq{width:28px;height:28px;border-radius:8px;border:1px solid var(--border);background:var(--muted);display:grid;place-items:center;cursor:pointer;flex-shrink:0}
     .qtymini{width:44px;text-align:center;padding:6px;border:1px solid var(--border);border-radius:8px;background:var(--muted);color:var(--text);flex-shrink:0}
     .item .rmv{padding:6px 10px;border-radius:10px;border:1px solid var(--border);background:var(--muted);cursor:pointer;white-space:nowrap}
     .item .sum{white-space:nowrap}
-
     .foot{border-top:1px solid var(--border);padding:12px 16px calc(12px + var(--safe-bottom));display:grid;gap:10px}
     .total{display:flex;justify-content:space-between;font-weight:800}
-
-    /* Панель модерации (в верхней части, под AppBar) */
-    .bar{padding:10px 12px;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:center}
-    .bar .note{margin-left:auto;color:var(--subtext);font-size:13px}
-
-    /* Каталог-навигатор */
+    /* Каталог-навигатор + управление категориями */
     .catlist{list-style:none;margin:0;padding:0}
     .catlist li{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer}
     .catlist li:hover{background:var(--muted)}
     .badge{min-width:22px;height:22px;border-radius:999px;background:var(--accent);color:var(--accent-contrast);display:grid;place-items:center;font-size:12px;font-weight:800;padding:0 6px}
-
-    /* FAB & TOAST */
-    .fab{position:fixed;right:16px;bottom:calc(16px + var(--safe-bottom));display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);padding:10px 14px;border-radius:999px;z-index:40}
-    .toast{position:fixed;left:50%;bottom:calc(90px + var(--safe-bottom));transform:translateX(-50%) translateY(20px);background:var(--text);color:var(--bg);padding:10px 14px;border-radius:12px;opacity:0;transition:opacity var(--trans-fast),transform var(--trans-fast);z-index:60;font-weight:600}
-    .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+    .toolbar{padding:10px 12px;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:center}
+    .toolbar .pillbtn.primary{background:var(--accent);color:var(--accent-contrast);border-color:transparent}
+    /* Улучшенная форма модерации */
+    .form{padding:12px 16px;display:grid;gap:12px;overflow:auto}
+    .section{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px;display:grid;gap:10px;box-shadow:var(--shadow)}
+    .section .title{font-weight:800}
+    .field label{display:block;font-size:12px;color:var(--subtext);margin-bottom:6px}
+    .field input[type="text"],.field input[type="number"],.field textarea,.field select{
+      width:100%;padding:10px;border:1px solid var(--border);background:var(--muted);color:var(--text);border-radius:10px;resize:vertical
+    }
+    .imgpick{display:flex;gap:12px;align-items:center}
+    .imgpick img{width:72px;height:72px;border-radius:10px;object-fit:cover;background:var(--muted);border:1px solid var(--border)}
   </style>
 </head>
 <body>
   <header class="appbar">
     <div class="row">
-      <div class="brand"><div class="logo">TS</div><div>TG Shop</div></div>
-
+      <!-- Кнопки выровнены: Каталог, поиск, избранное, корзина, модерация -->
       <button id="openCatalog" class="pillbtn" title="Каталог">Каталог</button>
-
       <div class="grow search">
         <div class="field">
           <input id="q" inputmode="search" autocomplete="off" autocapitalize="none" placeholder="Поиск по каталогу…"/>
@@ -123,14 +110,6 @@
       <button id="openMod" class="iconbtn" title="Модерация" style="display:none">⚙️</button>
     </div>
   </header>
-
-  <!-- Панель режима модерации -->
-  <div id="modModeBar" class="bar" style="display:none">
-    <button id="btnAdd" class="pillbtn" style="font-weight:800">+ Добавить товар</button>
-    <button id="btnExport" class="pillbtn">Экспорт JSON</button>
-    <span class="note">Режим модерации: нажмите на товар для редактирования</span>
-    <button id="btnExitMod" class="pillbtn" style="margin-left:auto">Выйти</button>
-  </div>
 
   <main class="wrap">
     <div id="grid" class="grid"></div>
@@ -159,12 +138,17 @@
     <div class="list" id="favList"></div>
   </aside>
 
-  <!-- Каталог (навигация по категориям) -->
+  <!-- Каталог (навигация по категориям) + Управление категориями -->
   <aside class="sheet" id="catalogSheet">
     <div class="head">
       <button id="closeCatalog" class="iconbtn" title="Назад">←</button>
       <div class="title">Категории</div>
     </div>
+
+    <div class="toolbar" id="catToolbar" style="display:none">
+      <button id="btnCatAdd" class="pillbtn primary">+ Категория</button>
+    </div>
+
     <ul id="catList" class="catlist"></ul>
   </aside>
 
@@ -174,43 +158,52 @@
       <button id="closeEdit" class="iconbtn" title="Назад">←</button>
       <div class="title" id="editTitle">Товар</div>
     </div>
+
     <div class="form">
-      <div class="field">
-        <label>Название</label>
-        <input id="f_name" type="text" placeholder="Например: Худи Classic"/>
-      </div>
-      <div class="row">
+      <div class="section">
+        <div class="title">Основное</div>
+        <div class="field">
+          <label>Название</label>
+          <input id="f_name" type="text" placeholder="Например: Худи Classic"/>
+        </div>
         <div class="field">
           <label>SKU (уникальный)</label>
           <input id="f_sku" type="text" placeholder="например: hd-classic"/>
         </div>
         <div class="field">
+          <label>Описание</label>
+          <textarea id="f_desc" rows="3" placeholder="Короткое описание товара"></textarea>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="title">Категория и цена</div>
+        <div class="field">
+          <label>Категория</label>
+          <input id="f_category" list="d_categories" type="text" placeholder="Например: Худи"/>
+          <datalist id="d_categories"></datalist>
+        </div>
+        <div class="field">
           <label>Цена, ₽</label>
           <input id="f_price" type="number" min="0" step="1" />
         </div>
-      </div>
-      <div class="field">
-        <label>Категория</label>
-        <input id="f_category" type="text" placeholder="Например: Худи"/>
-      </div>
-      <div class="field">
-        <label>Размеры (через запятую)</label>
-        <input id="f_sizes" type="text" placeholder="S, M, L, XL"/>
-      </div>
-      <div class="field">
-        <label>Описание</label>
-        <textarea id="f_desc" rows="3" placeholder="Короткое описание товара"></textarea>
-      </div>
-      <div class="field">
-        <label>Фото</label>
-        <div class="imgpick">
-          <img id="f_preview" alt="">
-          <input id="f_img" type="file" accept="image/*"><!-- галерея/камера -->
+        <div class="field">
+          <label>Размеры (через запятую)</label>
+          <input id="f_sizes" type="text" placeholder="S, M, L, XL"/>
         </div>
       </div>
-      <div class="row">
-        <button id="f_save" class="pillbtn" style="flex:1;background:var(--accent);color:var(--accent-contrast);border-color:transparent">Сохранить</button>
-        <button id="f_delete" class="pillbtn" style="flex:1;display:none">Удалить</button>
+
+      <div class="section">
+        <div class="title">Фото</div>
+        <div class="imgpick">
+          <img id="f_preview" alt="">
+          <input id="f_img" type="file" accept="image/*">
+        </div>
+      </div>
+
+      <div class="section" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <button id="f_save" class="pillbtn" style="background:var(--accent);color:var(--accent-contrast);border-color:transparent">Сохранить</button>
+        <button id="f_delete" class="pillbtn" style="display:none">Удалить</button>
       </div>
     </div>
   </aside>
@@ -220,7 +213,6 @@
   <script>
     /* ---------- TELEGRAM / THEME ---------- */
     const tg = window.Telegram.WebApp; tg.expand();
-    if (!(tg.initData && tg.initData.length > 10)) console.warn("Открыто не через Telegram");
     function applyTheme(){
       const p=tg.themeParams||{};
       const map={'--bg':p.bg_color,'--text':p.text_color,'--subtext':p.hint_color,'--card':p.secondary_bg_color,'--muted':p.section_bg_color,'--accent':p.button_color,'--accent-contrast':p.button_text_color,'--border':p.section_separator_color?hexToRgba(p.section_separator_color,.6):null};
@@ -240,11 +232,12 @@
     let currentCategory='';     // выбранная категория фильтра
 
     /* ---------- STORAGE KEYS ---------- */
-    const STORE_PRODUCTS='tgshop_products_v2';
+    const STORE_PRODUCTS='tgshop_products_v3';
     const STORE_CART='tgshop_cart_v1';
     const STORE_FAV ='tgshop_fav_v1';
+    const STORE_CATS='tgshop_categories_v1';
 
-    /* ---------- DEFAULT CATALOG (с категориями) ---------- */
+    /* ---------- DEFAULT CATALOG ---------- */
     const DEFAULT_PRODUCTS=[
       { sku:'ts-basic',   name:'Футболка Basic', category:'Футболки', price:1290, sizes:['S','M','L','XL'], img:'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?q=80&w=800&auto=format&fit=crop', desc:'Базовая футболка из хлопка' },
       { sku:'hd-classic', name:'Худи Classic',   category:'Худи',     price:3290, sizes:['S','M','L','XL'], img:'https://images.unsplash.com/photo-1520974735194-7b1c9a8d4a9a?q=80&w=800&auto=format&fit=crop', desc:'Тёплое худи на каждый день' },
@@ -255,8 +248,9 @@
       { sku:'cs-oversize',name:'Лонгслив Oversize',category:'Лонгсливы',price:1890, sizes:['S','M','L','XL'], img:'https://images.unsplash.com/photo-1516826957135-700dedea698c?q=80&w=800&auto=format&fit=crop', desc:'Свободный силуэт, мягкий трикотаж' },
       { sku:'ct-rain',    name:'Плащ Rain',      category:'Куртки',   price:5990, sizes:['S','M','L'], img:'https://images.unsplash.com/photo-1520975657286-5d99a4721f85?q=80&w=800&auto=format&fit=crop', desc:'Влагозащита, скрытые карманы' },
     ];
+    const DEFAULT_CATEGORIES = ['Футболки','Худи','Брюки','Куртки','Юбки','Лонгсливы','Разное'];
 
-    /* ---------- CLOUD STORAGE HELPERS (Telegram) ---------- */
+    /* ---------- CLOUD STORAGE HELPERS ---------- */
     const cloud = tg?.CloudStorage;
     const cloudAvail = !!cloud;
     const cloudGet = (key) => new Promise((resolve) => {
@@ -268,14 +262,11 @@
       try{ cloud.setItem(key, val, (err)=> resolve(!err)); }catch{ resolve(false); }
     });
 
-    /* ---------- LOCAL + CLOUD STORAGE LAYER ---------- */
+    /* ---------- STORAGE LAYER ---------- */
     function lsGet(key, def=null){ try{ const s=localStorage.getItem(key); return s?JSON.parse(s):def; }catch{ return def; } }
     function lsSet(key, val){ try{ localStorage.setItem(key, JSON.stringify(val)); }catch{} }
 
-    async function persistentSaveFav(arr){
-      lsSet(STORE_FAV, arr);
-      await cloudSet(STORE_FAV, (arr||[]).join(','));
-    }
+    async function persistentSaveFav(arr){ lsSet(STORE_FAV, arr); await cloudSet(STORE_FAV, (arr||[]).join(',')); }
     async function persistentLoadFav(){
       let arr = lsGet(STORE_FAV, null);
       if(arr===null){
@@ -306,8 +297,25 @@
       return Array.isArray(list) && list.length ? list : null;
     }
 
+    async function persistentSaveCategories(arr){
+      lsSet(STORE_CATS, arr);
+      try{
+        const s = JSON.stringify(arr);
+        if(s.length < 20000) await cloudSet(STORE_CATS, s);
+      }catch{}
+    }
+    async function persistentLoadCategories(){
+      let list = lsGet(STORE_CATS, null);
+      if(list===null){
+        const s = await cloudGet(STORE_CATS);
+        if(s){ try{ list = JSON.parse(s); }catch{ list = null; } }
+      }
+      return Array.isArray(list)&&list.length ? list : DEFAULT_CATEGORIES.slice();
+    }
+
     /* ---------- STATE ---------- */
     let products = null;
+    let categories = null;
     let cart     = [];
     let fav      = [];
 
@@ -315,19 +323,22 @@
     const grid=document.getElementById('grid');
     const q=document.getElementById('q');
     const clearBtn=document.getElementById('clearSearch');
-
     const sheet=document.getElementById('sheet');
     const cartList=document.getElementById('cartList');
     const cartCount=document.getElementById('cartCount');
     const totalEl=document.getElementById('total');
     const fab=document.getElementById('fabCart');
     const toast=document.getElementById('toast');
-
     const favSheet=document.getElementById('favSheet');
     const favList=document.getElementById('favList');
-
     const catalogSheet=document.getElementById('catalogSheet');
     const catList=document.getElementById('catList');
+    const openFavBtn=document.getElementById('openFav');
+    const openCartBtn=document.getElementById('openCart');
+    const openModBtn=document.getElementById('openMod');
+    const openCatalogBtn=document.getElementById('openCatalog');
+    const catToolbar=document.getElementById('catToolbar');
+    const btnCatAdd=document.getElementById('btnCatAdd');
 
     const editSheet=document.getElementById('editSheet');
     const f_name=document.getElementById('f_name');
@@ -341,30 +352,19 @@
     const f_save=document.getElementById('f_save');
     const f_delete=document.getElementById('f_delete');
     const editTitle=document.getElementById('editTitle');
+    const d_categories=document.getElementById('d_categories');
 
-    const openFavBtn=document.getElementById('openFav');
-    const openCartBtn=document.getElementById('openCart');
-    const openModBtn=document.getElementById('openMod');
-    const openCatalogBtn=document.getElementById('openCatalog');
-
-    const modModeBar=document.getElementById('modModeBar');
-    const btnAdd=document.getElementById('btnAdd');
-    const btnExport=document.getElementById('btnExport');
-    const btnExitMod=document.getElementById('btnExitMod');
-
-    /* ---------- BLUR KEYBOARD ---------- */
+    /* ---------- HELPERS ---------- */
     function hideKeyboard(){
       const el=document.activeElement;
       if(!el) return;
       const ed=el.tagName==='INPUT'||el.tagName==='TEXTAREA'||el.isContentEditable;
       if(ed) el.blur();
     }
-    document.addEventListener('pointerdown',e=>{ if(!e.target.closest('input,textarea,.chip')) hideKeyboard(); },{passive:true});
-    document.addEventListener('touchend',e=>{ if(!e.target.closest('input,textarea,.chip')) hideKeyboard(); },{passive:true});
-    document.addEventListener('scroll',hideKeyboard,{passive:true});
+    function money(v){return v.toLocaleString('ru-RU')+' ₽';}
+    function toastMsg(msg){toast.textContent=msg; toast.classList.add('show'); clearTimeout(window._tt); window._tt=setTimeout(()=>toast.classList.remove('show'),1400); tg.HapticFeedback?.notificationOccurred('success');}
 
     /* ---------- FAVORITES ---------- */
-    function money(v){return v.toLocaleString('ru-RU')+' ₽';}
     function isFav(sku){return fav.includes(sku);}
     async function toggleFav(sku){
       fav = isFav(sku) ? fav.filter(x=>x!==sku) : [...fav, sku];
@@ -413,32 +413,86 @@
       }
     });
 
-    /* ---------- CATEGORIES / NAV ---------- */
-    function getCategories(){
-      const map=new Map();
+    /* ---------- CATEGORIES ---------- */
+    function categoriesFromProducts(){
+      const set=new Set(categories||[]);
+      (products||[]).forEach(p=> set.add((p.category||'Разное').trim()||'Разное') );
+      return Array.from(set);
+    }
+    function renderCategoryOptions(){
+      d_categories.innerHTML='';
+      for(const c of categoriesFromProducts()){
+        const o=document.createElement('option'); o.value=c; d_categories.appendChild(o);
+      }
+    }
+    function getCategoryCounts(){
+      const counts = Object.create(null);
+      for(const c of categoriesFromProducts()) counts[c]=0;
       (products||[]).forEach(p=>{
-        const c=(p.category||'Разное').trim();
-        map.set(c, (map.get(c)||0)+1);
+        const c=(p.category||'Разное').trim()||'Разное';
+        counts[c]=(counts[c]||0)+1;
       });
-      return [...map.entries()].sort((a,b)=>a[0].localeCompare(b[0]));
+      return counts;
     }
     function renderCategoryList(){
       catList.innerHTML='';
+      const counts=getCategoryCounts();
       // "Все"
       const liAll=document.createElement('li');
       liAll.innerHTML=`<span>Все товары</span><span class="badge">${products.length}</span>`;
       liAll.onclick=()=>{ currentCategory=''; catalogSheet.classList.remove('open'); applyFilter(); };
       catList.appendChild(liAll);
       // Остальные
-      for(const [name,count] of getCategories()){
+      for(const c of categoriesFromProducts().sort((a,b)=>a.localeCompare(b))){
         const li=document.createElement('li');
-        li.innerHTML=`<span>${name}</span><span class="badge">${count}</span>`;
-        li.onclick=()=>{ currentCategory=name; catalogSheet.classList.remove('open'); applyFilter(); };
+        li.innerHTML=`<span>${c}</span><span class="badge">${counts[c]||0}</span>`;
+        li.onclick=()=>{ currentCategory=c; catalogSheet.classList.remove('open'); applyFilter(); };
+        // элементы управления категориями — только в моде
+        if(MOD_MODE){
+          const actions=document.createElement('div'); actions.style.display='flex'; actions.style.gap='8px';
+          const btnEdit=document.createElement('button'); btnEdit.className='pillbtn'; btnEdit.textContent='Изм.';
+          const btnDel=document.createElement('button'); btnDel.className='pillbtn'; btnDel.textContent='Удал.';
+          btnEdit.onclick=(e)=>{ e.stopPropagation(); promptRenameCategory(c); };
+          btnDel.onclick=(e)=>{ e.stopPropagation(); deleteCategory(c); };
+          li.appendChild(actions); actions.prepend(btnEdit); actions.append(btnDel);
+        }
         catList.appendChild(li);
       }
     }
+    function promptRenameCategory(oldName){
+      const name=prompt('Новое название категории', oldName)||'';
+      const newName=name.trim();
+      if(!newName || newName===oldName) return;
+      // обновляем список категорий
+      categories = categories.map(c=> c===oldName?newName:c);
+      // переносим товары в новую категорию
+      products = products.map(p=> p.category===oldName ? {...p, category:newName} : p);
+      persistentSaveCategories(categories);
+      persistentSaveProducts(products);
+      renderCategoryOptions(); renderCategoryList(); renderCatalog(); applyFilter();
+      toastMsg('Категория переименована');
+    }
+    function deleteCategory(name){
+      if(!confirm(`Удалить категорию «${name}»? Товары будут перемещены в «Разное».`)) return;
+      categories = categories.filter(c=>c!==name);
+      products = products.map(p=> p.category===name ? {...p, category:'Разное'} : p);
+      persistentSaveCategories(categories);
+      persistentSaveProducts(products);
+      if(currentCategory===name) currentCategory='';
+      renderCategoryOptions(); renderCategoryList(); renderCatalog(); applyFilter();
+      toastMsg('Категория удалена');
+    }
+    function addCategory(){
+      const name=(prompt('Название новой категории')||'').trim();
+      if(!name) return;
+      if(categories.includes(name)){ toastMsg('Такая категория уже есть'); return; }
+      categories = [...categories, name];
+      persistentSaveCategories(categories);
+      renderCategoryOptions(); renderCategoryList();
+      toastMsg('Категория добавлена');
+    }
 
-    /* ---------- CATALOG GRID ---------- */
+    /* ---------- GRID ---------- */
     const selectedSize=new Map();
     function sizeRow(p){
       const wrap=document.createElement('div'); wrap.className='sizes';
@@ -454,13 +508,14 @@
     function createCard(p){
       const el=document.createElement('div'); el.className='card';
 
-      // MOD: быстрый переход в редактирование
       if (IS_MODERATOR && MOD_MODE){
         const editBtn=document.createElement('button');
         editBtn.className='mod-edit'; editBtn.type='button'; editBtn.title='Редактировать';
         editBtn.textContent='✏️';
         editBtn.onclick=(e)=>{ e.stopPropagation(); openEditForm(p); };
         el.appendChild(editBtn);
+        el.style.cursor='pointer';
+        el.onclick=(e)=>{ if(!e.target.closest('.add,.fav-toggle,.chip,.qty')) openEditForm(p); };
       }
 
       const heart=document.createElement('button');
@@ -475,11 +530,6 @@
       img.onerror=()=>{img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800"><rect width="100%" height="100%" fill="#E5E7EB"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="system-ui" font-size="28" fill="#6B7280">Нет изображения</text></svg>');};
       el.appendChild(img);
 
-      // бейдж категории
-      const cat=document.createElement('div');
-      cat.className='cat'; cat.textContent=p.category||'Разное';
-      el.appendChild(cat);
-
       const body=document.createElement('div'); body.className='body';
       body.innerHTML=`<div class="title">${p.name}</div><div class="desc">${p.desc||''}</div><div class="price">${money(p.price)}</div>`;
       body.appendChild(sizeRow(p));
@@ -490,14 +540,6 @@
       el.appendChild(body);
 
       const qtyEl=controls.querySelector('.qty');
-      el.addEventListener('pointerdown',hideKeyboard);
-
-      // клик по карточке в мод-режиме = редактирование
-      if (IS_MODERATOR && MOD_MODE){
-        el.style.cursor='pointer';
-        el.onclick=(e)=>{ if(!e.target.closest('.add,.fav-toggle,.chip,.qty')) openEditForm(p); };
-      }
-
       controls.querySelector('.add').onclick=()=>{
         const size=selectedSize.get(p.sku)||p.sizes?.[0]||'';
         addToCart({sku:p.sku,name:p.name,price:p.price,size,qty:Math.max(1,Number(qtyEl.value)||1),img:p.img});
@@ -558,7 +600,6 @@
         const row=e.target.closest('.item'); const k=row.dataset.key; setQty(k, Number(e.target.value)||1);
       }
     });
-    cartList.addEventListener('pointerdown', hideKeyboard);
 
     /* ---------- MODERATION ---------- */
     function openEditForm(p){
@@ -610,7 +651,7 @@
     async function saveEdit(isNew, oldSku){
       const name=f_name.value.trim();
       const sku=f_sku.value.trim();
-      const category=f_category.value.trim() || 'Разное';
+      const category=(f_category.value.trim()||'Разное');
       const price=Math.max(0, Number(f_price.value||0)|0);
       const sizes=f_sizes.value.split(',').map(s=>s.trim()).filter(Boolean);
       const desc=f_desc.value.trim();
@@ -629,8 +670,13 @@
         await persistentSaveFav(fav);
         persistentSaveCart(cart);
       }
+      // если новой категории не было — добавим
+      if(!categories.includes(category)){
+        categories=[...categories, category];
+        await persistentSaveCategories(categories);
+      }
       await persistentSaveProducts(products);
-      renderCatalog(); updateCartUI(); updateFavUI(); renderCategoryList();
+      renderCategoryOptions(); renderCategoryList(); renderCatalog(); applyFilter();
       toastMsg('Сохранено');
       editSheet.classList.remove('open');
     }
@@ -649,7 +695,7 @@
     const openFav  =()=>{favSheet.classList.add('open'); sheet.classList.remove('open'); catalogSheet.classList.remove('open'); editSheet.classList.remove('open'); hideKeyboard();}
     const closeFav =()=>favSheet.classList.remove('open');
 
-    const openCatalog =()=>{catalogSheet.classList.add('open'); sheet.classList.remove('open'); favSheet.classList.remove('open'); editSheet.classList.remove('open'); renderCategoryList(); hideKeyboard();}
+    const openCatalog =()=>{catalogSheet.classList.add('open'); sheet.classList.remove('open'); favSheet.classList.remove('open'); editSheet.classList.remove('open'); renderCategoryList(); catToolbar.style.display = (IS_MODERATOR && MOD_MODE)?'':'none'; hideKeyboard();}
     const closeCatalog=()=>catalogSheet.classList.remove('open');
 
     document.getElementById('closeCart').onclick=closeCart;
@@ -661,27 +707,15 @@
     openFavBtn.onclick=openFav;
     openCatalogBtn.onclick=openCatalog;
 
-    // Переопределяем кнопку модерации: открывает КАТАЛОГ и включает MOD_MODE
+    // Модерация: без всплывающих надписей и выходов
     openModBtn.onclick=()=>{
       if(!IS_MODERATOR) return;
       MOD_MODE = true;
-      modModeBar.style.display='';
-      openCatalog(); // сначала показываем навигацию по категориям
-      toastMsg('Режим модерации: выберите категорию или товар');
-    };
-    btnExitMod.onclick=()=>{
-      MOD_MODE = false;
-      modModeBar.style.display='none';
-      toastMsg('Режим модерации выключен');
+      openCatalog(); // начинаем с каталога (навигация)
     };
 
-    // Быстрые действия модерации
-    btnAdd.onclick=()=>openEditForm(null);
-    btnExport.onclick=()=>{
-      const blob=new Blob([JSON.stringify(products,null,2)],{type:'application/json'});
-      const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='products.json'; a.click();
-      URL.revokeObjectURL(a.href);
-    };
+    // Управление категориями
+    btnCatAdd.onclick=()=>addCategory();
 
     /* ---------- CHECKOUT ---------- */
     document.getElementById('checkout').onclick=tryCheckout;
@@ -718,12 +752,7 @@
     q.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); hideKeyboard(); }});
     clearBtn.onclick=()=>{ q.value=''; applyFilter(); hideKeyboard(); };
 
-    /* ---------- TOAST ---------- */
-    let toastTid;
-    function toastMsg(msg){toast.textContent=msg; toast.classList.add('show'); clearTimeout(toastTid); toastTid=setTimeout(()=>toast.classList.remove('show'),1400); tg.HapticFeedback?.notificationOccurred('success');}
-    const showToast = toastMsg;
-
-    /* ---------- AUTH / MOD FLAG ---------- */
+    /* ---------- AUTH / INIT ---------- */
     async function fetchModeratorFlag(){
       try{
         if(!API) return false;
@@ -737,24 +766,25 @@
         return !!data.is_moderator;
       }catch{return false}
     }
-    async function showIfModerator(){
-      IS_MODERATOR=await fetchModeratorFlag();
-      openModBtn.style.display = IS_MODERATOR ? '' : 'none';
-    }
-
-    /* ---------- INIT ---------- */
     (async function init(){
       fav = await persistentLoadFav();
       cart = persistentLoadCart();
-      const loaded = await persistentLoadProducts();
-      // миграция старых товаров без category
-      products = (loaded || DEFAULT_PRODUCTS.slice()).map(p=>({category:'Разное', ...p, category: p.category || p.cat || 'Разное'}));
+      const loadedP = await persistentLoadProducts();
+      products = (loadedP || DEFAULT_PRODUCTS.slice()).map(p=>({category:'Разное', ...p, category: p.category || p.cat || 'Разное'}));
       await persistentSaveProducts(products);
-      await persistentSaveFav(fav);
-      persistentSaveCart(cart);
 
-      renderCatalog(); updateCartUI(); updateFavUI();
-      showIfModerator();
+      categories = await persistentLoadCategories();
+      // убедимся, что категории покрывают товары
+      for(const p of products){ if(!categories.includes(p.category)) categories.push(p.category); }
+      await persistentSaveCategories(categories);
+
+      renderCategoryOptions();
+      renderCatalog();
+      updateCartUI();
+      updateFavUI();
+
+      IS_MODERATOR = await fetchModeratorFlag();
+      openModBtn.style.display = IS_MODERATOR ? '' : 'none';
     })();
   </script>
 </body>
