@@ -253,8 +253,12 @@
     applyTheme(); tg.onEvent('themeChanged',applyTheme);
 
     const RAW_API = new URLSearchParams(location.search).get('api') || '';
-    const API = RAW_API.replace(/\/+$/,'') || '';
-    const cloud = tg?.CloudStorage, cloudAvail=!!cloud;
+    const FALLBACK_API = 'https://doctrinal-maren-reelingly.ngrok-free.dev';
+    const API = (RAW_API || FALLBACK_API).replace(/\/+$/, '');
+    console.log('[API base]', API);
+    if (!API) {
+    alert('API базовый URL пуст. Передай ?api= или задай FALLBACK_API.');
+    }
 
     // ---- State ----
     let IS_MODERATOR=false, MOD_MODE=false;
