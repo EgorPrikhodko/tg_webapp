@@ -69,7 +69,7 @@
     .menu-item{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border:1px solid var(--border);border-radius:12px;background:var(--card);box-shadow:var(--shadow);cursor:pointer}
     .menu-item + .menu-item{margin-top:10px}
 
-    /* Список элементов без зазоров */
+    /* Список элементов */
     .item{display:grid;grid-template-columns:56px 1fr;grid-template-rows:auto auto;grid-template-areas:"ph meta" "actions actions";column-gap:10px;row-gap:6px;align-items:start;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:8px 10px;margin:0;border-bottom:1px solid var(--border)}
     .sheet .list .item + .item{border-top:0}
     .item .ph{grid-area:ph;width:56px;height:56px;border-radius:10px;background:var(--muted);display:block;object-fit:cover}
@@ -92,7 +92,7 @@
     .cat-toolbar .pillbtn.primary{background:var(--accent);color:var(--accent-contrast);border-color:transparent}
     .tree{list-style:none;margin:0;padding:8px}
     .node{border:1px solid var(--border);border-radius:12px;background:var(--card);box-shadow:var(--shadow);margin-bottom:8px}
-    .node-header{display:flex;align-items:center;gap:8px;padding:10px 12px;cursor:pointer}
+    .node-header{display:flex;align-items:center;gap:8px;padding:10px 12px;cursor:default}
     .node-title{font-weight:700}
     .node-actions{margin-left:auto;display:flex;gap:6px}
     .node-children{padding:8px 12px 10px 18px}
@@ -267,57 +267,22 @@
     applyTheme(); tg.onEvent('themeChanged',applyTheme);
 
     /* ---------- API ---------- */
-    const API_BASE=(new URLSearchParams(location.search).get('api')||'').replace(/\/+$/,'');
-    const DEV_FALLBACK_API='';  // укажи ngrok при отладке
+    const RAW_API = new URLSearchParams(location.search).get('api') || '';
+    const API_BASE = RAW_API.replace(/\/+$/,'');
+    const DEV_FALLBACK_API = ''; // укажи ngrok при локальной отладке (например, https://xxxx.ngrok-free.app)
     const API = API_BASE || DEV_FALLBACK_API;
 
-    /* ---------- FLAGS ---------- */
+    /* ---------- FLAGS / STATE ---------- */
     let IS_MODERATOR=false;
-    let MOD_MODE=false;              // режим модерации
-    let currentPath=[];              // выбранный путь категории
+    let MOD_MODE=false;        // включается при входе в "Модерация"
+    let currentCatId=null;     // выбранная категория (id) для фильтра каталога
+    let currentPath=[];        // текстовый путь категории
 
     /* ---------- STORAGE KEYS ---------- */
-    const STORE_PRODUCTS='tgshop_products_v4';
     const STORE_CART='tgshop_cart_v1';
     const STORE_FAV ='tgshop_fav_v1';
-    const STORE_CAT_TREE='tgshop_cat_tree_v1';
-    const STORE_FILTERS='tgshop_filters_v1';
 
-    /* ---------- DEFAULTS ---------- */
-    const DEFAULT_PRODUCTS=[
-      { sku:'ts-basic', name:'Футболка Basic', price:1290, sizes:['S','M','L','XL'], img:'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?q=80&w=800&auto=format&fit=crop', desc:'Базовая футболка из хлопка', cat_path:['Одежда','Унисекс','Футболки'], color:'белый', brand:'Base', gender:'унисекс' },
-      { sku:'hd-classic', name:'Худи Classic', price:3290, sizes:['S','M','L','XL'], img:'https://images.unsplash.com/photo-1520974735194-7b1c9a8d4a9a?q=80&w=800&auto=format&fit=crop', desc:'Тёплое худи на каждый день', cat_path:['Одежда','Мужская','Худи'], color:'чёрный', brand:'Classic', gender:'мужской' },
-      { sku:'js-urban', name:'Джинсы Urban', price:3990, sizes:['28','30','32','34','36'], img:'https://images.unsplash.com/photo-1520975916090-3105956dac38?q=80&w=800&auto=format&fit=crop', desc:'Классический крой', cat_path:['Одежда','Мужская','Брюки','Карго'], color:'синий', brand:'Urban', gender:'мужской' },
-      { sku:'sk-midi', name:'Юбка Midi', price:2790, sizes:['XS','S','M','L'], img:'https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=800&auto=format&fit=crop', desc:'Миди-длина', cat_path:['Одежда','Женская','Юбки'], color:'чёрный', brand:'Midi', gender:'женский' },
-    ];
-    const DEFAULT_CAT_TREE = {
-      name:'root', children:[
-        {name:'Одежда', children:[
-          {name:'Мужская', children:[
-            {name:'Футболки', children:[]},
-            {name:'Худи', children:[]},
-            {name:'Брюки', children:[
-              {name:'Карго', children:[]},
-              {name:'Классические', children:[]}
-            ]}
-          ]},
-          {name:'Женская', children:[
-            {name:'Футболки', children:[]},
-            {name:'Юбки', children:[]}
-          ]},
-          {name:'Унисекс', children:[
-            {name:'Футболки', children:[]}
-          ]}
-        ]}
-      ]
-    };
-    const DEFAULT_FILTERS = {
-      colors:['чёрный','белый','синий','серый'],
-      brands:['Base','Classic','Urban','Midi'],
-      sizes:['XS','S','M','L','XL'],
-    };
-
-    /* ---------- CLOUD STORAGE HELPERS ---------- */
+    /* ---------- CLOUD STORAGE (для избранного) ---------- */
     const cloud = tg?.CloudStorage;
     const cloudAvail = !!cloud;
     const cloudGet = (key) => new Promise((resolve) => {
@@ -329,63 +294,69 @@
       try{ cloud.setItem(key, val, (err)=> resolve(!err)); }catch{ resolve(false); }
     });
 
-    /* ---------- STORAGE LAYER ---------- */
-    function lsGet(key, def=null){ try{ const s=localStorage.getItem(key); return s?JSON.parse(s):def; }catch{ return def; } }
-    function lsSet(key, val){ try{ localStorage.setItem(key, JSON.stringify(val)); }catch{} }
+    /* ---------- API helpers ---------- */
+    async function api(path, opts={}){ return fetch(`${API}${path}`, Object.assign({headers:{'Content-Type':'application/json'}}, opts)); }
+    async function apiGet(path){ const res=await fetch(`${API}${path}`); if(!res.ok) throw new Error(path); return res.json(); }
+    async function apiPost(path, body){ const res=await api(path,{method:'POST',body:JSON.stringify(body)}); if(!res.ok) throw new Error(path); return res.json(); }
+    async function apiPut(path, body){ const res=await api(path,{method:'PUT',body:JSON.stringify(body)}); if(!res.ok) throw new Error(path); return res.json(); }
+    async function apiDelete(path, body){ const res=await api(path,{method:'DELETE',body:JSON.stringify(body)}); if(!res.ok) throw new Error(path); return res.json(); }
 
-    async function saveProducts(list){
-      lsSet(STORE_PRODUCTS, list);
+    async function fetchModeratorFlag(){
       try{
-        const slim = (list||[]).map(p=>({sku:p.sku,name:p.name,cat_path:p.cat_path,price:p.price,sizes:p.sizes,desc:p.desc,img:(p.img||'').startsWith('data:')?'':(p.img||''),color:p.color||'',brand:p.brand||'',gender:p.gender||''}));
-        const s = JSON.stringify(slim);
-        if(s.length<60000) await cloudSet(STORE_PRODUCTS, s);
-      }catch{}
-    }
-    async function loadProducts(){
-      let list = lsGet(STORE_PRODUCTS, null);
-      if(list===null){
-        const s = await cloudGet(STORE_PRODUCTS);
-        if(s){ try{ list = JSON.parse(s); }catch{ list=null; } }
-      }
-      return Array.isArray(list)&&list.length ? list : null;
+        if(!API) return false;
+        const data = await apiPost('/api/auth/me', {init_data: tg.initData || ''});
+        return !!data.is_moderator;
+      }catch{return false}
     }
 
-    async function saveCatTree(tree){ lsSet(STORE_CAT_TREE, tree); const s=JSON.stringify(tree); if(s.length<60000) await cloudSet(STORE_CAT_TREE,s); }
-    async function loadCatTree(){
-      let t = lsGet(STORE_CAT_TREE, null);
-      if(t===null){
-        const s = await cloudGet(STORE_CAT_TREE);
-        if(s){ try{ t=JSON.parse(s); }catch{ t=null; } }
-      }
-      return t || DEFAULT_CAT_TREE;
+    async function fetchTree(){ return apiGet('/api/catalog/tree'); }
+    async function fetchProducts({q='', catId=null}={}){
+      const sp = new URLSearchParams();
+      if(q) sp.set('q', q);
+      if(catId) sp.set('cat_id', String(catId));
+      return apiGet(`/api/catalog/products?${sp.toString()}`);
+    }
+    async function fetchFilters(){ return apiGet('/api/filters'); }
+
+    async function saveFiltersAPI(filters){
+      return apiPost('/api/filters', {...filters, init_data: tg.initData || ''});
     }
 
-    async function saveFilters(f){ lsSet(STORE_FILTERS, f); const s=JSON.stringify(f); if(s.length<40000) await cloudSet(STORE_FILTERS,s); }
-    async function loadFilters(){
-      let f = lsGet(STORE_FILTERS, null);
-      if(f===null){
-        const s = await cloudGet(STORE_FILTERS);
-        if(s){ try{ f=JSON.parse(s); }catch{ f=null; } }
-      }
-      return f || DEFAULT_FILTERS;
+    async function createCategoryAPI({name, parent_id=null}){
+      return apiPost('/api/catalog/category', {name, parent_id, init_data: tg.initData || ''});
+    }
+    async function updateCategoryAPI(id, {name, parent_id=null}){
+      return apiPut(`/api/catalog/category/${id}`, {name, parent_id, init_data: tg.initData || ''});
+    }
+    async function deleteCategoryAPI(id){
+      return apiDelete(`/api/catalog/category/${id}`, {init_data: tg.initData || ''});
     }
 
-    function saveCart(arr){ lsSet(STORE_CART, arr); }
-    function loadCartLS(){ return lsGet(STORE_CART, []); }
-
-    async function saveFav(arr){ lsSet(STORE_FAV, arr); await cloudSet(STORE_FAV,(arr||[]).join(',')); }
-    async function loadFav(){
-      let arr = lsGet(STORE_FAV, null);
-      if(arr===null){
-        const csv = await cloudGet(STORE_FAV);
-        arr = csv ? csv.split(',').filter(Boolean) : [];
-      }
-      return Array.isArray(arr)?arr:[];
+    async function createProductAPI(p){
+      return apiPost('/api/catalog/product', {...p, init_data: tg.initData || ''});
+    }
+    async function updateProductAPI(id, patch){
+      return apiPut(`/api/catalog/product/${id}`, {...patch, init_data: tg.initData || ''});
+    }
+    async function deleteProductAPI(id){
+      return apiDelete(`/api/catalog/product/${id}`, {init_data: tg.initData || ''});
     }
 
-    /* ---------- STATE ---------- */
-    let products=[], catTree=DEFAULT_CAT_TREE, filters=DEFAULT_FILTERS;
-    let cart=[], fav=[];
+    async function uploadImage(file){
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('init_data', tg.initData || '');
+      const res = await fetch(`${API}/api/upload`, { method:'POST', body: fd });
+      if(!res.ok) throw new Error('upload failed');
+      const data = await res.json();
+      return data.url.startsWith('http') ? data.url : (API + data.url);
+    }
+
+    /* ---------- STATE DATA ---------- */
+    let products=[];    // [{id, sku, name, ... , category_path: []}]
+    let filters={colors:[], brands:[], sizes:[]};
+    let cart = loadCartLS();
+    let fav  = [];  // загрузим из TG Cloud/Local
     let activeFilters={ priceMin:'', priceMax:'', size:'', color:'', brand:'', gender:'' };
 
     /* ---------- DOM ---------- */
@@ -417,94 +388,86 @@
       const ed=el.tagName==='INPUT'||el.tagName==='TEXTAREA'||el.isContentEditable; if(ed) el.blur();
     }
     document.addEventListener('pointerdown',e=>{ if(!e.target.closest('input,textarea,.chip')) hideKeyboard(); },{passive:true});
-
     function money(v){return v.toLocaleString('ru-RU')+' ₽';}
-    function deepClone(x){return JSON.parse(JSON.stringify(x));}
-
-    /* ---------- CATEGORY TREE OPS ---------- */
     function pathToString(path){return (path||[]).join(' / ');}
-    function findNode(path){
-      let node=catTree;
-      for(const name of path){
-        node = (node.children||[]).find(n=>n.name===name);
-        if(!node) return null;
+
+    function loadCartLS(){ try{ return JSON.parse(localStorage.getItem(STORE_CART)||'[]'); }catch{ return []; } }
+    function saveCartLS(v){ try{ localStorage.setItem(STORE_CART, JSON.stringify(v)); }catch{} }
+
+    async function loadFav(){
+      let arr=null;
+      try{ arr = JSON.parse(localStorage.getItem(STORE_FAV)||'null'); }catch{ arr=null; }
+      if(arr===null){
+        const csv = await cloudGet(STORE_FAV);
+        arr = csv ? csv.split(',').filter(Boolean) : [];
       }
-      return node;
+      return Array.isArray(arr)?arr:[];
     }
-    function ensurePath(path){
-      let node=catTree;
-      for(const name of path){
-        let next=(node.children||[]).find(n=>n.name===name);
-        if(!next){ next={name,children:[]}; node.children=node.children||[]; node.children.push(next); }
-        node=next;
-      }
-      return node;
-    }
-    function deleteNode(path){
-      if(!path.length) return;
-      const parentPath=path.slice(0,-1), name=path[path.length-1];
-      const parent=findNode(parentPath)||catTree;
-      parent.children = (parent.children||[]).filter(n=>n.name!==name);
-    }
-    function renameNode(path, newName){
-      const node=findNode(path); if(!node) return;
-      node.name=newName;
-      // перенести товары
-      products = products.map(p=>{
-        if(path.every((x,i)=>p.cat_path?.[i]===x)){
-          const np=[...p.cat_path]; np[path.length-1]=newName; return {...p, cat_path:np};
-        }
-        return p;
-      });
+    async function saveFav(v){
+      try{ localStorage.setItem(STORE_FAV, JSON.stringify(v)); }catch{}
+      await cloudSet(STORE_FAV, (v||[]).join(','));
     }
 
-    /* ---------- RENDER CATEGORY TREE ---------- */
-    function renderTree(container, node, depth=0, path=[]){
+    /* ---------- CATEGORY TREE RENDER ---------- */
+    function renderTree(container, node){
       container.innerHTML='';
-      (node.children||[]).sort((a,b)=>a.name.localeCompare(b.name)).forEach(child=>{
+      const kids = (node.children||[]).slice().sort((a,b)=>a.name.localeCompare(b.name,'ru'));
+      for(const ch of kids){
         const li=document.createElement('li'); li.className='node';
         const header=document.createElement('div'); header.className='node-header';
-        const title=document.createElement('div'); title.className='node-title'; title.textContent=child.name;
-        const actions=document.createElement('div'); actions.className='node-actions';
-        const openBtn=document.createElement('button'); openBtn.className='pillbtn'; openBtn.textContent='Открыть';
-        openBtn.onclick=()=>{ currentPath=[...path,child.name]; catalogSheet.classList.remove('open'); applyFilter(); };
+        const title=document.createElement('div'); title.className='node-title'; title.textContent=ch.name;
         header.appendChild(title);
 
-        if(MOD_MODE){
+        const actions=document.createElement('div'); actions.className='node-actions';
+        const openBtn=document.createElement('button'); openBtn.className='pillbtn'; openBtn.textContent='Открыть';
+        openBtn.onclick=async ()=>{
+          currentCatId = ch.id;
+          currentPath = ch.path ? ch.path.split('/').filter(Boolean) : [];
+          close(catalogSheet);
+          await reloadProducts();
+        };
+        actions.appendChild(openBtn);
+
+        if (IS_MODERATOR && MOD_MODE){
           const addBtn=document.createElement('button'); addBtn.className='pillbtn'; addBtn.textContent='Добавить';
           const renBtn=document.createElement('button'); renBtn.className='pillbtn'; renBtn.textContent='Переимен.';
           const delBtn=document.createElement('button'); delBtn.className='pillbtn'; delBtn.textContent='Удалить';
-          addBtn.onclick=()=>{ const n=(prompt('Название подкатегории')||'').trim(); if(!n) return; const parent=findNode([...path,child.name]); parent.children=parent.children||[]; parent.children.push({name:n,children:[]}); saveCatTree(catTree); renderCategoryUI(); };
-          renBtn.onclick=()=>{ const n=(prompt('Новое имя категории', child.name)||'').trim(); if(!n||n===child.name) return; renameNode([...path,child.name], n); saveCatTree(catTree); saveProducts(products); renderCategoryUI(); renderCatalog(); applyFilter(); };
-          delBtn.onclick=()=>{ if(!confirm('Удалить эту категорию? Подкатегории также будут удалены, товары переместятся в «Прочее».')) return;
-            // переместим товары этой ветки в «Прочее»
-            products = products.map(p=>{
-              if([...path,child.name].every((x,i)=>p.cat_path?.[i]===x)){
-                return {...p, cat_path:['Прочее']};
-              }
-              return p;
-            });
-            deleteNode([...path,child.name]); saveCatTree(catTree); saveProducts(products); renderCategoryUI(); renderCatalog(); applyFilter();
+
+          addBtn.onclick=async ()=>{
+            const n=(prompt('Название подкатегории')||'').trim(); if(!n) return;
+            await createCategoryAPI({name:n, parent_id: ch.id});
+            const tree=await fetchTree(); window.__CAT_TREE__=tree; renderCategoryUI();
+          };
+          renBtn.onclick=async ()=>{
+            const n=(prompt('Новое имя категории', ch.name)||'').trim(); if(!n||n===ch.name) return;
+            await updateCategoryAPI(ch.id, {name:n, parent_id: null}); // перемещение не меняем, только имя
+            const tree=await fetchTree(); window.__CAT_TREE__=tree; renderCategoryUI(); await reloadProducts();
+          };
+          delBtn.onclick=async ()=>{
+            if(!confirm('Удалить категорию и её подкатегории? Товары переместятся в «Прочее».')) return;
+            await deleteCategoryAPI(ch.id);
+            const tree=await fetchTree(); window.__CAT_TREE__=tree; renderCategoryUI(); await reloadProducts();
           };
           actions.appendChild(addBtn); actions.appendChild(renBtn); actions.appendChild(delBtn);
         }
-        actions.appendChild(openBtn);
+
         header.appendChild(actions);
         li.appendChild(header);
 
-        // children container
-        if((child.children||[]).length){
-          const kids=document.createElement('div'); kids.className='node-children';
+        if ((ch.children||[]).length){
+          const wrap=document.createElement('div'); wrap.className='node-children';
           const ul=document.createElement('ul'); ul.className='tree';
-          renderTree(ul, child, depth+1, [...path,child.name]);
-          kids.appendChild(ul); li.appendChild(kids);
+          renderTree(ul, ch);
+          wrap.appendChild(ul);
+          li.appendChild(wrap);
         }
         container.appendChild(li);
-      });
+      }
     }
     function renderCategoryUI(){
       catTreeEl.innerHTML='';
-      renderTree(catTreeEl, catTree, 0, []);
+      renderTree(catTreeEl, window.__CAT_TREE__ || {children:[]});
+      catToolbar.style.display=(IS_MODERATOR && MOD_MODE)?'':'none';
     }
 
     /* ---------- FILTERS UI (USER) ---------- */
@@ -559,6 +522,8 @@
       });
       return wrap;
     }
+    function normalizeImg(url){ if(!url) return ''; if(url.startsWith('/')) return API + url; return url; }
+
     function createCard(p){
       const el=document.createElement('div'); el.className='card';
       if (IS_MODERATOR && MOD_MODE){
@@ -567,20 +532,20 @@
         el.style.cursor='pointer'; el.onclick=(e)=>{ if(!e.target.closest('.add,.fav-toggle,.chip,.qty')) openEditForm(p); };
       }
       const heart=document.createElement('button'); heart.className='fav-toggle'; heart.setAttribute('data-favsku', p.sku); heart.type='button'; heart.innerHTML='♡'; heart.onclick=()=>{toggleFav(p.sku);}; el.appendChild(heart);
-      const img=document.createElement('img'); img.className='img'; img.decoding='async'; img.loading='eager'; img.referrerPolicy='no-referrer'; img.alt=p.name; img.src=p.img||''; img.onerror=()=>{img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800"><rect width="100%" height="100%" fill="#E5E7EB"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="system-ui" font-size="28" fill="#6B7280">Нет изображения</text></svg>');}; el.appendChild(img);
+      const img=document.createElement('img'); img.className='img'; img.decoding='async'; img.loading='eager'; img.referrerPolicy='no-referrer'; img.alt=p.name; img.src=normalizeImg(p.img||''); img.onerror=()=>{img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800"><rect width="100%" height="100%" fill="#E5E7EB"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="system-ui" font-size="28" fill="#6B7280">Нет изображения</text></svg>');}; el.appendChild(img);
       const body=document.createElement('div'); body.className='body';
-      body.innerHTML=`<div class="title">${p.name}</div><div class="desc">${p.desc||''}</div><div class="price">${money(p.price)}</div>`;
+      body.innerHTML=`<div class="title">${p.name}</div><div class="desc">${p.desc||''}</div><div class="price">${money(p.price||0)}</div>`;
       body.appendChild(sizeRow(p));
       const controls=document.createElement('div'); controls.className='controls'; controls.innerHTML=`<input class="qty" type="number" min="1" value="1" aria-label="Кол-во"/><button class="add">В корзину</button>`; body.appendChild(controls); el.appendChild(body);
       const qtyEl=controls.querySelector('.qty');
-      controls.querySelector('.add').onclick=()=>{ const size=selectedSize.get(p.sku)||p.sizes?.[0]||''; addToCart({sku:p.sku,name:p.name,price:p.price,size,qty:Math.max(1,Number(qtyEl.value)||1),img:p.img}); hideKeyboard(); };
+      controls.querySelector('.add').onclick=()=>{ const size=selectedSize.get(p.sku)||p.sizes?.[0]||''; addToCart({sku:p.sku,name:p.name,price:p.price||0,size,qty:Math.max(1,Number(qtyEl.value)||1),img:normalizeImg(p.img)}); hideKeyboard(); };
       return el;
     }
-    function renderCatalog(){
+    function renderCatalog(list=null){
       grid.innerHTML='';
-      products.forEach(p=>grid.appendChild(createCard(p)));
-      updateFavIcons();
-      applyFilter();
+      const arr = list || products;
+      arr.forEach(p=>grid.appendChild(createCard(p)));
+      updateFavIcons(); applyFilter();
     }
 
     /* ---------- FAVORITES ---------- */
@@ -589,29 +554,28 @@
     function updateFavIcons(){ document.querySelectorAll('[data-favsku]').forEach(btn=>{ const sku=btn.getAttribute('data-favsku'); const active=isFav(sku); btn.classList.toggle('active', active); btn.innerHTML = active ? '♥' : '♡'; }); }
     function favItemRow(p){
       const row=document.createElement('div'); row.className='item'; row.dataset.sku=p.sku;
-      row.innerHTML=`<img class="ph" src="${p.img||''}" alt=""><div class="meta"><div class="t">${p.name}</div><div class="s">Артикул: ${p.sku}</div></div><div class="actions"><div class="left"><button class="rmv">Убрать</button></div><button class="add tocart">В корзину</button></div>`;
+      row.innerHTML=`<img class="ph" src="${normalizeImg(p.img||'')}" alt=""><div class="meta"><div class="t">${p.name}</div><div class="s">Артикул: ${p.sku}</div></div><div class="actions"><div class="left"><button class="rmv">Убрать</button></div><button class="add tocart">В корзину</button></div>`;
       return row;
     }
     function updateFavUI(){
       favList.innerHTML=''; fav.forEach(sku=>{ const p=products.find(x=>x.sku===sku); if(p) favList.appendChild(favItemRow(p)); });
     }
-
     favList.addEventListener('click',(e)=>{
       const row=e.target.closest('.item'); if(!row) return;
       const sku=row.dataset.sku; const p=products.find(x=>x.sku===sku); if(!p) return;
       if(e.target.classList.contains('rmv')){ toggleFav(sku); return; }
-      if(e.target.classList.contains('tocart')){ const size=p.sizes?.[0]||''; addToCart({sku:p.sku,name:p.name,price:p.price,size,qty:1,img:p.img}); }
+      if(e.target.classList.contains('tocart')){ const size=p.sizes?.[0]||''; addToCart({sku:p.sku,name:p.name,price:p.price||0,size,qty:1,img:normalizeImg(p.img)}); }
     });
 
     /* ---------- CART ---------- */
     function keyOf(x){return `${x.sku}:${x.size}`;}
-    function addToCart(item){const k=keyOf(item);const f=cart.find(x=>keyOf(x)===k);if(f)f.qty+=item.qty;else cart.push(item);updateCartUI();saveCart(cart);}
-    function removeFromCart(k){cart=cart.filter(x=>keyOf(x)!==k);updateCartUI();saveCart(cart);}
-    function setQty(k,val){const it=cart.find(x=>keyOf(x)===k); if(!it) return; it.qty=Math.max(1, val|0); updateCartUI();saveCart(cart);}
-    function calcTotal(){return cart.reduce((s,x)=>s+x.price*x.qty,0);}
+    function addToCart(item){const k=keyOf(item);const f=cart.find(x=>keyOf(x)===k);if(f)f.qty+=item.qty;else cart.push(item);updateCartUI();saveCartLS(cart);}
+    function removeFromCart(k){cart=cart.filter(x=>keyOf(x)!==k);updateCartUI();saveCartLS(cart);}
+    function setQty(k,val){const it=cart.find(x=>keyOf(x)===k); if(!it) return; it.qty=Math.max(1, val|0); updateCartUI();saveCartLS(cart);}
+    function calcTotal(){return cart.reduce((s,x)=>s+(x.price||0)*x.qty,0);}
     function cartItemRow(x){
       const row=document.createElement('div'); row.className='item'; row.dataset.key=`${x.sku}:${x.size}`;
-      row.innerHTML=`<img class="ph" src="${x.img||''}" alt=""><div class="meta"><div class="t">${x.name}</div><div class="s">Размер: ${x.size}</div></div><div class="actions"><div class="left"><div class="qtyctrl"><button class="btnsq minus">−</button><input class="qtymini" type="number" min="1" value="${x.qty}"><button class="btnsq plus">+</button></div><button class="rmv">Убрать</button></div><div class="t sum">${money(x.price*x.qty)}</div></div>`;
+      row.innerHTML=`<img class="ph" src="${normalizeImg(x.img||'')}" alt=""><div class="meta"><div class="t">${x.name}</div><div class="s">Размер: ${x.size}</div></div><div class="actions"><div class="left"><div class="qtyctrl"><button class="btnsq minus">−</button><input class="qtymini" type="number" min="1" value="${x.qty}"><button class="btnsq plus">+</button></div><button class="rmv">Убрать</button></div><div class="t sum">${money((x.price||0)*x.qty)}</div></div>`;
       return row;
     }
     function updateCartUI(){
@@ -622,30 +586,81 @@
     cartList.addEventListener('click', (e)=>{
       const row=e.target.closest('.item'); if(!row) return; const k=row.dataset.key;
       if(e.target.classList.contains('rmv')) { removeFromCart(k); return; }
-      if(e.target.classList.contains('minus')) { const it=cart.find(x=>keyOf(x)===k); if(!it) return; it.qty=Math.max(1,it.qty-1); updateCartUI(); saveCart(cart); return; }
-      if(e.target.classList.contains('plus'))  { const it=cart.find(x=>keyOf(x)===k); if(!it) return; it.qty+=1; updateCartUI(); saveCart(cart); return; }
+      if(e.target.classList.contains('minus')) { const it=cart.find(x=>keyOf(x)===k); if(!it) return; it.qty=Math.max(1,it.qty-1); updateCartUI(); saveCartLS(cart); return; }
+      if(e.target.classList.contains('plus'))  { const it=cart.find(x=>keyOf(x)===k); if(!it) return; it.qty+=1; updateCartUI(); saveCartLS(cart); return; }
     });
     cartList.addEventListener('change', (e)=>{ if(e.target.classList.contains('qtymini')){ const row=e.target.closest('.item'); const k=row.dataset.key; setQty(k, Number(e.target.value)||1); }});
 
     /* ---------- OPEN/CLOSE SHEETS ---------- */
     function open(el){ el.classList.add('open'); }
     function close(el){ el.classList.remove('open'); }
-    openMenuBtn.onclick=()=>{ open(menuSheet); };
-    closeMenu.onclick=()=>{ close(menuSheet); };
-    mCatalog.onclick=()=>{ close(menuSheet); openCatalog(); };
-    mFav.onclick=()=>{ close(menuSheet); openFav(); };
-    mCart.onclick=()=>{ close(menuSheet); openCart(); };
-    mMod.onclick=()=>{ close(menuSheet); if(IS_MODERATOR){ MOD_MODE=true; openCatalog(); } };
-    mFilters.onclick=()=>{ close(menuSheet); if(IS_MODERATOR){ open(filtersSheet); loadFiltersForm(); } };
-
-    function openCart(){ open(cartSheet); close(favSheet); close(catalogSheet); close(filtersSheet); close(editSheet); }
-    function openFav(){ open(favSheet); close(cartSheet); close(catalogSheet); close(filtersSheet); close(editSheet); }
-    function openCatalog(){ open(catalogSheet); close(cartSheet); close(favSheet); close(filtersSheet); close(editSheet); renderCategoryUI(); catToolbar.style.display=(IS_MODERATOR && MOD_MODE)?'':'none'; }
+    const openCart =()=>{ open(cartSheet); close(favSheet); close(catalogSheet); close(filtersSheet); close(editSheet); }
+    const openFav  =()=>{ open(favSheet); close(cartSheet); close(catalogSheet); close(filtersSheet); close(editSheet); }
+    function openCatalog(){ open(catalogSheet); close(cartSheet); close(favSheet); close(filtersSheet); close(editSheet); renderCategoryUI(); }
     closeCart.onclick=()=>close(cartSheet);
     closeFav.onclick=()=>close(favSheet);
     closeCatalog.onclick=()=>close(catalogSheet);
     closeFilters.onclick=()=>close(filtersSheet);
     closeEdit.onclick=()=>close(editSheet);
+
+    openMenuBtn.onclick=()=>{ open(menuSheet); };
+    closeMenu.onclick=()=>{ close(menuSheet); };
+    mCatalog.onclick=()=>{ close(menuSheet); MOD_MODE=false; openCatalog(); };
+    mFav.onclick=()=>{ close(menuSheet); openFav(); };
+    mCart.onclick=()=>{ close(menuSheet); openCart(); };
+    mMod.onclick=()=>{ close(menuSheet); if(IS_MODERATOR){ MOD_MODE=true; openCatalog(); } };
+    mFilters.onclick=()=>{ close(menuSheet); if(IS_MODERATOR){ open(filtersSheet); loadFiltersForm(); } };
+
+    /* ---------- CATEGORY TOOLBAR ---------- */
+    btnCatAdd.onclick=async ()=>{
+      const name=(prompt('Название подкатегории')||'').trim(); if(!name) return;
+      // создаём под текущей выбранной, если есть, иначе — в корне
+      await createCategoryAPI({name, parent_id: currentCatId || null});
+      const tree=await fetchTree(); window.__CAT_TREE__=tree; renderCategoryUI();
+    };
+    btnCatAddProduct.onclick=()=>{ openEditForm(null, currentPath); };
+
+    /* ---------- EDIT FORM ---------- */
+    function openEditForm(p, presetPath=null){
+      open(editSheet);
+      const isNew=!p;
+      const data = p || { id:null, sku:`item-${Date.now()}`, name:'', price:0, sizes:['S','M','L'], img:'', desc:'', category_path: (presetPath||['Прочее']), color:'', brand:'', gender:'' };
+      editTitle.textContent = isNew?'Новый товар':'Редактирование';
+      f_name.value=data.name||''; f_sku.value=data.sku||''; f_desc.value=data.desc||'';
+      f_cat_path.value=pathToString(data.category_path||[]);
+      f_price.value=Number(data.price||0); f_sizes.value=(data.sizes||[]).join(', ');
+      f_color.value=data.color||''; f_brand.value=data.brand||''; f_gender.value=data.gender||'';
+      f_preview.src=normalizeImg(data.img||''); f_delete.style.display=isNew?'none':'';
+      f_save.onclick=()=>saveEdit(isNew, data.id, data.sku);
+      f_delete.onclick=()=>{ if(confirm('Удалить товар?')){ deleteProductById(data.id); close(editSheet); } };
+      f_img.onchange=async (e)=>{ const file=e.target.files?.[0]; if(!file) return; const url=await uploadImage(file); f_preview.src=url; };
+    }
+
+    async function saveEdit(isNew, id, oldSku){
+      const name=f_name.value.trim(); const sku=f_sku.value.trim(); const desc=f_desc.value.trim();
+      const cat_path=f_cat_path.value.split('/').map(s=>s.trim()).filter(Boolean); const price=Math.max(0, Number(f_price.value||0)|0);
+      const sizes=f_sizes.value.split(',').map(s=>s.trim()).filter(Boolean);
+      const color=f_color.value.trim(); const brand=f_brand.value.trim(); const gender=f_gender.value;
+      const img=(f_preview.src||'');
+      if(!name||!sku){ alert('Укажите название и SKU'); return; }
+      const dto={ sku, name, desc, price, sizes, img, color, brand, gender, category_path: cat_path };
+
+      if(isNew){
+        await createProductAPI(dto);
+      }else{
+        await updateProductAPI(id, dto);
+        // поддержим пересинхронизацию избранного/корзины по изменению sku/имени/цены/картинки
+        cart = cart.map(it=> it.sku===oldSku ? {...it, sku, name, price, img} : it); saveCartLS(cart);
+        fav  = fav.map(s => s===oldSku ? sku : s); await saveFav(fav);
+      }
+      await reloadTreeAndProducts();
+      close(editSheet);
+    }
+    async function deleteProductById(id){
+      if(!id) return;
+      await deleteProductAPI(id);
+      await reloadTreeAndProducts();
+    }
 
     /* ---------- FILTERS (EDITOR) ---------- */
     function loadFiltersForm(){
@@ -657,95 +672,30 @@
       filters.colors = f_colors.value.split(',').map(s=>s.trim()).filter(Boolean);
       filters.brands = f_brands.value.split(',').map(s=>s.trim()).filter(Boolean);
       filters.sizes  = f_sizes_p.value.split(',').map(s=>s.trim()).filter(Boolean);
-      await saveFilters(filters);
+      await saveFiltersAPI(filters);
       renderFiltersBar(); applyFilter(); close(filtersSheet);
     };
     filtersReset.onclick=async ()=>{
-      filters=deepClone(DEFAULT_FILTERS); await saveFilters(filters);
+      filters = await fetchFilters();
       renderFiltersBar(); applyFilter(); close(filtersSheet);
     };
-
-    /* ---------- CATEGORY TOOLBAR ---------- */
-    btnCatAdd.onclick=()=>{
-      const name=(prompt('Название подкатегории')||'').trim(); if(!name) return;
-      const parent=ensurePath(currentPath); parent.children=parent.children||[]; parent.children.push({name,children:[]});
-      saveCatTree(catTree); renderCategoryUI();
-    };
-    btnCatAddProduct.onclick=()=>{
-      openEditForm(null, currentPath);
-    };
-
-    /* ---------- EDIT FORM ---------- */
-    function openEditForm(p, presetPath=null){
-      open(editSheet);
-      const isNew=!p;
-      const data = p || { sku:`item-${Date.now()}`, name:'', price:0, sizes:['S','M','L'], img:'', desc:'', cat_path: (presetPath||['Прочее']), color:'', brand:'', gender:'' };
-      editTitle.textContent = isNew?'Новый товар':'Редактирование';
-      f_name.value=data.name||''; f_sku.value=data.sku||''; f_desc.value=data.desc||'';
-      f_cat_path.value=pathToString(data.cat_path||[]);
-      f_price.value=Number(data.price||0); f_sizes.value=(data.sizes||[]).join(', ');
-      f_color.value=data.color||''; f_brand.value=data.brand||''; f_gender.value=data.gender||'';
-      f_preview.src=data.img||''; f_delete.style.display=isNew?'none':'';
-      f_save.onclick=()=>saveEdit(isNew, data.sku);
-      f_delete.onclick=()=>{ if(confirm('Удалить товар?')){ deleteProduct(data.sku); close(editSheet); } };
-      f_img.onchange=async (e)=>{ const file=e.target.files?.[0]; if(!file) return; const url=await fileToCompressedDataURL(file,1024,0.85); f_preview.src=url; };
-    }
-    async function fileToCompressedDataURL(file, maxSide=1024, quality=0.85){
-      const img = await blobToImage(file); const {canvas}=imageToCanvas(img,maxSide); return canvas.toDataURL('image/jpeg', quality);
-    }
-    function blobToImage(file){ return new Promise((res,rej)=>{ const url=URL.createObjectURL(file); const img=new Image(); img.onload=()=>{ URL.revokeObjectURL(url); res(img); }; img.onerror=(e)=>{ URL.revokeObjectURL(url); rej(e); }; img.src=url; }); }
-    function imageToCanvas(img,maxSide){ const s=Math.min(1,maxSide/Math.max(img.width,img.height)); const w=Math.max(1,Math.round(img.width*s)); const h=Math.max(1,Math.round(img.height*s)); const c=document.createElement('canvas'); c.width=w; c.height=h; c.getContext('2d').drawImage(img,0,0,w,h); return {canvas:c,w,h}; }
-
-    async function saveEdit(isNew, oldSku){
-      const name=f_name.value.trim(); const sku=f_sku.value.trim(); const desc=f_desc.value.trim();
-      const cat_path=f_cat_path.value.split('/').map(s=>s.trim()).filter(Boolean); const price=Math.max(0, Number(f_price.value||0)|0);
-      const sizes=f_sizes.value.split(',').map(s=>s.trim()).filter(Boolean);
-      const color=f_color.value.trim(); const brand=f_brand.value.trim(); const gender=f_gender.value;
-      const img=f_preview.src||'';
-      if(!name||!sku){ alert('Укажите название и SKU'); return; }
-      if(isNew && products.some(p=>p.sku===sku)){ alert('Такой SKU уже есть'); return; }
-      // гарантируем путь в дереве
-      if(cat_path.length) ensurePath(cat_path); await saveCatTree(catTree);
-
-      if(isNew){
-        products=[...products,{sku,name,desc,cat_path,price,sizes,img,color,brand,gender}];
-      }else{
-        products=products.map(p=>p.sku===oldSku?{...p,sku,name,desc,cat_path,price,sizes,img,color,brand,gender}:p);
-        cart = cart.map(it=> it.sku===oldSku ? {...it, sku, name, price, img} : it);
-        fav  = fav.map(s => s===oldSku ? sku : s);
-        await saveFav(fav); saveCart(cart);
-      }
-      await saveProducts(products);
-      renderCategoryUI(); renderCatalog(); applyFilter();
-      close(editSheet);
-    }
-    async function deleteProduct(sku){
-      products=products.filter(p=>p.sku!==sku);
-      await saveProducts(products);
-      cart = cart.filter(it=>it.sku!==sku); saveCart(cart); updateCartUI();
-      fav  = fav.filter(s=>s!==sku); await saveFav(fav); updateFavUI();
-      renderCatalog(); renderCategoryUI();
-    }
 
     /* ---------- SEARCH & FILTER ---------- */
     function applyFilter(){
       const text=(q.value||'').trim().toLowerCase();
-      const cards=[...grid.children];
-      cards.forEach((card,i)=>{
-        const p=products[i];
-        // текст
-        const hitText = !text || [p.name,p.sku,p.desc,(p.brand||''),(p.color||''),(p.gender||''),(p.cat_path||[]).join(' ')].join(' ').toLowerCase().includes(text);
-        // путь
-        const hitPath = !currentPath.length || currentPath.every((seg,idx)=> (p.cat_path||[])[idx]===seg );
-        // фильтры
-        const priceOk = (!activeFilters.priceMin || p.price >= Number(activeFilters.priceMin)) && (!activeFilters.priceMax || p.price <= Number(activeFilters.priceMax));
+      const filtered = products.filter(p=>{
+        const hitText = !text || [p.name,p.sku,p.desc,(p.brand||''),(p.color||''),(p.gender||''),(p.category_path||[]).join(' ')].join(' ').toLowerCase().includes(text);
+        const priceOk = (!activeFilters.priceMin || (p.price||0) >= Number(activeFilters.priceMin)) && (!activeFilters.priceMax || (p.price||0) <= Number(activeFilters.priceMax));
         const sizeOk  = (!activeFilters.size) || (p.sizes||[]).includes(activeFilters.size);
         const colorOk = (!activeFilters.color) || (p.color||'')===activeFilters.color;
         const brandOk = (!activeFilters.brand) || (p.brand||'')===activeFilters.brand;
         const genderOk= (!activeFilters.gender) || (p.gender||'')===activeFilters.gender;
-
-        card.style.display = (hitText && hitPath && priceOk && sizeOk && colorOk && brandOk && genderOk) ? '' : 'none';
+        return hitText && priceOk && sizeOk && colorOk && brandOk && genderOk;
       });
+      // перерисуем сетку
+      grid.innerHTML='';
+      filtered.forEach(p=>grid.appendChild(createCard(p)));
+      updateFavIcons();
     }
     q.addEventListener('input',applyFilter);
     q.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); hideKeyboard(); }});
@@ -770,31 +720,48 @@
     }
     function setLoading(v){ if(tg?.MainButton){ tg.MainButton.setParams({is_active:!v}); if(v) tg.HapticFeedback.impactOccurred('light'); } }
 
-    /* ---------- INIT ---------- */
-    async function fetchModeratorFlag(){
-      try{
-        if(!API) return false;
-        const res=await fetch(`${API}/api/auth/me`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({init_data:tg.initData||''})});
-        if(!res.ok) return false; const data=await res.json(); return !!data.is_moderator;
-      }catch{return false}
+    /* ---------- INIT / RELOAD ---------- */
+    async function reloadProducts(){
+      const prods = await fetchProducts({ q: q.value||'', catId: currentCatId });
+      products = prods.map(p => ({
+        id: p.id, sku: p.sku, name: p.name, desc: p.desc,
+        price: p.price, sizes: p.sizes || [], img: p.img,
+        color: p.color, brand: p.brand, gender: p.gender,
+        category_path: p.category_path || []
+      }));
+      renderCatalog();
+      updateFavUI();
+    }
+    async function reloadTreeAndProducts(){
+      const tree = await fetchTree(); window.__CAT_TREE__ = tree; renderCategoryUI();
+      await reloadProducts();
     }
 
     (async function init(){
+      // Проверка открытия через Telegram
+      if (!(tg.initData && tg.initData.length > 10) && !API){
+        alert('Приложение открыто не через Telegram и API не передан. Откройте из бота или добавьте ?api=');
+      }
+
+      // Избранное
       fav = await loadFav();
-      cart = loadCartLS();
-      const lp = await loadProducts();
-      products = lp || DEFAULT_PRODUCTS.slice();
-      await saveProducts(products);
 
-      catTree = await loadCatTree();
-      filters = await loadFilters();
-      renderFiltersBar();
-
-      renderCatalog(); updateCartUI(); updateFavUI();
-
+      // Модератор?
       IS_MODERATOR = await fetchModeratorFlag();
       mMod.style.display = IS_MODERATOR ? '' : 'none';
       mFilters.style.display = IS_MODERATOR ? '' : 'none';
+
+      // Фильтры
+      try { filters = await fetchFilters(); } catch { filters={colors:[],brands:[],sizes:[]}; }
+      renderFiltersBar();
+
+      // Категории и товары
+      try {
+        const tree = await fetchTree(); window.__CAT_TREE__ = tree; renderCategoryUI();
+      } catch { window.__CAT_TREE__ = {children:[]}; }
+      await reloadProducts();
+
+      updateCartUI();
     })();
   </script>
 </body>
