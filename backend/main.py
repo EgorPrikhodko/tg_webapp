@@ -56,17 +56,15 @@ else:
 # ────────────────────────────────────────────────────────────────────────────────
 DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
 
-connect_args = {}
-# Render Postgres требует TLS — включаем явно.
-connect_args["ssl"] = ssl.create_default_context()
+connect_args = {"ssl": ssl.create_default_context()}
 
 engine = create_async_engine(
     DATABASE_URL,
-    connect_args=connect_args,   # работает и когда ?ssl=true, и когда параметров нет
+    connect_args=connect_args,
     pool_pre_ping=True,
     pool_size=5,
     max_overflow=0,
-) if DATABASE_URL else None
+)
 
 # ────────────────────────────────────────────────────────────────────────────────
 # Routes
