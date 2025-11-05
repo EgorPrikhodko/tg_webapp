@@ -1,4 +1,5 @@
 import os
+import ssl
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -13,7 +14,7 @@ from sqlalchemy import text
 # ────────────────────────────────────────────────────────────────────────────────
 # App
 # ────────────────────────────────────────────────────────────────────────────────
-app = FastAPI(title="TG WebApp Backend", version="1.0.0")
+app = FastAPI(title="TG WebApp Backend", version="1.1.0")
 
 # ────────────────────────────────────────────────────────────────────────────────
 # Static (favicon, assets)
@@ -51,11 +52,20 @@ else:
     )
 
 # ────────────────────────────────────────────────────────────────────────────────
-# Database (health only; minimal engine)
+# Database (asyncpg + TLS)
 # ────────────────────────────────────────────────────────────────────────────────
 DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
+
+connect_args = {}
+# Render Postgres требует TLS — включаем явно.
+connect_args["ssl"] = ssl.create_default_context()
+
 engine = create_async_engine(
-    DATABASE_URL, pool_pre_ping=True, pool_size=5, max_overflow=0
+    DATABASE_URL,
+    connect_args=connect_args,   # работает и когда ?ssl=true, и когда параметров нет
+    pool_pre_ping=True,
+    pool_size=5,
+    max_overflow=0,
 ) if DATABASE_URL else None
 
 # ────────────────────────────────────────────────────────────────────────────────
@@ -107,5 +117,4 @@ async def favicon() -> Response:
 # ────────────────────────────────────────────────────────────────────────────────
 @app.get("/api/categories")
 async def list_categories() -> list[dict]:
-    # Заглушка. Когда подключишь модели — вернём реальные категории из БД.
     return []
