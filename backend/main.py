@@ -1,102 +1,111 @@
-# backend/main.py
-from __future__ import annotations
-
 import os
-import logging
-from datetime import datetime, timezone
-from typing import List, Optional
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from starlette.responses import JSONResponse
-from dotenv import load_dotenv
+from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
+from starlette.responses import Response
 
+from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine, async_sessionmaker
 
-# ── загрузим .env ПЕРЕД импортом роутера ──────────────────────────────────────
-load_dotenv()
+# ────────────────────────────────────────────────────────────────────────────────
+# App
+# ────────────────────────────────────────────────────────────────────────────────
+app = FastAPI(title="TG WebApp Backend", version="1.0.0")
 
-from backend.api import router as api_router  # теперь MODERATOR_IDS прочитается корректно
+# ────────────────────────────────────────────────────────────────────────────────
+# Static (favicon, assets)
+# ────────────────────────────────────────────────────────────────────────────────
+BASE_DIR = Path(__file__).resolve().parent
+STATIC_DIR = BASE_DIR / "static"
+STATIC_DIR.mkdir(exist_ok=True)
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
-# ── env ───────────────────────────────────────────────────────────────────────
+# ────────────────────────────────────────────────────────────────────────────────
+# CORS (env-driven)
+# ────────────────────────────────────────────────────────────────────────────────
+def split_env_list(name: str) -> list[str]:
+    raw = os.getenv(name, "")
+    return [x.strip() for x in raw.split(",") if x.strip()]
+
+ALLOWED_ORIGINS = split_env_list("ALLOWED_ORIGINS")
+ALLOWED_ORIGIN_REGEX = os.getenv("ALLOWED_ORIGIN_REGEX", "").strip()
+
+if ALLOWED_ORIGIN_REGEX:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origin_regex=ALLOWED_ORIGIN_REGEX,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+else:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=ALLOWED_ORIGINS or ["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+# ────────────────────────────────────────────────────────────────────────────────
+# Database (health only; minimal engine)
+# ────────────────────────────────────────────────────────────────────────────────
 DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
-if not DATABASE_URL:
-    raise RuntimeError("DATABASE_URL не задан в .env")
+engine = create_async_engine(
+    DATABASE_URL, pool_pre_ping=True, pool_size=5, max_overflow=0
+) if DATABASE_URL else None
 
-RAW_ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "")
-ALLOWED_ORIGINS: List[str] = [o.strip() for o in RAW_ALLOWED_ORIGINS.split(",") if o.strip()]
-WEBAPP_URL = os.getenv("WEBAPP_URL", "").strip()
-BACKEND_VERSION = "0.1.0"
+# ────────────────────────────────────────────────────────────────────────────────
+# Routes
+# ────────────────────────────────────────────────────────────────────────────────
+@app.get("/", response_class=HTMLResponse)
+async def root() -> str:
+    return """
+    <!doctype html>
+    <html lang="ru">
+    <head><meta charset="utf-8"><title>TG WebApp Backend</title></head>
+    <body style="font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;padding:24px">
+      <h1>✅ Backend работает</h1>
+      <ul>
+        <li><a href="/docs">/docs</a> — Swagger</li>
+        <li><a href="/redoc">/redoc</a> — ReDoc</li>
+        <li><a href="/health">/health</a> — Health</li>
+        <li><a href="/health/db">/health/db</a> — Health DB</li>
+      </ul>
+    </body>
+    </html>
+    """
 
-# ── logging ───────────────────────────────────────────────────────────────────
-logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s")
-log = logging.getLogger("tg_shop.backend")
+@app.get("/health")
+async def health() -> dict:
+    return {"status": "ok"}
 
-# ── DB (без startup-хуков) ───────────────────────────────────────────────────
-engine: AsyncEngine = create_async_engine(DATABASE_URL, echo=False, pool_pre_ping=True, future=True)
-SessionFactory: async_sessionmaker[AsyncSession] = async_sessionmaker(bind=engine, expire_on_commit=False)
-
-# ── FastAPI ───────────────────────────────────────────────────────────────────
-app = FastAPI(title="TG Shop Backend")
-app.state.sessionmaker = SessionFactory  # для backend/api.py
-
-cors_origins = ALLOWED_ORIGINS or ["*"]
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=cors_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# ── схемы ответов ─────────────────────────────────────────────────────────────
-class HealthResponse(BaseModel):
-    status: str
-    time_utc: str
-    database: str
-
-class ConfigResponse(BaseModel):
-    webapp_url: Optional[str] = None
-    allowed_origins: List[str] = []
-    backend_version: str
-    now_utc: str
-
-# ── маршруты ──────────────────────────────────────────────────────────────────
-@app.get("/health", response_model=HealthResponse, tags=["system"])
-async def health() -> JSONResponse:
+@app.get("/health/db")
+async def health_db() -> dict:
+    if engine is None:
+        return {"db": "skipped", "detail": "DATABASE_URL is not set"}
     try:
         async with engine.connect() as conn:
-            await conn.execute(text("SELECT 1"))
-        db_status = "ok"
-    except Exception:
-        db_status = "failed"
+            r = await conn.execute(text("SELECT 1"))
+            _ = r.scalar_one()
+        return {"db": "ok"}
+    except Exception as e:
+        return {"db": "error", "detail": str(e)}
 
-    return JSONResponse(
-        HealthResponse(
-            status="ok",
-            time_utc=datetime.now(timezone.utc).isoformat(),
-            database=db_status,
-        ).model_dump()
-    )
+@app.get("/favicon.ico")
+async def favicon() -> Response:
+    ico = STATIC_DIR / "favicon.ico"
+    if ico.exists():
+        return FileResponse(ico, media_type="image/x-icon")
+    return Response(status_code=204)
 
-@app.get("/api/config", response_model=ConfigResponse, tags=["system"])
-async def get_config() -> JSONResponse:
-    return JSONResponse(
-        ConfigResponse(
-            webapp_url=WEBAPP_URL or None,
-            allowed_origins=cors_origins,
-            backend_version=BACKEND_VERSION,
-            now_utc=datetime.now(timezone.utc).isoformat(),
-        ).model_dump()
-    )
-
-@app.get("/", tags=["system"])
-async def root():
-    return {"ok": True, "msg": "TG Shop Backend is running"}
-
-# CRUD роуты
-app.include_router(api_router, prefix="/api")
-
-# Запуск: uvicorn backend.main:app --reload --port 9010
+# ────────────────────────────────────────────────────────────────────────────────
+# Minimal API stub (чтобы фронт не падал)
+# ────────────────────────────────────────────────────────────────────────────────
+@app.get("/api/categories")
+async def list_categories() -> list[dict]:
+    # Заглушка. Когда подключишь модели — вернём реальные категории из БД.
+    return []
