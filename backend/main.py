@@ -1,3 +1,6 @@
+# backend/main.py
+from __future__ import annotations
+
 import os
 import ssl
 from pathlib import Path
@@ -8,13 +11,13 @@ from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.responses import Response
 
-from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy import text
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 
 # ────────────────────────────────────────────────────────────────────────────────
 # App
 # ────────────────────────────────────────────────────────────────────────────────
-app = FastAPI(title="TG WebApp Backend", version="1.1.0")
+app = FastAPI(title="TG WebApp Backend", version="1.2.0")
 
 # ────────────────────────────────────────────────────────────────────────────────
 # Static (favicon, assets)
@@ -54,17 +57,30 @@ else:
 # ────────────────────────────────────────────────────────────────────────────────
 # Database (asyncpg + TLS)
 # ────────────────────────────────────────────────────────────────────────────────
-DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
+DATABASE_URL = os.getenv("DATABASE_URL", "").strip()  # postgresql+asyncpg://...
 
-connect_args = {"ssl": ssl.create_default_context()}
+engine = None
+SessionLocal: async_sessionmaker[AsyncSession] | None = None
 
-engine = create_async_engine(
-    DATABASE_URL,
-    connect_args=connect_args,
-    pool_pre_ping=True,
-    pool_size=5,
-    max_overflow=0,
-)
+if DATABASE_URL:
+    connect_args = {"ssl": ssl.create_default_context()}
+    engine = create_async_engine(
+        DATABASE_URL,
+        connect_args=connect_args,
+        pool_pre_ping=True,
+        pool_size=5,
+        max_overflow=0,
+    )
+    SessionLocal = async_sessionmaker(bind=engine, expire_on_commit=False, class_=AsyncSession)
+    # положим фабрику сессий в state — её подхватывает backend/api.py
+    app.state.sessionmaker = SessionLocal
+
+# ────────────────────────────────────────────────────────────────────────────────
+# API router
+# ────────────────────────────────────────────────────────────────────────────────
+from backend import api as api_module  # noqa: E402
+
+app.include_router(api_module.router, prefix="/api")
 
 # ────────────────────────────────────────────────────────────────────────────────
 # Routes
@@ -89,7 +105,8 @@ async def root() -> str:
 
 @app.get("/health")
 async def health() -> dict:
-    return {"status": "ok"}
+    # совместимость со старым фронтом: возвращаем и status, и pseudo-database
+    return {"status": "ok", "database": "ok"}
 
 @app.get("/health/db")
 async def health_db() -> dict:
@@ -109,10 +126,3 @@ async def favicon() -> Response:
     if ico.exists():
         return FileResponse(ico, media_type="image/x-icon")
     return Response(status_code=204)
-
-# ────────────────────────────────────────────────────────────────────────────────
-# Minimal API stub (чтобы фронт не падал)
-# ────────────────────────────────────────────────────────────────────────────────
-@app.get("/api/categories")
-async def list_categories() -> list[dict]:
-    return []
