@@ -33,7 +33,6 @@ pydantic_core
 Pygments
 PyJWT
 pytest
-pytest-asyncio
 python-dotenv
 python-telegram-bot
 pytokens
@@ -48,3 +47,4 @@ uvicorn
 watchfiles
 
 websockets
+
