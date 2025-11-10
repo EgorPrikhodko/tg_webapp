@@ -1,4 +1,3 @@
-# backend/api.py
 from __future__ import annotations
 
 import os
@@ -17,7 +16,8 @@ from fastapi import (
     Query,
 )
 from pydantic import BaseModel, Field, conint, field_validator
-from sqlalchemy import select, update, delete, and_, or_, func, insert
+from sqlalchemy import select, delete, and_, or_
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.models import User, Category, Product
@@ -25,8 +25,9 @@ from backend.models import User, Category, Product
 router = APIRouter(tags=["api"])
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Вспомогательные утилиты: доступ к сессии и правам
+# Доступ к сессии и права
 # ──────────────────────────────────────────────────────────────────────────────
+
 def _parse_moder_ids(raw: str) -> List[int]:
     out: List[int] = []
     for part in (raw or "").split(","):
@@ -43,13 +44,10 @@ MODERATOR_IDS: List[int] = _parse_moder_ids(os.getenv("MODERATOR_IDS", ""))
 
 
 async def get_session(request: Request) -> AsyncSession:
-    """
-    Берём sessionmaker, который кладётся в app.state.sessionmaker в main.py.
-    """
     sm = getattr(request.app.state, "sessionmaker", None)
     if sm is None:
         raise RuntimeError(
-            "Sessionmaker не найден. В main.py добавь: app.state.sessionmaker = AsyncSessionLocal"
+            "Sessionmaker не найден. В main.py положи: app.state.sessionmaker = SessionLocal"
         )
     async with sm() as session:  # type: AsyncSession
         yield session
@@ -57,9 +55,8 @@ async def get_session(request: Request) -> AsyncSession:
 
 async def get_tg_id(
     x_telegram_id: Optional[int] = Header(None, convert_underscores=False, alias="X-Telegram-Id"),
-    tg_id_q: Optional[int] = Query(None, alias="tg_id"),  # на случай ручных тестов из браузера
+    tg_id_q: Optional[int] = Query(None, alias="tg_id"),
 ) -> Optional[int]:
-    """Telegram ID из заголовка X-Telegram-Id или query-параметра tg_id."""
     return x_telegram_id or tg_id_q
 
 
@@ -72,8 +69,9 @@ async def require_admin(tg_id: Optional[int] = Depends(get_tg_id)) -> int:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Вспомогательные функции
+# Утилиты нормализации
 # ──────────────────────────────────────────────────────────────────────────────
+
 _slug_re = re.compile(r"[^a-z0-9\-]+")
 
 def slugify(value: str) -> str:
@@ -84,37 +82,24 @@ def slugify(value: str) -> str:
     return v or "item"
 
 async def parse_json_or_form(request: Request, allowed_fields: List[str]) -> Dict[str, Any]:
-    """
-    Универсальный парсер: JSON или multipart/form-data → dict.
-    Разрешён только белый список полей.
-    """
     ctype = (request.headers.get("content-type") or "").lower()
-    data: Dict[str, Any]
     if "application/json" in ctype:
         data = await request.json()
         if not isinstance(data, dict):
             raise HTTPException(422, "JSON payload must be an object")
-    elif "multipart/form-data" in ctype:
+    elif "multipart/form-data" in ctype or "application/x-www-form-urlencoded" in ctype:
         form = await request.form()
         data = {k: form.get(k) for k in allowed_fields if k in form}
     else:
-        # Для простоты поддержим и application/x-www-form-urlencoded
-        if "application/x-www-form-urlencoded" in ctype:
-            form = await request.form()
-            data = {k: form.get(k) for k in allowed_fields if k in form}
-        else:
-            raise HTTPException(415, "Unsupported Media Type")
-    # Оставим только разрешённые поля
+        raise HTTPException(415, "Unsupported Media Type")
     return {k: v for k, v in data.items() if k in allowed_fields}
-
 
 def to_bool(v: Any) -> bool:
     if isinstance(v, bool):
         return v
     if v is None:
         return False
-    s = str(v).strip().lower()
-    return s in {"1", "true", "on", "yes"}
+    return str(v).strip().lower() in {"1", "true", "on", "yes"}
 
 def to_int_or_none(v: Any) -> Optional[int]:
     if v is None or str(v).strip() == "":
@@ -128,7 +113,7 @@ def to_float(v: Any) -> float:
     if isinstance(v, (int, float)):
         return float(v)
     s = str(v).strip().replace(",", ".")
-    return float(s)
+    return float(s or 0)
 
 def parse_json_field(v: Any) -> Optional[dict | list]:
     if v is None or v == "":
@@ -142,8 +127,9 @@ def parse_json_field(v: Any) -> Optional[dict | list]:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Схемы (Pydantic)
+# Pydantic-схемы
 # ──────────────────────────────────────────────────────────────────────────────
+
 # Users
 class EnsureUserIn(BaseModel):
     tg_id: conint(gt=0)
@@ -153,7 +139,6 @@ class EnsureUserOut(BaseModel):
     tg_id: int
     is_admin: bool
     is_active: bool
-
 
 # Categories
 class CategoryIn(BaseModel):
@@ -167,8 +152,7 @@ class CategoryOut(BaseModel):
     slug: str
     parent_id: Optional[int]
 
-
-# Products (вход мягко валидируется)
+# Products
 class ProductIn(BaseModel):
     title: str = Field(..., max_length=255)
     slug: Optional[str] = Field(None, max_length=255)
@@ -179,7 +163,7 @@ class ProductIn(BaseModel):
     is_active: bool = True
     images: Optional[List[str]] = None
     attributes: Optional[Dict[str, Any]] = None
-    category_id: Optional[int] = None  # разрешим None → проверим сами
+    category_id: Optional[int] = None
 
     @field_validator("title")
     @classmethod
@@ -191,11 +175,9 @@ class ProductIn(BaseModel):
 
     @field_validator("slug")
     @classmethod
-    def _slug(cls, v: Optional[str], info):
-        if v is None or not str(v).strip():
-            # сгенерируем потом из title (в эндпоинте), здесь только очистим
-            return None
-        return str(v).strip()
+    def _slug(cls, v: Optional[str]) -> Optional[str]:
+        v = (v or "").strip()
+        return v or None
 
     @field_validator("description")
     @classmethod
@@ -213,9 +195,7 @@ class ProductIn(BaseModel):
     @classmethod
     def _stock(cls, v):
         if isinstance(v, str):
-            v = v.strip()
-            if v == "":
-                return 0
+            v = v.strip() or "0"
         return int(v)
 
     @field_validator("currency")
@@ -236,7 +216,6 @@ class ProductIn(BaseModel):
     @field_validator("images")
     @classmethod
     def _images(cls, v):
-        # допускаем JSON-строку или список
         if v is None or v == "":
             return None
         if isinstance(v, str):
@@ -254,7 +233,6 @@ class ProductIn(BaseModel):
     @field_validator("attributes")
     @classmethod
     def _attrs(cls, v):
-        # допускаем JSON-строку или dict
         if v is None or v == "":
             return None
         if isinstance(v, str):
@@ -289,7 +267,6 @@ class ProductOut(BaseModel):
 # ──────────────────────────────────────────────────────────────────────────────
 @router.post("/users/ensure", response_model=EnsureUserOut)
 async def ensure_user(payload: EnsureUserIn, session: AsyncSession = Depends(get_session)):
-    """Зарегистрировать пользователя по tg_id, если его ещё нет (первый вход в WebApp)."""
     q = select(User).where(User.tg_id == payload.tg_id)
     res = await session.execute(q)
     user = res.scalar_one_or_none()
@@ -307,7 +284,7 @@ async def ensure_user(payload: EnsureUserIn, session: AsyncSession = Depends(get
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Categories
+# Categories (с проверкой parent_id и дружелюбными ошибками)
 # ──────────────────────────────────────────────────────────────────────────────
 @router.get("/categories", response_model=List[CategoryOut])
 async def list_categories(session: AsyncSession = Depends(get_session)):
@@ -318,13 +295,34 @@ async def list_categories(session: AsyncSession = Depends(get_session)):
 
 @router.post("/categories", response_model=CategoryOut)
 async def create_category(
-    payload: CategoryIn,
+    request: Request,
     _: int = Depends(require_admin),
     session: AsyncSession = Depends(get_session),
 ):
-    cat = Category(name=payload.name, slug=payload.slug, parent_id=payload.parent_id)
+    raw = await parse_json_or_form(request, ["name", "slug", "parent_id"])
+
+    name = (raw.get("name") or "").strip()
+    slug = (raw.get("slug") or "").strip()
+    parent_id = to_int_or_none(raw.get("parent_id"))
+
+    if not name:
+        raise HTTPException(422, detail="name is required")
+    if not slug:
+        raise HTTPException(422, detail="slug is required")
+
+    if parent_id is not None:
+        exists = await session.scalar(select(Category.id).where(Category.id == parent_id))
+        if not exists:
+            raise HTTPException(422, detail=f"parent_id={parent_id} does not exist")
+
+    cat = Category(name=name, slug=slug, parent_id=parent_id)
     session.add(cat)
-    await session.commit()
+    try:
+        await session.commit()
+    except IntegrityError as e:
+        await session.rollback()
+        raise HTTPException(409, detail="category slug already exists") from e
+
     await session.refresh(cat)
     return CategoryOut(id=cat.id, name=cat.name, slug=cat.slug, parent_id=cat.parent_id)
 
@@ -332,20 +330,45 @@ async def create_category(
 @router.patch("/categories/{category_id}", response_model=CategoryOut)
 async def update_category(
     category_id: int,
-    payload: CategoryIn,
+    request: Request,
     _: int = Depends(require_admin),
     session: AsyncSession = Depends(get_session),
 ):
-    q = select(Category).where(Category.id == category_id)
-    res = await session.execute(q)
+    res = await session.execute(select(Category).where(Category.id == category_id))
     cat = res.scalar_one_or_none()
     if not cat:
         raise HTTPException(404, "Категория не найдена")
 
-    cat.name = payload.name
-    cat.slug = payload.slug
-    cat.parent_id = payload.parent_id
-    await session.commit()
+    raw = await parse_json_or_form(request, ["name", "slug", "parent_id"])
+
+    if "name" in raw:
+        name = (raw.get("name") or "").strip()
+        if not name:
+            raise HTTPException(422, detail="name is required")
+        cat.name = name
+
+    if "slug" in raw:
+        slug = (raw.get("slug") or "").strip()
+        if not slug:
+            raise HTTPException(422, detail="slug is required")
+        cat.slug = slug
+
+    if "parent_id" in raw:
+        parent_id = to_int_or_none(raw.get("parent_id"))
+        if parent_id == category_id:
+            raise HTTPException(422, detail="parent_id cannot be equal to category_id")
+        if parent_id is not None:
+            exists = await session.scalar(select(Category.id).where(Category.id == parent_id))
+            if not exists:
+                raise HTTPException(422, detail=f"parent_id={parent_id} does not exist")
+        cat.parent_id = parent_id
+
+    try:
+        await session.commit()
+    except IntegrityError as e:
+        await session.rollback()
+        raise HTTPException(409, detail="category slug already exists") from e
+
     await session.refresh(cat)
     return CategoryOut(id=cat.id, name=cat.name, slug=cat.slug, parent_id=cat.parent_id)
 
@@ -362,7 +385,7 @@ async def delete_category(
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Products
+# Products (с проверкой category_id и дружелюбными ошибками)
 # ──────────────────────────────────────────────────────────────────────────────
 @router.get("/products", response_model=List[ProductOut])
 async def list_products(
@@ -444,47 +467,62 @@ async def create_product(
     _: int = Depends(require_admin),
     session: AsyncSession = Depends(get_session),
 ):
-    # Разрешённый набор полей с формы/JSON:
     allowed = [
         "title", "slug", "description", "price", "currency",
         "stock", "is_active", "images", "attributes", "category_id",
     ]
     raw = await parse_json_or_form(request, allowed)
 
-    # Мягкая нормализация
-    payload = ProductIn(
-        title=str(raw.get("title", "")),
-        slug=(raw.get("slug") or None),
-        description=(raw.get("description") or None),
-        price=to_float(raw.get("price", 0)),
-        currency=str(raw.get("currency", "RUB")).upper(),
-        stock=int(to_int_or_none(raw.get("stock")) or 0),
-        is_active=to_bool(raw.get("is_active")),
-        images=(parse_json_field(raw.get("images")) if isinstance(raw.get("images"), str) else raw.get("images")),
-        attributes=(parse_json_field(raw.get("attributes")) if isinstance(raw.get("attributes"), str) else raw.get("attributes")),
-        category_id=to_int_or_none(raw.get("category_id")),
-    )
+    title = str(raw.get("title", "")).strip()
+    if not title:
+        raise HTTPException(422, detail="title is required")
 
-    if payload.category_id is None:
-        raise HTTPException(422, detail="category_id is required")
+    slug = (str(raw.get("slug") or "").strip()) or slugify(title)
+    description = (str(raw.get("description") or "").strip()) or None
+    price = to_float(raw.get("price", 0))
+    currency = (str(raw.get("currency", "RUB")).strip().upper()) or "RUB"
+    stock = int(to_int_or_none(raw.get("stock")) or 0)
+    is_active = to_bool(raw.get("is_active"))
 
-    # slug по умолчанию из title
-    slug = payload.slug or slugify(payload.title)
+    images = raw.get("images")
+    if isinstance(images, str):
+        images = parse_json_field(images)
+    attributes = raw.get("attributes")
+    if isinstance(attributes, str):
+        attributes = parse_json_field(attributes)
+
+    category_id = to_int_or_none(raw.get("category_id"))
+    if category_id is None:
+        raise HTTPException(422, detail="category_id is required and must be int")
+    exists = await session.scalar(select(Category.id).where(Category.id == category_id))
+    if not exists:
+        raise HTTPException(422, detail=f"category_id={category_id} does not exist")
 
     p = Product(
-        title=payload.title,
+        title=title,
         slug=slug,
-        description=payload.description,
-        price=Decimal(str(payload.price)),
-        currency=payload.currency,
-        stock=payload.stock,
-        is_active=payload.is_active,
-        images=payload.images,
-        attributes=payload.attributes,
-        category_id=payload.category_id,  # type: ignore[arg-type]
+        description=description,
+        price=Decimal(str(price)),
+        currency=currency,
+        stock=stock,
+        is_active=is_active,
+        images=images,
+        attributes=attributes,
+        category_id=category_id,
     )
+
     session.add(p)
-    await session.commit()
+    try:
+        await session.commit()
+    except IntegrityError as e:
+        await session.rollback()
+        msg = str(e).lower()
+        if "unique" in msg and "slug" in msg:
+            raise HTTPException(409, detail="product slug already exists") from e
+        if "foreign key" in msg:
+            raise HTTPException(422, detail="invalid category_id (foreign key)") from e
+        raise HTTPException(400, detail="cannot create product") from e
+
     await session.refresh(p)
     return ProductOut(
         id=p.id,
@@ -519,19 +557,21 @@ async def update_product(
     ]
     raw = await parse_json_or_form(request, allowed)
 
-    # Обновляем только присланные поля (с мягким приведением типов)
     if "title" in raw:
-        p.title = str(raw["title"]).strip()
+        t = str(raw["title"]).strip()
+        if not t:
+            raise HTTPException(422, detail="title is required")
+        p.title = t
     if "slug" in raw:
         s = str(raw["slug"]).strip()
         p.slug = s or slugify(p.title)
     if "description" in raw:
-        desc = str(raw["description"]).strip()
-        p.description = desc or None
+        d = str(raw["description"]).strip()
+        p.description = d or None
     if "price" in raw:
         p.price = Decimal(str(to_float(raw["price"])))
     if "currency" in raw:
-        p.currency = str(raw["currency"]).strip().upper() or p.currency
+        p.currency = (str(raw["currency"]).strip().upper()) or p.currency
     if "stock" in raw:
         iv = to_int_or_none(raw["stock"])
         p.stock = int(iv or 0)
@@ -545,9 +585,22 @@ async def update_product(
         cid = to_int_or_none(raw["category_id"])
         if cid is None:
             raise HTTPException(422, detail="category_id must be int")
+        exists = await session.scalar(select(Category.id).where(Category.id == cid))
+        if not exists:
+            raise HTTPException(422, detail=f"category_id={cid} does not exist")
         p.category_id = cid
 
-    await session.commit()
+    try:
+        await session.commit()
+    except IntegrityError as e:
+        await session.rollback()
+        msg = str(e).lower()
+        if "unique" in msg and "slug" in msg:
+            raise HTTPException(409, detail="product slug already exists") from e
+        if "foreign key" in msg:
+            raise HTTPException(422, detail="invalid category_id (foreign key)") from e
+        raise HTTPException(400, detail="cannot update product") from e
+
     await session.refresh(p)
     return ProductOut(
         id=p.id,
