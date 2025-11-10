@@ -1,10 +1,11 @@
+# backend/api.py
 from __future__ import annotations
 
 import os
 import json
 import re
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from fastapi import (
     APIRouter,
@@ -116,14 +117,31 @@ def to_float(v: Any) -> float:
     return float(s or 0)
 
 def parse_json_field(v: Any) -> Optional[dict | list]:
+    """
+    Принимаем только dict/list.
+    Строки типа "1", "true", "42" -> игнорируем (None), чтобы не ломать схему.
+    """
     if v is None or v == "":
         return None
     if isinstance(v, (dict, list)):
         return v
     try:
-        return json.loads(str(v))
+        parsed = json.loads(str(v))
     except Exception:
         return None
+    return parsed if isinstance(parsed, (dict, list)) else None
+
+def safe_images(v: Any) -> Optional[List[str]]:
+    if isinstance(v, list):
+        return [str(s).strip() for s in v if str(s).strip()]
+    return None
+
+def safe_attrs(v: Any) -> Optional[Union[Dict[str, Any], List[Any]]]:
+    if isinstance(v, dict):
+        return v
+    if isinstance(v, list):
+        return v
+    return None
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -219,13 +237,10 @@ class ProductIn(BaseModel):
         if v is None or v == "":
             return None
         if isinstance(v, str):
-            try:
-                parsed = json.loads(v)
-                if isinstance(parsed, list):
-                    return [str(s).strip() for s in parsed if str(s).strip()]
-                return None
-            except Exception:
-                return None
+            parsed = parse_json_field(v)
+            if isinstance(parsed, list):
+                return [str(s).strip() for s in parsed if str(s).strip()]
+            return None
         if isinstance(v, list):
             return [str(s).strip() for s in v if str(s).strip()]
         return None
@@ -236,13 +251,8 @@ class ProductIn(BaseModel):
         if v is None or v == "":
             return None
         if isinstance(v, str):
-            try:
-                parsed = json.loads(v)
-                if isinstance(parsed, dict):
-                    return parsed
-                return None
-            except Exception:
-                return None
+            parsed = parse_json_field(v)
+            return parsed if isinstance(parsed, dict) else None
         if isinstance(v, dict):
             return v
         return None
@@ -258,7 +268,7 @@ class ProductOut(BaseModel):
     stock: int
     is_active: bool
     images: Optional[List[str]]
-    attributes: Optional[Dict[str, Any]]
+    attributes: Optional[Union[Dict[str, Any], List[Any]]]
     category_id: int
 
 
@@ -284,7 +294,7 @@ async def ensure_user(payload: EnsureUserIn, session: AsyncSession = Depends(get
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Categories (с проверкой parent_id и дружелюбными ошибками)
+# Categories (проверка parent_id + дружелюбные ошибки)
 # ──────────────────────────────────────────────────────────────────────────────
 @router.get("/categories", response_model=List[CategoryOut])
 async def list_categories(session: AsyncSession = Depends(get_session)):
@@ -348,20 +358,20 @@ async def update_category(
         cat.name = name
 
     if "slug" in raw:
-        slug = (raw.get("slug") or "").strip()
-        if not slug:
+        s = (raw.get("slug") or "").strip()
+        if not s:
             raise HTTPException(422, detail="slug is required")
-        cat.slug = slug
+        cat.slug = s
 
     if "parent_id" in raw:
-        parent_id = to_int_or_none(raw.get("parent_id"))
-        if parent_id == category_id:
+        pid = to_int_or_none(raw.get("parent_id"))
+        if pid == category_id:
             raise HTTPException(422, detail="parent_id cannot be equal to category_id")
-        if parent_id is not None:
-            exists = await session.scalar(select(Category.id).where(Category.id == parent_id))
+        if pid is not None:
+            exists = await session.scalar(select(Category.id).where(Category.id == pid))
             if not exists:
-                raise HTTPException(422, detail=f"parent_id={parent_id} does not exist")
-        cat.parent_id = parent_id
+                raise HTTPException(422, detail=f"parent_id={pid} does not exist")
+        cat.parent_id = pid
 
     try:
         await session.commit()
@@ -385,7 +395,7 @@ async def delete_category(
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Products (с проверкой category_id и дружелюбными ошибками)
+# Products (проверка category_id + дружелюбные ошибки)
 # ──────────────────────────────────────────────────────────────────────────────
 @router.get("/products", response_model=List[ProductOut])
 async def list_products(
@@ -431,8 +441,8 @@ async def list_products(
             currency=p.currency,
             stock=p.stock,
             is_active=bool(p.is_active),
-            images=p.images,
-            attributes=p.attributes,
+            images=safe_images(p.images),
+            attributes=safe_attrs(p.attributes),
             category_id=p.category_id,
         )
 
@@ -455,8 +465,8 @@ async def get_product(product_id: int, session: AsyncSession = Depends(get_sessi
         currency=p.currency,
         stock=p.stock,
         is_active=bool(p.is_active),
-        images=p.images,
-        attributes=p.attributes,
+        images=safe_images(p.images),
+        attributes=safe_attrs(p.attributes),
         category_id=p.category_id,
     )
 
@@ -533,8 +543,8 @@ async def create_product(
         currency=p.currency,
         stock=p.stock,
         is_active=bool(p.is_active),
-        images=p.images,
-        attributes=p.attributes,
+        images=safe_images(p.images),
+        attributes=safe_attrs(p.attributes),
         category_id=p.category_id,
     )
 
@@ -611,8 +621,8 @@ async def update_product(
         currency=p.currency,
         stock=p.stock,
         is_active=bool(p.is_active),
-        images=p.images,
-        attributes=p.attributes,
+        images=safe_images(p.images),
+        attributes=safe_attrs(p.attributes),
         category_id=p.category_id,
     )
 
