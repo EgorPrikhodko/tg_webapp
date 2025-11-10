@@ -7,62 +7,134 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     :root{
-      --bg:#0f1220; --card:#171a2b; --muted:#20243a;
-      --text:#f4f6ff; --subtext:#b4b8d0; --accent:#5b8cff;
-      --ok:#3ad29f; --warn:#ffc857; --err:#ff6b6b;
-      --radius:14px; --shadow:0 10px 30px rgba(0,0,0,.35);
+      --bg:#0b0f1a; --bg2:#0f1424; --card:#12182a; --muted:#1a2036;
+      --text:#e9ecff; --subtext:#9aa3c2; --accent:#6ea8ff; --accent-2:#8b7dff;
+      --ok:#2dd4bf; --warn:#ffc857; --err:#ff6b6b; --info:#67e8f9;
+      --radius:16px; --radius-sm:12px; --shadow:0 12px 36px rgba(0,0,0,.45);
+      --border:1px solid rgba(255,255,255,.06);
+      --grad:linear-gradient(135deg, rgba(110,168,255,.20), rgba(139,125,255,.15));
+      --glow:0 0 0 2px rgba(110,168,255,.25), 0 10px 30px rgba(110,168,255,.15);
     }
     *{box-sizing:border-box}
-    body{margin:0;background:var(--bg);color:var(--text);
-      font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
-    .wrap{max-width:1120px;margin:0 auto;padding:18px}
-    header{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-bottom:14px}
-    h1{font-size:20px;margin:0;letter-spacing:.3px}
-    .pill{background:var(--muted);padding:8px 12px;border-radius:999px;color:var(--subtext);display:inline-flex;align-items:center;gap:8px}
-    .status-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
-    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 0}
-    .tab-btn{background:var(--muted);color:var(--text);border:none;border-radius:10px;padding:10px 14px;cursor:pointer;transition:.2s}
-    .tab-btn[aria-selected="true"]{background:var(--accent)}
-    .grid{display:grid;gap:14px}
-    @media(min-width:860px){.grid-2{grid-template-columns:1fr 1fr}.grid-3{grid-template-columns:1fr 1fr 1fr}}
-    .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px;border:1px solid rgba(255,255,255,.06)}
-    .card h2{margin:0 0 8px;font-size:16px}
+    html,body{height:100%}
+    body{
+      margin:0;background:
+        radial-gradient(1200px 600px at -10% -10%, rgba(139,125,255,.15), transparent 60%),
+        radial-gradient(1000px 600px at 110% -10%, rgba(103,232,249,.12), transparent 60%),
+        radial-gradient(1200px 800px at 50% 120%, rgba(110,168,255,.10), transparent 60%),
+        var(--bg);
+      color:var(--text);
+      font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;
+    }
+    .wrap{max-width:1180px;margin:0 auto;padding:18px}
+    header{
+      display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:16px;
+      padding:12px;border-radius:var(--radius);background:linear-gradient(180deg, var(--bg2), rgba(18,24,42,.66));
+      border:var(--border);
+    }
+    .brand{
+      display:flex;align-items:center;gap:12px
+    }
+    .logo{
+      width:36px;height:36px;border-radius:12px;
+      background:conic-gradient(from 90deg at 50% 50%, rgba(110,168,255,.6), rgba(139,125,255,.6), rgba(110,168,255,.6));
+      box-shadow:var(--glow);
+    }
+    h1{font-size:18px;margin:0;letter-spacing:.3px}
+    .meta{
+      display:flex;gap:8px;flex-wrap:wrap;align-items:center
+    }
+    .pill{
+      background:var(--muted);padding:8px 12px;border-radius:999px;
+      color:var(--subtext);display:inline-flex;align-items:center;gap:8px;border:var(--border)
+    }
+    .status-dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+    .status-ok{background:var(--ok)} .status-warn{background:var(--warn)} .status-err{background:var(--err)}
+
+    .api-box{display:flex;gap:8px;max-width:540px}
+    .input, select, textarea{
+      width:100%;background:rgba(9,13,24,.8);border:1px solid #25304a;color:var(--text);
+      border-radius:12px;padding:10px 12px;outline:none;transition:.2s;
+    }
+    .input:focus, select:focus, textarea:focus{border-color:#3a54a8; box-shadow:0 0 0 3px rgba(62,102,255,.18)}
+    textarea{min-height:88px;resize:vertical}
+
+    .btn{
+      background:linear-gradient(135deg, var(--accent), var(--accent-2));color:#fff;border:none;
+      border-radius:12px;padding:10px 14px;cursor:pointer;font-weight:600;transition:.2s; box-shadow:0 6px 24px rgba(110,168,255,.25);
+    }
+    .btn:hover{transform:translateY(-1px)}
+    .btn:active{transform:translateY(0)}
+    .btn.muted{background:var(--muted);color:var(--text);box-shadow:none}
+    .btn.red{background:#ff5c7a}
+    .btn.green{background:#18d1a6}
+    .btn:disabled{opacity:.6;cursor:not-allowed}
+
+    nav.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 0}
+    .tab-btn{background:var(--muted);color:var(--text);border:none;border-radius:12px;padding:10px 14px;cursor:pointer;transition:.2s;border:var(--border)}
+    .tab-btn[aria-selected="true"]{background:var(--grad);box-shadow:var(--glow)}
+
+    .grid{display:grid;gap:16px}
+    @media(min-width:880px){.grid-2{grid-template-columns:1fr 1fr}.grid-3{grid-template-columns:1fr 1fr 1fr}}
+
+    .card{
+      background:linear-gradient(180deg, rgba(18,24,42,.92), rgba(12,16,30,.92));
+      border-radius:18px;box-shadow:var(--shadow);padding:16px;border:var(--border);position:relative;overflow:clip
+    }
+    .card::after{
+      content:""; position:absolute; inset:0; pointer-events:none;
+      background:radial-gradient(600px 180px at 20% -10%, rgba(110,168,255,.08), transparent 60%);
+    }
+    .card h2{margin:0 0 10px;font-size:16px}
     .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
     .row>*{flex:1 1 auto}
-    .input,select,textarea{width:100%;background:#0c0f1d;border:1px solid #2b3150;color:var(--text);border-radius:10px;padding:10px 12px;outline:none}
-    textarea{min-height:80px;resize:vertical}
-    .btn{background:var(--accent);color:#fff;border:none;border-radius:10px;padding:10px 14px;cursor:pointer;font-weight:600}
-    .btn.muted{background:var(--muted);color:var(--text)}
-    .btn.red{background:#ff5c7a}
-    .btn.green{background:var(--ok);color:#05110d}
-    .btn:disabled{opacity:.6;cursor:not-allowed}
-    .table{width:100%;border-collapse:collapse;overflow:hidden;border-radius:12px}
-    .table th,.table td{padding:10px;border-bottom:1px solid rgba(255,255,255,.06);text-align:left;vertical-align:top}
-    .table th{color:var(--subtext);font-weight:600}
-    .badg{padding:3px 8px;border-radius:999px;background:var(--muted);color:var(--text);font-size:12px}
-    .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;background:#11162a;border:1px solid #253058;color:var(--text);padding:12px 14px;border-radius:12px;box-shadow:var(--shadow);z-index:50;display:none}
     .hint{color:var(--subtext);font-size:12px}
     .divider{height:1px;background:rgba(255,255,255,.06);margin:12px 0}
-    .badge-ok{background:rgba(58,210,159,.18);color:#3ad29f}
-    .tag{background:#0f1430;border:1px solid #28306b;padding:6px 8px;border-radius:10px;color:#c5ccff}
+
+    .table-wrap{overflow:auto;border-radius:14px;border:var(--border)}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.06);text-align:left;vertical-align:top}
+    th{color:#b9c2e0;font-weight:600;background:rgba(110,168,255,.05)}
+    tr:hover td{background:rgba(139,125,255,.05)}
+    .tag{background:#0f1430;border:1px solid #28306b;padding:4px 8px;border-radius:10px;color:#c5ccff;font-size:12px}
     .code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+
+    .toast{
+      position:fixed;left:50%;transform:translateX(-50%);bottom:18px;background:#11162a;
+      border:1px solid #253058;color:var(--text);padding:12px 14px;border-radius:12px;box-shadow:var(--shadow);z-index:50;display:none;max-width:86%;
+    }
+    .toast.show{display:block;animation:pop .25s ease}
+    @keyframes pop{from{transform:translateX(-50%) translateY(6px);opacity:.5} to{transform:translateX(-50%) translateY(0);opacity:1}}
+
+    .badge-ok{background:rgba(45,212,191,.16);color:#2dd4bf}
+    .empty{color:var(--subtext);font-size:13px;padding:6px 0}
+    .sublabel{font-size:12px;color:var(--subtext)}
+
+    .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .ghost{opacity:.75}
   </style>
 </head>
 <body>
   <div class="wrap">
     <header>
-      <div class="row" style="gap:12px;align-items:center">
-        <h1>🛍️ TG Shop · WebApp</h1>
+      <div class="brand">
+        <div class="logo"></div>
+        <div>
+          <h1>🛍️ TG Shop · WebApp</h1>
+          <div class="sublabel">Мини-приложение с админ-панелью</div>
+        </div>
+      </div>
+      <div class="meta">
         <div id="pillStatus" class="pill">
-          <span class="status-dot" id="dotDb" style="background:var(--warn)"></span>
+          <span class="status-dot status-warn" id="dotDb"></span>
           <span id="txtDb">Проверка БД…</span>
         </div>
         <div class="pill" title="ID текущего пользователя">👤 <span id="pillUser">—</span></div>
         <div class="pill" title="Режим"><span id="pillMode">Гость</span></div>
-      </div>
-      <div class="row" style="justify-content:flex-end;gap:8px;max-width:520px">
-        <input id="apiInput" class="input" placeholder="API Base (опционально)" />
-        <button id="saveApiBtn" class="btn muted">Set API</button>
+        <div class="api-box">
+          <input id="apiInput" class="input" placeholder="API Base (опционально)" />
+          <button id="saveApiBtn" class="btn muted">Set API</button>
+        </div>
       </div>
     </header>
 
@@ -72,41 +144,50 @@
     </nav>
 
     <!-- Каталог -->
-    <section id="view_catalog" class="grid" style="margin-top:12px">
+    <section id="view_catalog" class="grid" style="margin-top:14px">
       <div class="card">
-        <h2>Категории</h2>
-        <div class="row">
+        <div class="toolbar" style="justify-content:space-between">
+          <h2>Категории</h2>
+          <div class="hint">Публичный GET: <span class="code tag">/api/categories</span></div>
+        </div>
+        <div class="row" style="margin-top:6px">
           <button class="btn muted" id="btnReloadCats">Обновить список</button>
-          <span class="hint">Публичный GET: <span class="code tag">/api/categories</span></span>
         </div>
         <div class="divider"></div>
-        <div id="catsEmpty" class="hint">Пока нет категорий…</div>
-        <table class="table" id="catsTable" style="display:none">
-          <thead><tr><th>ID</th><th>Название</th><th>Slug</th><th>Parent</th></tr></thead>
-          <tbody id="catsTbody"></tbody>
-        </table>
+        <div id="catsEmpty" class="empty">Пока нет категорий…</div>
+        <div class="table-wrap" id="catsTableWrap" style="display:none">
+          <table class="table" id="catsTable">
+            <thead><tr><th>ID</th><th>Название</th><th>Slug</th><th>Parent</th></tr></thead>
+            <tbody id="catsTbody"></tbody>
+          </table>
+        </div>
       </div>
 
       <div class="card">
-        <h2>Товары</h2>
-        <div class="row">
+        <div class="toolbar" style="justify-content:space-between">
+          <h2>Товары</h2>
+          <div class="hint">Публичный GET: <span class="code tag">/api/products</span></div>
+        </div>
+        <div class="row" style="margin-top:6px">
           <input id="qSearch" class="input" placeholder="Поиск по названию/описанию…" />
           <select id="selCatFilter" class="input"><option value="">— Категория —</option></select>
           <button class="btn muted" id="btnReloadProds">Найти</button>
         </div>
         <div class="divider"></div>
-        <div id="prodsEmpty" class="hint">Товаров пока нет…</div>
-        <table class="table" id="prodsTable" style="display:none">
-          <thead>
+        <div id="prodsEmpty" class="empty">Товаров пока нет…</div>
+        <div class="table-wrap" id="prodsTableWrap" style="display:none">
+          <table class="table" id="prodsTable">
+            <thead>
             <tr><th>ID</th><th>Название</th><th>Цена</th><th>Вал.</th><th>Остаток</th><th>Активен</th><th>Категория</th></tr>
-          </thead>
-          <tbody id="prodsTbody"></tbody>
-        </table>
+            </thead>
+            <tbody id="prodsTbody"></tbody>
+          </table>
+        </div>
       </div>
     </section>
 
     <!-- Админ -->
-    <section id="view_admin" class="grid grid-2" style="margin-top:12px;display:none">
+    <section id="view_admin" class="grid grid-2" style="margin-top:14px;display:none">
       <div class="card">
         <h2>Категории · CRUD</h2>
         <div class="row">
@@ -120,11 +201,13 @@
           <button id="btnCancelCat" class="btn muted" disabled>Отмена</button>
         </div>
         <div class="divider"></div>
-        <div id="catsEmptyA" class="hint">Пока нет категорий…</div>
-        <table class="table" id="catsTableA" style="display:none">
-          <thead><tr><th>ID</th><th>Название</th><th>Slug</th><th>Parent</th><th>Действия</th></tr></thead>
-          <tbody id="catsTbodyA"></tbody>
-        </table>
+        <div id="catsEmptyA" class="empty">Пока нет категорий…</div>
+        <div class="table-wrap" id="catsTableAWrap" style="display:none">
+          <table class="table" id="catsTableA">
+            <thead><tr><th>ID</th><th>Название</th><th>Slug</th><th>Parent</th><th>Действия</th></tr></thead>
+            <tbody id="catsTbodyA"></tbody>
+          </table>
+        </div>
       </div>
 
       <div class="card">
@@ -155,15 +238,16 @@
             <button id="btnCancelProd" class="btn muted" disabled>Отмена</button>
           </div>
         </div>
-
         <div class="divider"></div>
-        <div id="prodsEmptyA" class="hint">Пока нет товаров…</div>
-        <table class="table" id="prodsTableA" style="display:none">
-          <thead>
-            <tr><th>ID</th><th>Название</th><th>Цена</th><th>Вал.</th><th>Ост.</th><th>Активен</th><th>Категория</th><th>Действия</th></tr>
-          </thead>
-          <tbody id="prodsTbodyA"></tbody>
-        </table>
+        <div id="prodsEmptyA" class="empty">Пока нет товаров…</div>
+        <div class="table-wrap" id="prodsTableAWrap" style="display:none">
+          <table class="table" id="prodsTableA">
+            <thead>
+              <tr><th>ID</th><th>Название</th><th>Цена</th><th>Вал.</th><th>Ост.</th><th>Активен</th><th>Категория</th><th>Действия</th></tr>
+            </thead>
+            <tbody id="prodsTbodyA"></tbody>
+          </table>
+        </div>
       </div>
     </section>
   </div>
@@ -193,10 +277,10 @@
       toast: document.getElementById("toast"),
 
       catsEmpty: document.getElementById("catsEmpty"),
-      catsTable: document.getElementById("catsTable"),
+      catsTableWrap: document.getElementById("catsTableWrap"),
       catsTbody: document.getElementById("catsTbody"),
       prodsEmpty: document.getElementById("prodsEmpty"),
-      prodsTable: document.getElementById("prodsTable"),
+      prodsTableWrap: document.getElementById("prodsTableWrap"),
       prodsTbody: document.getElementById("prodsTbody"),
       btnReloadCats: document.getElementById("btnReloadCats"),
       btnReloadProds: document.getElementById("btnReloadProds"),
@@ -204,7 +288,7 @@
       selCatFilter: document.getElementById("selCatFilter"),
 
       catsEmptyA: document.getElementById("catsEmptyA"),
-      catsTableA: document.getElementById("catsTableA"),
+      catsTableAWrap: document.getElementById("catsTableAWrap"),
       catsTbodyA: document.getElementById("catsTbodyA"),
       catName: document.getElementById("catName"),
       catSlug: document.getElementById("catSlug"),
@@ -214,7 +298,7 @@
       btnCancelCat: document.getElementById("btnCancelCat"),
 
       prodsEmptyA: document.getElementById("prodsEmptyA"),
-      prodsTableA: document.getElementById("prodsTableA"),
+      prodsTableAWrap: document.getElementById("prodsTableAWrap"),
       prodsTbodyA: document.getElementById("prodsTbodyA"),
       pTitle: document.getElementById("pTitle"),
       pSlug: document.getElementById("pSlug"),
@@ -253,55 +337,75 @@
       }
     }
 
-    // ──────────────── Utils ────────────────
+    // ──────────────── helpers ────────────────
+    class ApiError extends Error{
+      constructor(status, message, raw){ super(message); this.status=status; this.raw=raw; }
+    }
     function headers(json = true, withTg = false) {
       const h = {};
       if (json) h["Content-Type"] = "application/json";
       if (withTg && tgId) h["X-Telegram-Id"] = String(tgId);
       return h;
     }
+    function parseErrorText(text){
+      if (!text) return "Ошибка запроса";
+      try{
+        const j = JSON.parse(text);
+        if (j.detail){
+          if (typeof j.detail === "string") return j.detail;
+          if (Array.isArray(j.detail)) return j.detail.map(x=>x.msg||x.detail||JSON.stringify(x)).join("; ");
+          if (j.detail.message) return j.detail.message;
+        }
+        if (j.message) return j.message;
+        return typeof j === "string" ? j : JSON.stringify(j);
+      }catch{ return text; }
+    }
     async function apiGet(path, params = undefined) {
       const u = new URL(API_BASE + path);
       if (params) Object.entries(params).forEach(([k, v]) => (v ?? v === 0) && u.searchParams.set(k, v));
       const r = await fetch(u, { method: "GET" });
-      if (!r.ok) throw new Error(await r.text());
-      return r.json();
+      const text = await r.text();
+      if (!r.ok) throw new ApiError(r.status, parseErrorText(text), text);
+      return text ? JSON.parse(text) : null;
     }
     async function apiSend(method, path, body = null, withTg = false) {
       const r = await fetch(API_BASE + path, {
         method, headers: headers(true, withTg), body: body ? JSON.stringify(body) : null,
       });
-      if (!r.ok) throw new Error(await r.text());
-      return r.json();
+      const text = await r.text();
+      if (!r.ok) throw new ApiError(r.status, parseErrorText(text), text);
+      return text ? JSON.parse(text) : null;
     }
     function toast(msg, tone = "info") {
       els.toast.textContent = msg;
-      els.toast.style.display = "block";
-      els.toast.style.borderColor = tone === "err" ? "#ff6b6b" : tone === "ok" ? "#3ad29f" : "#253058";
-      setTimeout(() => (els.toast.style.display = "none"), 2200);
+      els.toast.className = "toast show";
+      els.toast.style.borderColor =
+        tone === "err" ? "#ff6b6b" : tone === "ok" ? "#2dd4bf" : "#253058";
+      setTimeout(() => (els.toast.className = "toast"), 2400);
     }
     function setDbStatus(ok) {
-      els.dotDb.style.background = ok ? "var(--ok)" : "var(--err)";
+      els.dotDb.className = "status-dot " + (ok ? "status-ok" : "status-err");
       els.txtDb.textContent = ok ? "БД: ok" : "БД: failed";
     }
     function setUserPills({ isAdmin }) {
       els.pillUser.textContent = tgId ? String(tgId) : "—";
       els.pillMode.textContent = isAdmin ? "Админ" : "Гость";
-      els.pillMode.className = "pill " + (isAdmin ? "badge-ok" : "");
+      els.pillMode.parentElement.className = "pill " + (isAdmin ? "badge-ok" : "");
       els.tabAdmin.style.display = isAdmin ? "inline-flex" : "none";
     }
+    function escapeHtml(s){ return String(s).replace(/[&<>"'`]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','`':'&#96;'}[c])); }
 
     // ──────────────── Init ────────────────
     async function init() {
-      // проверяем конкретно /health/db (а не /health)
+      // DB health
       let dbOk = false;
       try {
         const hdb = await apiGet("/health/db");
         dbOk = (hdb?.db === "ok") || (hdb?.status === "ok");
-      } catch {}
+      } catch (e) {}
       setDbStatus(dbOk);
 
-      // узнаём пользователя и его права
+      // user & rights
       let isAdmin = false;
       if (tgId) {
         try {
@@ -313,28 +417,28 @@
       }
       setUserPills({ isAdmin });
 
-      // загрузка данных
+      // data
       await Promise.all([refreshCategories(), refreshProducts()]);
       await refreshAdminData();
 
-      // обработчики
+      // handlers
       bindHandlers();
     }
 
     // ──────────────── Категории ────────────────
     async function refreshCategories() {
       const list = await apiGet("/api/categories");
-      renderCats(list, els.catsTbody, els.catsTable, els.catsEmpty);
+      renderCats(list, els.catsTbody, els.catsTableWrap, els.catsEmpty);
       els.selCatFilter.innerHTML =
         `<option value="">— Категория —</option>` +
         list.map(c => `<option value="${c.id}">${escapeHtml(c.name)} (#${c.id})</option>`).join("");
       return list;
     }
-    function renderCats(list, tbody, tableEl, emptyEl) {
+    function renderCats(list, tbody, container, emptyEl) {
       if (!list.length) {
-        tableEl.style.display = "none"; emptyEl.style.display = "block"; tbody.innerHTML = ""; return;
+        container.style.display = "none"; emptyEl.style.display = "block"; tbody.innerHTML = ""; return;
       }
-      tableEl.style.display = "table"; emptyEl.style.display = "none";
+      container.style.display = "block"; emptyEl.style.display = "none";
       tbody.innerHTML = list.map(c => `
         <tr>
           <td>${c.id}</td>
@@ -352,14 +456,14 @@
       const catId = els.selCatFilter.value.trim();
       if (catId) params.category_id = catId;
       const list = await apiGet("/api/products", params);
-      renderProds(list, els.prodsTbody, els.prodsTable, els.prodsEmpty);
+      renderProds(list, els.prodsTbody, els.prodsTableWrap, els.prodsEmpty);
       return list;
     }
-    function renderProds(list, tbody, tableEl, emptyEl) {
+    function renderProds(list, tbody, container, emptyEl) {
       if (!list.length) {
-        tableEl.style.display = "none"; emptyEl.style.display = "block"; tbody.innerHTML = ""; return;
+        container.style.display = "none"; emptyEl.style.display = "block"; tbody.innerHTML = ""; return;
       }
-      tableEl.style.display = "table"; emptyEl.style.display = "none";
+      container.style.display = "block"; emptyEl.style.display = "none";
       tbody.innerHTML = list.map(p => `
         <tr>
           <td>${p.id}</td>
@@ -385,9 +489,9 @@
     }
     function renderAdminCats(list) {
       if (!list.length) {
-        els.catsTableA.style.display = "none"; els.catsEmptyA.style.display = "block"; els.catsTbodyA.innerHTML = ""; return;
+        els.catsTableAWrap.style.display = "none"; els.catsEmptyA.style.display = "block"; els.catsTbodyA.innerHTML = ""; return;
       }
-      els.catsTableA.style.display = "table"; els.catsEmptyA.style.display = "none";
+      els.catsTableAWrap.style.display = "block"; els.catsEmptyA.style.display = "none";
       els.catsTbodyA.innerHTML = list.map(c => `
         <tr>
           <td>${c.id}</td>
@@ -395,8 +499,8 @@
           <td><span class="tag code">${escapeHtml(c.slug)}</span></td>
           <td>${c.parent_id ?? ""}</td>
           <td class="row" style="gap:6px">
-            <button class="btn muted" data-act="editCat" data-id="${c.id}">✏️</button>
-            <button class="btn red" data-act="delCat" data-id="${c.id}">🗑️</button>
+            <button class="btn muted" data-act="editCat" data-id="${c.id}" title="Редактировать">✏️</button>
+            <button class="btn red" data-act="delCat" data-id="${c.id}" title="Удалить">🗑️</button>
           </td>
         </tr>`).join("");
       els.catsTbodyA.querySelectorAll("button[data-act]").forEach(btn=>{
@@ -413,10 +517,11 @@
           } else if (act==="delCat"){
             if(!confirm(`Удалить категорию #${id}?`)) return;
             try{
-              await fetch(API_BASE+`/api/categories/${id}`,{method:"DELETE",headers:headers(false,true)});
+              const r = await fetch(API_BASE+`/api/categories/${id}`,{method:"DELETE",headers:headers(false,true)});
+              if(!r.ok){ const t = await r.text(); throw new ApiError(r.status, parseErrorText(t), t); }
               toast("Категория удалена","ok");
               await Promise.all([refreshAdminData(), refreshCategories()]);
-            }catch{ toast("Ошибка удаления категории","err"); }
+            }catch(err){ toast(err.message || "Ошибка удаления категории","err"); }
           }
         });
       });
@@ -429,11 +534,11 @@
       };
       if (!payload.name || !payload.slug) return toast("Укажи name и slug","err");
       try{
-        const r = await apiSend("POST","/api/categories",payload,true);
-        toast(`Создано #${r.id}`,"ok");
+        await apiSend("POST","/api/categories",payload,true);
+        toast(`Категория создана`,"ok");
         els.catName.value = els.catSlug.value = els.catParent.value = "";
         await Promise.all([refreshAdminData(), refreshCategories()]);
-      }catch{ toast("Ошибка создания категории","err"); }
+      }catch(err){ toast(err.message || "Ошибка создания категории","err"); }
     });
     els.btnUpdateCat.addEventListener("click", async ()=>{
       if (!editingCatId) return;
@@ -443,13 +548,13 @@
         parent_id: els.catParent.value.trim() ? Number(els.catParent.value.trim()) : null
       };
       try{
-        const r = await apiSend("PATCH", `/api/categories/${editingCatId}`, payload, true);
-        toast(`Сохранено #${r.id}`,"ok");
+        await apiSend("PATCH", `/api/categories/${editingCatId}`, payload, true);
+        toast(`Категория сохранена`,"ok");
         editingCatId = null;
         els.btnUpdateCat.disabled = true; els.btnCancelCat.disabled = true; els.btnCreateCat.disabled = false;
         els.catName.value = els.catSlug.value = els.catParent.value = "";
         await Promise.all([refreshAdminData(), refreshCategories()]);
-      }catch{ toast("Ошибка обновления категории","err"); }
+      }catch(err){ toast(err.message || "Ошибка обновления категории","err"); }
     });
     els.btnCancelCat.addEventListener("click", ()=>{
       editingCatId = null;
@@ -460,9 +565,9 @@
     let editingProdId = null;
     function renderAdminProds(list) {
       if (!list.length) {
-        els.prodsTableA.style.display = "none"; els.prodsEmptyA.style.display = "block"; els.prodsTbodyA.innerHTML = ""; return;
+        els.prodsTableAWrap.style.display = "none"; els.prodsEmptyA.style.display = "block"; els.prodsTbodyA.innerHTML = ""; return;
       }
-      els.prodsTableA.style.display = "table"; els.prodsEmptyA.style.display = "none";
+      els.prodsTableAWrap.style.display = "block"; els.prodsEmptyA.style.display = "none";
       els.prodsTbodyA.innerHTML = list.map(p => `
         <tr>
           <td>${p.id}</td><td>${escapeHtml(p.title)}</td>
@@ -472,8 +577,8 @@
           <td>${p.is_active ? "Да" : "Нет"}</td>
           <td>${p.category_id}</td>
           <td class="row" style="gap:6px">
-            <button class="btn muted" data-act="editProd" data-id="${p.id}">✏️</button>
-            <button class="btn red" data-act="delProd" data-id="${p.id}">🗑️</button>
+            <button class="btn muted" data-act="editProd" data-id="${p.id}" title="Редактировать">✏️</button>
+            <button class="btn red" data-act="delProd" data-id="${p.id}" title="Удалить">🗑️</button>
           </td>
         </tr>`).join("");
       els.prodsTbodyA.querySelectorAll("button[data-act]").forEach(btn=>{
@@ -497,21 +602,56 @@
           } else if (act==="delProd"){
             if(!confirm(`Удалить товар #${id}?`)) return;
             try{
-              await fetch(API_BASE+`/api/products/${id}`,{method:"DELETE",headers:headers(false,true)});
+              const r = await fetch(API_BASE+`/api/products/${id}`,{method:"DELETE",headers:headers(false,true)});
+              if(!r.ok){ const t = await r.text(); throw new ApiError(r.status, parseErrorText(t), t); }
               toast("Товар удалён","ok");
               await refreshAdminData(); await refreshProducts();
-            }catch{ toast("Ошибка удаления товара","err"); }
+            }catch(err){ toast(err.message || "Ошибка удаления товара","err"); }
           }
         });
       });
     }
+
+    function collectProdPayload(){
+      const title = els.pTitle.value.trim();
+      let slug = els.pSlug.value.trim();
+      if (!slug && title) slug = slugify(title);
+      const category_id = parseInt(els.pCat.value,10);
+      if (!title || !slug || !category_id){ toast("Укажи title, slug и категорию","err"); return null; }
+      let price = parseFloat((els.pPrice.value || "0").replace(",", ".")); if (Number.isNaN(price) || price < 0) price = 0;
+      const stock = parseInt(els.pStock.value || "0",10);
+      const images = els.pImages.value.trim() ? els.pImages.value.split("\n").map(s=>s.trim()).filter(Boolean) : null;
+      let attributes = null; const rawAttrs = els.pAttrs.value.trim();
+      if (rawAttrs){ try{ attributes = JSON.parse(rawAttrs); } catch{ toast("Некорректный JSON атрибутов","err"); return null; } }
+      return {
+        title, slug, description: els.pDesc.value.trim() || null, price,
+        currency:(els.pCurr.value||"RUB").toUpperCase(),
+        stock:Number.isFinite(stock)?stock:0,
+        is_active: els.pActive.value==="true",
+        images, attributes, category_id
+      };
+    }
+    function clearProdForm(){
+      els.pTitle.value = els.pSlug.value = els.pDesc.value = "";
+      els.pPrice.value = ""; els.pCurr.value = "RUB"; els.pStock.value = "0";
+      els.pCat.value = ""; els.pActive.value = "true"; els.pImages.value = ""; els.pAttrs.value = "";
+    }
+
+    // маленький фронтовый slugify для UX
+    function slugify(v){
+      return (v||"").toLowerCase().trim()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+        .replace(/\s+/g,"-").replace(/[^a-z0-9\-]/g,"-")
+        .replace(/\-+/g,"-").replace(/^\-+|\-+$/g,"") || "item";
+    }
+
     els.btnCreateProd.addEventListener("click", async ()=>{
       const payload = collectProdPayload(); if (!payload) return;
       try{
         const r = await apiSend("POST","/api/products",payload,true);
         toast(`Товар #${r.id} создан`,"ok");
         clearProdForm(); await refreshAdminData(); await refreshProducts();
-      }catch{ toast("Ошибка создания товара","err"); }
+      }catch(err){ toast(err.message || "Ошибка создания товара","err"); }
     });
     els.btnUpdateProd.addEventListener("click", async ()=>{
       if (!editingProdId) return;
@@ -521,33 +661,13 @@
         toast(`Товар #${r.id} сохранён`,"ok");
         editingProdId = null; els.btnCreateProd.disabled = false; els.btnUpdateProd.disabled = true; els.btnCancelProd.disabled = true;
         clearProdForm(); await refreshAdminData(); await refreshProducts();
-      }catch{ toast("Ошибка сохранения товара","err"); }
+      }catch(err){ toast(err.message || "Ошибка сохранения товара","err"); }
     });
     els.btnCancelProd.addEventListener("click", ()=>{
       editingProdId = null; els.btnCreateProd.disabled = false; els.btnUpdateProd.disabled = true; els.btnCancelProd.disabled = true; clearProdForm();
     });
 
-    function collectProdPayload(){
-      const title = els.pTitle.value.trim();
-      const slug = els.pSlug.value.trim();
-      const category_id = parseInt(els.pCat.value,10);
-      if (!title || !slug || !category_id){ toast("Укажи title, slug и категорию","err"); return null; }
-      let price = parseFloat(els.pPrice.value || "0"); if (Number.isNaN(price) || price < 0) price = 0;
-      const stock = parseInt(els.pStock.value || "0",10);
-      const images = els.pImages.value.trim() ? els.pImages.value.split("\n").map(s=>s.trim()).filter(Boolean) : null;
-      let attributes = null; const rawAttrs = els.pAttrs.value.trim();
-      if (rawAttrs){ try{ attributes = JSON.parse(rawAttrs); } catch{ toast("Некорректный JSON атрибутов","err"); return null; } }
-      return { title, slug, description: els.pDesc.value.trim() || null, price,
-               currency:(els.pCurr.value||"RUB").toUpperCase(), stock:Number.isFinite(stock)?stock:0,
-               is_active: els.pActive.value==="true", images, attributes, category_id };
-    }
-    function clearProdForm(){
-      els.pTitle.value = els.pSlug.value = els.pDesc.value = "";
-      els.pPrice.value = ""; els.pCurr.value = "RUB"; els.pStock.value = "0";
-      els.pCat.value = ""; els.pActive.value = "true"; els.pImages.value = ""; els.pAttrs.value = "";
-    }
-
-    // ──────────────── Навигация ────────────────
+    // ──────────────── Навигация / общие обработчики ────────────────
     function bindHandlers(){
       els.tabCatalog.addEventListener("click", ()=>{
         els.tabCatalog.setAttribute("aria-selected","true");
@@ -565,8 +685,12 @@
         const v = els.apiInput.value.trim(); if (!v) return toast("Укажи API Base URL","err");
         const u = new URL(location.href); u.searchParams.set("api", v); location.href = u.toString();
       });
+
+      // автоподстановка slug из title
+      els.pTitle.addEventListener("blur", ()=>{
+        if (!els.pSlug.value.trim()) els.pSlug.value = slugify(els.pTitle.value);
+      });
     }
-    function escapeHtml(s){ return String(s).replace(/[&<>"'`]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','`':'&#96;'}[c])); }
 
     init();
   </script>
