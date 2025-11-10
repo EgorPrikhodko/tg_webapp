@@ -42,9 +42,9 @@ PyYAML
 ruff
 sniffio
 SQLAlchemy
-starlette
 typing-inspection
 typing_extensions
 uvicorn
 watchfiles
+
 websockets
