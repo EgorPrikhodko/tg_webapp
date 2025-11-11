@@ -8,27 +8,19 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     :root{
-      --bg:#0b0f1a; --bg2:#0f1424; --card:#12182a; --muted:#1a2036;
+      --bg:#0b0f1a; --card:#12182a; --muted:#1a2036;
       --text:#e9ecff; --subtext:#9aa3c2; --accent:#6ea8ff; --accent-2:#8b7dff;
-      --ok:#2dd4bf; --warn:#ffc857; --err:#ff6b6b; --info:#67e8f9;
-      --icon:#a5aec9; --icon-active:#ffffff;
+      --ok:#2dd4bf; --icon:#a5aec9; --icon-active:#ffffff;
       --radius:16px; --radius-sm:12px; --shadow:0 12px 36px rgba(0,0,0,.45);
       --border:1px solid rgba(255,255,255,.06);
-      --grad:linear-gradient(135deg, rgba(110,168,255,.20), rgba(139,125,255,.15));
-      --glow:0 0 0 2px rgba(110,168,255,.25), 0 10px 30px rgba(110,168,255,.15);
       --badge:#ff2f8e;
 
-      /* фиксированная высота контента карточки, чтобы все были одного размера */
-      --card-content-h: 168px;
+      --card-content-h: 168px; /* фиксированная высота контента карточки */
     }
     *{box-sizing:border-box}
     html,body{height:100%}
     body{
-      margin:0;background:
-        radial-gradient(1200px 600px at -10% -10%, rgba(139,125,255,.15), transparent 60%),
-        radial-gradient(1000px 600px at 110% -10%, rgba(103,232,249,.12), transparent 60%),
-        radial-gradient(1200px 800px at 50% 120%, rgba(110,168,255,.10), transparent 60%),
-        var(--bg) !important; /* не меняем фон никогда */
+      margin:0;background:var(--bg) !important; /* однотонный фон, без градиентов */
       color:var(--text);
       font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;
       -webkit-tap-highlight-color:transparent;
@@ -39,21 +31,18 @@
     .muted-ic .icv{fill:var(--icon)}
     .active-ic .icv{fill:var(--icon-active)}
 
-    .wrap{max-width:760px;margin:0 auto;padding:12px 12px 84px}
+    .wrap{max-width:820px;margin:0 auto;padding:12px 12px 84px}
     .topbar{
       position:sticky;top:0;z-index:10;padding:10px 12px;margin:-12px -12px 10px;
-      background:linear-gradient(180deg, rgba(11,15,26,.92), rgba(11,15,26,.75) 60%, transparent);
-      backdrop-filter:saturate(1.3) blur(6px);
+      background:rgba(11,15,26,.95); backdrop-filter:saturate(1.2) blur(6px);
+      border-bottom:1px solid rgba(255,255,255,.06);
     }
     .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
     .search{
       flex:1;background:#0b1022;border:1px solid #27314d;border-radius:14px;padding:10px 12px;color:var(--text);outline:none;
     }
-    /* Фокус не меняет фон */
     .search:focus{background:#0b1022;border-color:#2e3b62;box-shadow:0 0 0 2px rgba(62,102,255,.14)}
-    /* отключаем любые автозаполнение-подсветки */
-    input:-webkit-autofill,
-    input:-webkit-autofill:focus{transition:background-color 99999s ease-in-out 0s}
+    input:-webkit-autofill,input:-webkit-autofill:focus{transition:background-color 99999s ease-in-out 0s}
 
     .pill{display:none;background:var(--muted);padding:8px 10px;border-radius:999px;color:var(--subtext);border:var(--border);font-size:12px;gap:8px;align-items:center}
     .pill .ok{width:10px;height:10px;border-radius:50%;background:var(--ok)}
@@ -64,9 +53,7 @@
     @media(min-width:560px){ .grid.cards{grid-template-columns:1fr 1fr 1fr} }
 
     .card{
-      display:flex;flex-direction:column;
-      background:linear-gradient(180deg, rgba(18,24,42,.95), rgba(12,16,30,.92));
-      border-radius:16px;border:var(--border);overflow:hidden;position:relative
+      display:flex;flex-direction:column;background:#11172a;border-radius:16px;border:var(--border);overflow:hidden;position:relative
     }
     .card .pic{
       width:100%;padding-top:100%;background:#0f1430;position:relative;overflow:hidden;flex:0 0 auto;
@@ -77,13 +64,11 @@
       border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(4px);border-radius:999px;padding:6px;cursor:pointer
     }
     .card .fav .icv{fill:var(--icon)}
-    /* активное избранное — тот же розовый, что и бэйдж корзины */
-    .card .fav[aria-pressed="true"] .icv{fill:var(--badge)}
+    .card .fav[aria-pressed="true"] .icv{fill:var(--badge)} /* активное сердечко — розовое */
 
     .card .cnt{
       padding:10px 10px 12px;display:flex;flex-direction:column;gap:6px;
-      min-height:var(--card-content-h); /* фиксируем высоту, чтобы карточки были одинаковые */
-      flex:1 1 auto;
+      min-height:var(--card-content-h);flex:1 1 auto;
     }
     .title{
       font-size:13px;line-height:1.25;margin:0;
@@ -97,9 +82,7 @@
     .price{font-weight:800;font-size:15px}
     .old{color:#939bb7;text-decoration:line-through;font-size:12px}
     .badge{font-size:11px;padding:3px 6px;border-radius:8px;border:1px solid #2a335e;background:#0f1430}
-    .rating{
-      font-size:12px;color:#cbd3ff;display:flex;align-items:center;gap:6px;min-height:1.2em;
-    }
+    .rating{font-size:12px;color:#cbd3ff;display:flex;align-items:center;gap:6px;min-height:1.2em}
     .rating .star{width:14px;height:14px;display:inline-block}
     .add{margin-top:auto;width:100%;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;border:none;padding:9px 10px;border-radius:12px;font-weight:700;cursor:pointer}
 
@@ -116,16 +99,31 @@
     .tabbtn{
       position:relative;display:flex;align-items:center;justify-content:center;padding:10px;border-radius:12px;border:1px solid transparent;background:transparent;cursor:pointer
     }
-    .tabbtn[aria-selected="true"]{background:var(--grad);box-shadow:var(--glow);border:var(--border)}
+    .tabbtn[aria-selected="true"]{background:rgba(110,168,255,.12);border:var(--border)}
     .tabbtn[aria-selected="true"] .icv{fill:var(--icon-active)}
-
-    /* cart badge like screenshot */
     .tabbtn .badge-dot{
       position:absolute;right:6px;top:4px;min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--badge);color:#fff;
       font-weight:800;font-size:12px;display:none;align-items:center;justify-content:center;line-height:1;border:2px solid #0c1122;
     }
 
-    /* simple lists */
+    /* Catalog (плитки + список подкатегорий) */
+    .cat-tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    @media(min-width:560px){ .cat-tiles{grid-template-columns:1fr 1fr 1fr} }
+    .cat-tile{
+      background:#1a2033;border:1px solid rgba(255,255,255,.06);border-radius:14px;position:relative;overflow:hidden;
+      padding:12px;min-height:110px;display:flex;align-items:flex-end;justify-content:space-between;gap:8px;cursor:pointer;
+    }
+    .cat-tile .tt{font-weight:600}
+    .cat-tile .img{
+      position:absolute;right:6px;bottom:0;width:60%;height:80%;opacity:.9;pointer-events:none;mask-image:linear-gradient(to top,black 65%, transparent)
+    }
+    .cat-back{display:flex;align-items:center;gap:8px;margin:2px 0 10px}
+    .cat-back button{background:#1a2033;border:1px solid rgba(255,255,255,.1);color:var(--text);padding:8px 12px;border-radius:12px;cursor:pointer}
+    .sub-list{display:flex;flex-direction:column;gap:8px}
+    .sub-item{display:flex;align-items:center;gap:12px;background:#161c2e;border:1px solid rgba(255,255,255,.06);padding:10px;border-radius:14px;cursor:pointer}
+    .sub-item .thumb{width:52px;height:52px;border-radius:12px;background:#0f1430;overflow:hidden;flex:0 0 auto}
+    .sub-item .thumb img{width:100%;height:100%;object-fit:cover}
+
     .empty{color:var(--subtext);padding:10px 2px}
     .line{display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;background:#0f1430;border:1px solid #28306b}
     .line .thumb{width:54px;height:54px;border-radius:10px;background:#121735;overflow:hidden}
@@ -134,8 +132,8 @@
     .muted{opacity:.85}
 
     .toast{
-      position:fixed;left:50%;transform:translateX(-50%);bottom:72px;background:#11162a;
-      border:1px solid #253058;color:var(--text);padding:12px 14px;border-radius:12px;box-shadow:var(--shadow);z-index:50;display:none;max-width:86%;
+      position:fixed;left:50%;transform:translateX(-50%);bottom:72px;background:#11162a;border:1px solid #253058;color:var(--text);
+      padding:12px 14px;border-radius:12px;box-shadow:var(--shadow);z-index:50;display:none;max-width:86%;
     }
     .toast.show{display:block;animation:pop .25s ease}
     @keyframes pop{from{transform:translateX(-50%) translateY(6px);opacity:.5} to{transform:translateX(-50%) translateY(0);opacity:1}}
@@ -172,11 +170,15 @@
 
     <!-- Каталог -->
     <section id="scr_catalog" class="screen">
-      <div class="row" style="margin:6px 0 10px">
-        <select id="selCat" class="search" style="max-width:100%"><option value="">— Все категории —</option></select>
+      <!-- плитки верхних категорий -->
+      <div id="catTiles" class="cat-tiles"></div>
+      <div id="catTilesEmpty" class="empty" style="display:none">Категорий пока нет…</div>
+
+      <!-- список подкатегорий -->
+      <div id="catSub" style="display:none">
+        <div class="cat-back"><button id="btnCatBack">← Назад</button><div id="catPath" class="muted"></div></div>
+        <div id="subList" class="sub-list"></div>
       </div>
-      <div class="grid cards" id="catGrid"></div>
-      <div class="empty" id="catEmpty" style="display:none">В выбранной категории ничего нет…</div>
     </section>
 
     <!-- Избранное -->
@@ -214,13 +216,65 @@
       </div>
     </section>
 
-    <!-- Редактирование (админ) — заглушка -->
+    <!-- Админ: CRUD -->
     <section id="scr_admin" class="screen">
-      <div class="empty">Админ-режим: сюда вынесем CRUD.</div>
+      <div class="grid" style="gap:12px">
+        <div class="line" style="flex-direction:column;align-items:stretch">
+          <b>Категории · CRUD</b>
+          <div class="row">
+            <input id="catName" class="search" placeholder="Название (Обувь)" />
+            <input id="catSlug" class="search" placeholder="slug (shoes)" />
+            <input id="catParent" class="search" placeholder="parent_id (опц.)" />
+          </div>
+          <div class="row">
+            <input id="catImage" class="search" placeholder="URL изображения (опц.)" />
+            <button id="btnCreateCat" class="add" style="max-width:160px">Создать</button>
+            <button id="btnUpdateCat" class="add" style="max-width:160px;background:#18d1a6" disabled>Сохранить</button>
+            <button id="btnCancelCat" class="add" style="max-width:120px;background:#303b57" disabled>Отмена</button>
+          </div>
+          <div id="catsEmptyA" class="empty">Нет категорий</div>
+          <div id="catsTableAWrap" style="display:none">
+            <div id="catsTbodyA" class="sub-list"></div>
+          </div>
+        </div>
+
+        <div class="line" style="flex-direction:column;align-items:stretch">
+          <b>Товары · CRUD</b>
+          <div class="row">
+            <input id="pTitle" class="search" placeholder="Название"/>
+            <input id="pSlug" class="search" placeholder="slug"/>
+          </div>
+          <textarea id="pDesc" class="search" placeholder="Описание (опц.)" style="min-height:72px"></textarea>
+          <div class="row">
+            <input id="pPrice" class="search" type="number" min="0" step="0.01" placeholder="Цена"/>
+            <input id="pCurr" class="search" placeholder="Валюта" value="RUB"/>
+            <input id="pStock" class="search" type="number" min="0" step="1" placeholder="Остаток" value="0"/>
+          </div>
+          <div class="row">
+            <select id="pCat" class="search"><option value="">— Категория —</option></select>
+            <select id="pActive" class="search">
+              <option value="true" selected>Активен</option>
+              <option value="false">Скрыт</option>
+            </select>
+          </div>
+          <textarea id="pImages" class="search" placeholder="Ссылки на изображения (по одному в строке)"></textarea>
+          <textarea id="pAttrs" class="search" placeholder='Атрибуты JSON: {"old_price":999,"rating":4.7,"ratings_count":42581}'></textarea>
+          <div class="row">
+            <button id="btnCreateProd" class="add" style="max-width:160px">Создать</button>
+            <button id="btnUpdateProd" class="add" style="max-width:160px;background:#18d1a6" disabled>Сохранить</button>
+            <button id="btnCancelProd" class="add" style="max-width:120px;background:#303b57" disabled>Отмена</button>
+          </div>
+
+          <div id="prodsEmptyA" class="empty">Нет товаров</div>
+          <div id="prodsTableAWrap" style="display:none">
+            <div id="prodsTbodyA" class="sub-list"></div>
+          </div>
+        </div>
+      </div>
     </section>
   </div>
 
-  <!-- Bottom Tabbar (icons only) -->
+  <!-- Bottom Tabbar -->
   <nav id="tabbar" class="tabbar">
     <button class="tabbtn active-ic" data-scr="home" aria-selected="true" title="Главная"><svg class="icv"><use href="#i-home"/></svg></button>
     <button class="tabbtn muted-ic" data-scr="catalog" title="Каталог"><svg class="icv"><use href="#i-grid"/></svg></button>
@@ -280,10 +334,7 @@
     function toast(msg){ const el=document.getElementById("toast"); el.textContent=msg; el.className="toast show"; setTimeout(()=>el.className="toast",2200); }
     function money(v,c="RUB"){ return `${Number(v||0).toFixed(0)} ${c}`; }
     function escapeHtml(s){ return String(s).replace(/[&<>"'`]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','`':'&#96;'}[c])); }
-    function formatCount(n){
-      n = Number(n||0);
-      return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "\u202F"); // узкий неразрывный пробел
-    }
+    function formatCount(n){ n = Number(n||0); return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "\u202F"); }
 
     // ─────────────── state (favorites, cart)
     const favKey="tgshop_fav_ids"; const cartKey="tgshop_cart";
@@ -293,13 +344,13 @@
     function saveFav(){ localStorage.setItem(favKey, JSON.stringify([...fav])); }
     function saveCart(){ localStorage.setItem(cartKey, JSON.stringify(Object.fromEntries(cart))); }
 
-    // ─────────────── render: product card
+    // ─────────────── product card
     function productCard(p){
       const img = (Array.isArray(p.images) && p.images[0]) ? p.images[0] : "";
       const currency = (p.currency||"RUB").toUpperCase();
       const old = p.attributes?.old_price ?? null;
-      const rating = p.attributes?.rating ?? null;           // например 4.7
-      const rcnt = p.attributes?.ratings_count ?? null;      // например 42581
+      const rating = p.attributes?.rating ?? null;
+      const rcnt = p.attributes?.ratings_count ?? null;
       const liked = fav.has(p.id);
       const desc = p.description || "";
       return `
@@ -327,16 +378,15 @@
       `;
     }
 
-    // attach handlers to a rendered grid
-    function bindCardHandlers(rootEl, list){
+    // bind handlers for cards
+    function bindCardHandlers(rootEl){
       rootEl.querySelectorAll(".card").forEach(card=>{
         const id = Number(card.dataset.id);
         card.querySelector(".fav")?.addEventListener("click", (e)=>{
           e.stopPropagation();
           if (fav.has(id)) fav.delete(id); else fav.add(id);
           saveFav();
-          e.currentTarget.setAttribute("aria-pressed", fav.has(id) ? "true" : "false");
-          renderFav(); // синхронизация
+          syncAllGrids(); // синхронизируем сердечки везде
         });
         card.querySelector(".add")?.addEventListener("click", ()=>{
           cart.set(id, (cart.get(id)||0)+1); saveCart(); toast("Добавлено в корзину"); updateCartBadge();
@@ -363,15 +413,27 @@
       });
     }
 
-    // ─────────────── fetch data + renders
+    // ─────────────── data + renders
     let allProducts = [];
+    let allCategories = [];
+    let catIndexByParent = new Map(); // parent_id -> [cats]
+    let selectedCat = null;
+
+    function indexCategories(cats){
+      catIndexByParent = new Map();
+      cats.forEach(c=>{
+        const pid = (c.parent_id??null);
+        if(!catIndexByParent.has(pid)) catIndexByParent.set(pid,[]);
+        catIndexByParent.get(pid).push(c);
+      });
+    }
+
     async function refreshHealth(){
       const pill = document.getElementById("pillDb");
       try{
         const h = await apiGet("/health/db");
         const ok = (h?.db==="ok") || (h?.status==="ok");
-        if (isAdmin && ok){ pill.style.display="inline-flex"; } // только админам
-        else { pill.style.display="none"; }
+        pill.style.display = (isAdmin && ok) ? "inline-flex" : "none"; // только админам
       }catch{ pill.style.display = isAdmin ? "inline-flex" : "none"; }
     }
     async function ensureUser(){
@@ -380,7 +442,7 @@
         const u = await apiSend("POST","/api/users/ensure",{tg_id:tgId},true);
         isAdmin = !!u.is_admin;
         roleEl.textContent = isAdmin ? "Режим: админ" : "Режим: гость";
-        // кнопка "Редактирование" в таббар
+        // кнопка "Редактирование"
         if (isAdmin && !document.querySelector('.tabbtn[data-scr="admin"]')){
           const tb=document.getElementById("tabbar"); tb.classList.add("admin");
           const btn=document.createElement("button");
@@ -393,40 +455,94 @@
     }
     async function loadCategories(){
       const cats = await apiGet("/api/categories");
-      const sel = document.getElementById("selCat");
-      sel.innerHTML = '<option value="">— Все категории —</option>' + cats.map(c=>`<option value="${c.id}">${escapeHtml(c.name)} (#${c.id})</option>`).join("");
-      return cats;
+      allCategories = cats;
+      indexCategories(cats);
+      renderCatTiles();
+      // заполнить селект в админке для товаров
+      const sel = document.getElementById("pCat");
+      sel.innerHTML = '<option value="">— Категория —</option>' + cats.map(c=>`<option value="${c.id}">${escapeHtml(c.name)} (#${c.id})</option>`).join("");
+      // перерисовать список категорий в админке
+      renderAdminCats();
     }
     async function loadProducts(params){
       const list = await apiGet("/api/products", params);
       allProducts = list;
       renderHome(list);
-      renderCatalog(list);
       renderFav();
       renderCart();
       updateCartBadge();
+      renderAdminProds(); // чтобы видеть актуальные товары
     }
 
-    // renders
+    // -------- Catalog renders
+    function renderCatTiles(){
+      selectedCat = null;
+      const tiles = document.getElementById("catTiles");
+      const empty = document.getElementById("catTilesEmpty");
+      const sub = document.getElementById("catSub");
+      sub.style.display = "none";
+      tiles.style.display = "grid";
+      const roots = (catIndexByParent.get(null)||[]);
+      if(!roots.length){ tiles.innerHTML=""; empty.style.display="block"; return; }
+      empty.style.display="none";
+      tiles.innerHTML = roots.map(c=>{
+        const img = c.attributes?.image || "";
+        return `
+          <div class="cat-tile" data-id="${c.id}">
+            <div class="tt">${escapeHtml(c.name)}</div>
+            ${img?`<img class="img" src="${escapeHtml(img)}" alt="">`:``}
+          </div>
+        `;
+      }).join("");
+      tiles.querySelectorAll(".cat-tile").forEach(t=>{
+        t.addEventListener("click", ()=>{
+          selectedCat = Number(t.dataset.id);
+          renderSubcats(selectedCat);
+        });
+      });
+    }
+    function renderSubcats(parentId){
+      const tiles = document.getElementById("catTiles");
+      const sub = document.getElementById("catSub");
+      const list = document.getElementById("subList");
+      const path = document.getElementById("catPath");
+      const parent = allCategories.find(x=>x.id===parentId);
+      tiles.style.display="none"; sub.style.display="block";
+      path.textContent = parent ? parent.name : "";
+      const children = (catIndexByParent.get(parentId)||[]);
+      list.innerHTML = children.map(c=>{
+        const img = c.attributes?.image || "";
+        return `
+          <div class="sub-item" data-id="${c.id}">
+            <div class="thumb">${img?`<img src="${escapeHtml(img)}" alt="">`:``}</div>
+            <div class="t">${escapeHtml(c.name)}</div>
+          </div>
+        `;
+      }).join("");
+      // клик по подкатегории — фильтруем товары по category_id и показываем "Главную"
+      list.querySelectorAll(".sub-item").forEach(li=>{
+        li.addEventListener("click", ()=>{
+          const catId = Number(li.dataset.id);
+          show('home');
+          loadProducts({category_id:catId});
+        });
+      });
+    }
+    document.getElementById("btnCatBack").addEventListener("click", renderCatTiles);
+
+    // -------- Product renders
     function renderHome(list){
       const g=document.getElementById("homeGrid"), e=document.getElementById("homeEmpty");
       if (!list.length){ g.innerHTML=""; e.style.display="block"; return; }
       e.style.display="none";
       g.innerHTML = list.map(productCard).join("");
-      bindCardHandlers(g,list);
-    }
-    function renderCatalog(list){
-      const sel = document.getElementById("selCat").value.trim();
-      const filtered = sel ? list.filter(p=>String(p.category_id)===sel) : list;
-      const g=document.getElementById("catGrid"), e=document.getElementById("catEmpty");
-      if (!filtered.length){ g.innerHTML=""; e.style.display="block"; return; }
-      e.style.display="none"; g.innerHTML = filtered.map(productCard).join(""); bindCardHandlers(g,filtered);
+      bindCardHandlers(g);
     }
     function renderFav(){
       const arr = allProducts.filter(p=>fav.has(p.id));
       const g=document.getElementById("favGrid"), e=document.getElementById("favEmpty");
       if(!arr.length){ g.innerHTML=""; e.style.display="block"; return; }
-      e.style.display="none"; g.innerHTML = arr.map(productCard).join(""); bindCardHandlers(g,arr);
+      e.style.display="none"; g.innerHTML = arr.map(productCard).join(""); bindCardHandlers(g);
     }
     function renderCart(){
       const listEl = document.getElementById("cartList");
@@ -472,6 +588,15 @@
       });
     }
 
+    // синхронизация сердечек на всех экранах
+    function syncAllGrids(){
+      renderHome(allProducts);
+      renderFav();
+      // если открыт каталог с товарами (после выбора подкатегории) — обновим товары
+      // (мы показываем товары на главной; каталогу ничего не нужно)
+      updateCartBadge();
+    }
+
     // только корзина имеет счётчик
     function updateCartBadge(){
       const cartCount = [...cart.values()].reduce((a,b)=>a+b,0);
@@ -480,16 +605,206 @@
       else { badge.style.display="none"; }
     }
 
+    // ─────────────── Admin CRUD (категории)
+    let editingCatId = null;
+    function renderAdminCats(){
+      const list = allCategories.slice().sort((a,b)=>a.id-b.id);
+      const wrap = document.getElementById("catsTableAWrap");
+      const empty = document.getElementById("catsEmptyA");
+      const body = document.getElementById("catsTbodyA");
+      if (!list.length){ wrap.style.display="none"; empty.style.display="block"; body.innerHTML=""; return; }
+      wrap.style.display="block"; empty.style.display="none";
+      body.innerHTML = list.map(c=>`
+        <div class="sub-item">
+          <div class="t"><b>#${c.id}</b> · ${escapeHtml(c.name)} <span class="muted">(${escapeHtml(c.slug)})</span> ${c.parent_id?`· parent:${c.parent_id}`:""}</div>
+          <div class="row" style="gap:6px">
+            <button class="tabbtn" data-act="editCat" data-id="${c.id}">✏️</button>
+            <button class="tabbtn" data-act="delCat" data-id="${c.id}">🗑️</button>
+          </div>
+        </div>
+      `).join("");
+      body.querySelectorAll("[data-act]").forEach(btn=>{
+        btn.addEventListener("click", async ()=>{
+          const id = Number(btn.dataset.id);
+          const act = btn.dataset.act;
+          if (act==="editCat"){
+            const c = list.find(x=>x.id===id); if(!c) return;
+            editingCatId = id;
+            document.getElementById("catName").value = c.name||"";
+            document.getElementById("catSlug").value = c.slug||"";
+            document.getElementById("catParent").value = c.parent_id ?? "";
+            document.getElementById("catImage").value = c.attributes?.image || "";
+            document.getElementById("btnUpdateCat").disabled = false;
+            document.getElementById("btnCancelCat").disabled = false;
+          }else if (act==="delCat"){
+            if(!confirm(`Удалить категорию #${id}?`)) return;
+            const r = await fetch(API_BASE+`/api/categories/${id}`,{method:"DELETE",headers:headers(false,true)});
+            if (!r.ok){ const t=await r.text(); return toast(parseErrorText(t)); }
+            toast("Категория удалена");
+            await loadCategories();
+          }
+        });
+      });
+    }
+    document.getElementById("btnCreateCat").addEventListener("click", async ()=>{
+      const payload = {
+        name: document.getElementById("catName").value.trim(),
+        slug: document.getElementById("catSlug").value.trim(),
+        parent_id: document.getElementById("catParent").value.trim()?Number(document.getElementById("catParent").value.trim()):null,
+        attributes: (()=>{
+          const img = document.getElementById("catImage").value.trim();
+          return img ? {image: img} : null;
+        })()
+      };
+      if (!payload.name || !payload.slug) return toast("Укажи name и slug");
+      try{
+        await apiSend("POST","/api/categories",payload,true);
+        toast("Категория создана");
+        ["catName","catSlug","catParent","catImage"].forEach(id=>document.getElementById(id).value="");
+        await loadCategories();
+      }catch(e){ toast(e.message||"Ошибка создания категории"); }
+    });
+    document.getElementById("btnUpdateCat").addEventListener("click", async ()=>{
+      if (!editingCatId) return;
+      const payload = {
+        name: document.getElementById("catName").value.trim(),
+        slug: document.getElementById("catSlug").value.trim(),
+        parent_id: document.getElementById("catParent").value.trim()?Number(document.getElementById("catParent").value.trim()):null,
+        attributes: (()=>{
+          const img = document.getElementById("catImage").value.trim();
+          return img ? {image: img} : null;
+        })()
+      };
+      try{
+        await apiSend("PATCH", `/api/categories/${editingCatId}`, payload, true);
+        toast("Категория сохранена");
+        editingCatId=null; document.getElementById("btnUpdateCat").disabled=true; document.getElementById("btnCancelCat").disabled=true;
+        ["catName","catSlug","catParent","catImage"].forEach(id=>document.getElementById(id).value="");
+        await loadCategories();
+      }catch(e){ toast(e.message||"Ошибка обновления категории"); }
+    });
+    document.getElementById("btnCancelCat").addEventListener("click", ()=>{
+      editingCatId=null; document.getElementById("btnUpdateCat").disabled=true; document.getElementById("btnCancelCat").disabled=true;
+      ["catName","catSlug","catParent","catImage"].forEach(id=>document.getElementById(id).value="");
+    });
+
+    // ─────────────── Admin CRUD (товары)
+    let editingProdId = null;
+    function collectProdPayload(){
+      const title = document.getElementById("pTitle").value.trim();
+      let slug = document.getElementById("pSlug").value.trim();
+      const desc = document.getElementById("pDesc").value.trim();
+      if (!slug && title) slug = slugify(title);
+      const category_id = parseInt(document.getElementById("pCat").value,10);
+      if (!title || !slug || !category_id){ toast("Укажи title, slug и категорию"); return null; }
+      let price = parseFloat((document.getElementById("pPrice").value || "0").replace(",", ".")); if (Number.isNaN(price) || price < 0) price = 0;
+      const stock = parseInt(document.getElementById("pStock").value || "0",10);
+      const images = (()=>{
+        const v = document.getElementById("pImages").value.trim();
+        return v ? v.split("\n").map(s=>s.trim()).filter(Boolean) : null;
+      })();
+      let attributes = null; const rawAttrs = document.getElementById("pAttrs").value.trim();
+      if (rawAttrs){ try{ attributes = JSON.parse(rawAttrs); } catch{ toast("Некорректный JSON атрибутов"); return null; } }
+      return {
+        title, slug, description: desc || null, price,
+        currency:(document.getElementById("pCurr").value||"RUB").toUpperCase(),
+        stock:Number.isFinite(stock)?stock:0,
+        is_active: document.getElementById("pActive").value==="true",
+        images, attributes, category_id
+      };
+    }
+    function slugify(v){
+      return (v||"").toLowerCase().trim()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+        .replace(/\s+/g,"-").replace(/[^a-z0-9\-]/g,"-")
+        .replace(/\-+/g,"-").replace(/^\-+|\-+$/g,"") || "item";
+    }
+    function clearProdForm(){
+      ["pTitle","pSlug","pDesc","pPrice","pCurr","pStock","pImages","pAttrs"].forEach(id=>document.getElementById(id).value="");
+      document.getElementById("pCurr").value="RUB";
+      document.getElementById("pStock").value="0";
+      document.getElementById("pCat").value="";
+      document.getElementById("pActive").value="true";
+    }
+
+    function renderAdminProds(){
+      const list = allProducts.slice().sort((a,b)=>a.id-b.id);
+      const wrap = document.getElementById("prodsTableAWrap");
+      const empty = document.getElementById("prodsEmptyA");
+      const body = document.getElementById("prodsTbodyA");
+      if (!list.length){ wrap.style.display="none"; empty.style.display="block"; body.innerHTML=""; return; }
+      wrap.style.display="block"; empty.style.display="none";
+      body.innerHTML = list.map(p=>`
+        <div class="sub-item">
+          <div class="t"><b>#${p.id}</b> · ${escapeHtml(p.title)} <span class="muted">(${escapeHtml(p.slug)})</span> · ${money(p.price,(p.currency||"RUB").toUpperCase())} · cat:${p.category_id}</div>
+          <div class="row" style="gap:6px">
+            <button class="tabbtn" data-act="editProd" data-id="${p.id}">✏️</button>
+            <button class="tabbtn" data-act="delProd" data-id="${p.id}">🗑️</button>
+          </div>
+        </div>
+      `).join("");
+      body.querySelectorAll("[data-act]").forEach(btn=>{
+        btn.addEventListener("click", async ()=>{
+          const id = Number(btn.dataset.id);
+          const act = btn.dataset.act;
+          if (act==="editProd"){
+            const p = list.find(x=>x.id===id); if(!p) return;
+            editingProdId = id;
+            document.getElementById("pTitle").value = p.title||"";
+            document.getElementById("pSlug").value = p.slug||"";
+            document.getElementById("pDesc").value = p.description||"";
+            document.getElementById("pPrice").value = String(p.price ?? 0);
+            document.getElementById("pCurr").value = p.currency||"RUB";
+            document.getElementById("pStock").value = String(p.stock ?? 0);
+            document.getElementById("pCat").value = String(p.category_id ?? "");
+            document.getElementById("pActive").value = p.is_active ? "true" : "false";
+            document.getElementById("pImages").value = Array.isArray(p.images) ? p.images.join("\n") : "";
+            document.getElementById("pAttrs").value = p.attributes ? JSON.stringify(p.attributes,null,2) : "";
+            document.getElementById("btnUpdateProd").disabled=false;
+            document.getElementById("btnCancelProd").disabled=false;
+          } else if (act==="delProd"){
+            if(!confirm(`Удалить товар #${id}?`)) return;
+            const r = await fetch(API_BASE+`/api/products/${id}`,{method:"DELETE",headers:headers(false,true)});
+            if (!r.ok){ const t=await r.text(); return toast(parseErrorText(t)); }
+            toast("Товар удалён");
+            await loadProducts();
+          }
+        });
+      });
+    }
+    document.getElementById("btnCreateProd").addEventListener("click", async ()=>{
+      const payload = collectProdPayload(); if (!payload) return;
+      try{
+        const r = await apiSend("POST","/api/products",payload,true);
+        toast(`Товар #${r.id} создан`);
+        clearProdForm();
+        await loadProducts();
+      }catch(e){ toast(e.message||"Ошибка создания товара"); }
+    });
+    document.getElementById("btnUpdateProd").addEventListener("click", async ()=>{
+      if (!editingProdId) return;
+      const payload = collectProdPayload(); if (!payload) return;
+      try{
+        const r = await apiSend("PATCH", `/api/products/${editingProdId}`, payload, true);
+        toast(`Товар #${r.id} сохранён`);
+        editingProdId=null; document.getElementById("btnUpdateProd").disabled=true; document.getElementById("btnCancelProd").disabled=true;
+        clearProdForm(); await loadProducts();
+      }catch(e){ toast(e.message||"Ошибка сохранения товара"); }
+    });
+    document.getElementById("btnCancelProd").addEventListener("click", ()=>{
+      editingProdId=null; document.getElementById("btnUpdateProd").disabled=true; document.getElementById("btnCancelProd").disabled=true; clearProdForm();
+    });
+
     // ─────────────── events
-    document.getElementById("selCat").addEventListener("change",()=>renderCatalog(allProducts));
     document.getElementById("search").addEventListener("input", (e)=>{
       const q = e.target.value.trim();
       const params = q ? { q } : undefined;
       loadProducts(params);
     });
+
     document.getElementById("btnResetLocal").addEventListener("click", ()=>{
       localStorage.removeItem(favKey); localStorage.removeItem(cartKey);
-      fav = new Set(); cart = new Map(); renderFav(); renderCart(); updateCartBadge(); toast("Данные очищены");
+      fav = new Set(); cart = new Map(); syncAllGrids(); toast("Данные очищены");
     });
     document.getElementById("btnChangeApi").addEventListener("click", ()=>{
       const v = prompt("Укажи новый API Base URL", API_BASE); if(!v) return;
