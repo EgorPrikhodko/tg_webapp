@@ -2,7 +2,8 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <!-- Отключаем зум по тапу/двойному тапу -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#0b0f1a" />
   <title>TG Shop · WebApp</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -14,19 +15,20 @@
       --radius:16px; --radius-sm:12px; --shadow:0 12px 36px rgba(0,0,0,.45);
       --border:1px solid rgba(255,255,255,.06);
       --badge:#ff2f8e;
-
-      --card-content-h: 168px; /* фиксированная высота контента карточки */
+      --card-content-h: 168px;
     }
     *{box-sizing:border-box}
     html,body{height:100%}
     body{
-      margin:0;background:var(--bg) !important; /* однотонный фон, без градиентов */
+      margin:0;background:var(--bg) !important;
       color:var(--text);
       font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;
       -webkit-tap-highlight-color:transparent;
+      touch-action: manipulation;
     }
+    img{user-select:none;-webkit-user-drag:none;touch-action:manipulation}
 
-    /* SVG icons */
+    /* SVG icons (монохром, единый стиль) */
     .icv{width:22px;height:22px;fill:var(--icon);display:block}
     .muted-ic .icv{fill:var(--icon)}
     .active-ic .icv{fill:var(--icon-active)}
@@ -47,7 +49,6 @@
     .pill{display:none;background:var(--muted);padding:8px 10px;border-radius:999px;color:var(--subtext);border:var(--border);font-size:12px;gap:8px;align-items:center}
     .pill .ok{width:10px;height:10px;border-radius:50%;background:var(--ok)}
 
-    /* grid like Ozon */
     .grid{display:grid;gap:10px}
     .grid.cards{grid-template-columns:1fr 1fr}
     @media(min-width:560px){ .grid.cards{grid-template-columns:1fr 1fr 1fr} }
@@ -55,29 +56,21 @@
     .card{
       display:flex;flex-direction:column;background:#11172a;border-radius:16px;border:var(--border);overflow:hidden;position:relative
     }
-    .card .pic{
-      width:100%;padding-top:100%;background:#0f1430;position:relative;overflow:hidden;flex:0 0 auto;
-    }
+    .card .pic{width:100%;padding-top:100%;background:#0f1430;position:relative;overflow:hidden;flex:0 0 auto}
     .card .pic img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
     .card .fav{
       position:absolute;top:8px;right:8px;z-index:2;background:rgba(17,22,42,.7);
       border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(4px);border-radius:999px;padding:6px;cursor:pointer
     }
     .card .fav .icv{fill:var(--icon)}
-    .card .fav[aria-pressed="true"] .icv{fill:var(--badge)} /* активное сердечко — розовое */
+    .card .fav[aria-pressed="true"] .icv{fill:var(--badge)} /* активное избранное — розовое */
 
-    .card .cnt{
-      padding:10px 10px 12px;display:flex;flex-direction:column;gap:6px;
-      min-height:var(--card-content-h);flex:1 1 auto;
-    }
+    .card .cnt{padding:10px 10px 12px;display:flex;flex-direction:column;gap:6px;min-height:var(--card-content-h);flex:1 1 auto}
     .title{
       font-size:13px;line-height:1.25;margin:0;
       display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.6em;
     }
-    .desc{
-      color:#c9cff1;font-size:12px;opacity:.9;
-      display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.4em;
-    }
+    .desc{color:#c9cff1;font-size:12px;opacity:.9;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.4em}
     .price-row{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
     .price{font-weight:800;font-size:15px}
     .old{color:#939bb7;text-decoration:line-through;font-size:12px}
@@ -86,19 +79,16 @@
     .rating .star{width:14px;height:14px;display:inline-block}
     .add{margin-top:auto;width:100%;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;border:none;padding:9px 10px;border-radius:12px;font-weight:700;cursor:pointer}
 
-    /* screens */
     .screen{display:none}
     .screen.active{display:block}
 
-    /* bottom bar */
+    /* Bottom bar */
     .tabbar{
       position:fixed;left:0;right:0;bottom:0;z-index:20;background:#0c1122;border-top:1px solid #232d4d;
       display:grid;grid-template-columns:repeat(5,1fr);gap:4px;padding:6px 6px calc(env(safe-area-inset-bottom,0) + 6px);
     }
     .tabbar.admin{grid-template-columns:repeat(6,1fr)}
-    .tabbtn{
-      position:relative;display:flex;align-items:center;justify-content:center;padding:10px;border-radius:12px;border:1px solid transparent;background:transparent;cursor:pointer
-    }
+    .tabbtn{position:relative;display:flex;align-items:center;justify-content:center;padding:10px;border-radius:12px;border:1px solid transparent;background:transparent;cursor:pointer}
     .tabbtn[aria-selected="true"]{background:rgba(110,168,255,.12);border:var(--border)}
     .tabbtn[aria-selected="true"] .icv{fill:var(--icon-active)}
     .tabbtn .badge-dot{
@@ -106,7 +96,7 @@
       font-weight:800;font-size:12px;display:none;align-items:center;justify-content:center;line-height:1;border:2px solid #0c1122;
     }
 
-    /* Catalog (плитки + список подкатегорий) */
+    /* Catalog tiles + subcategories */
     .cat-tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
     @media(min-width:560px){ .cat-tiles{grid-template-columns:1fr 1fr 1fr} }
     .cat-tile{
@@ -114,15 +104,28 @@
       padding:12px;min-height:110px;display:flex;align-items:flex-end;justify-content:space-between;gap:8px;cursor:pointer;
     }
     .cat-tile .tt{font-weight:600}
-    .cat-tile .img{
-      position:absolute;right:6px;bottom:0;width:60%;height:80%;opacity:.9;pointer-events:none;mask-image:linear-gradient(to top,black 65%, transparent)
-    }
+    .cat-tile .img{position:absolute;right:6px;bottom:0;width:60%;height:80%;opacity:.9;pointer-events:none;mask-image:linear-gradient(to top,black 65%, transparent)}
     .cat-back{display:flex;align-items:center;gap:8px;margin:2px 0 10px}
     .cat-back button{background:#1a2033;border:1px solid rgba(255,255,255,.1);color:var(--text);padding:8px 12px;border-radius:12px;cursor:pointer}
     .sub-list{display:flex;flex-direction:column;gap:8px}
     .sub-item{display:flex;align-items:center;gap:12px;background:#161c2e;border:1px solid rgba(255,255,255,.06);padding:10px;border-radius:14px;cursor:pointer}
     .sub-item .thumb{width:52px;height:52px;border-radius:12px;background:#0f1430;overflow:hidden;flex:0 0 auto}
     .sub-item .thumb img{width:100%;height:100%;object-fit:cover}
+
+    /* Admin */
+    .admin-grid{display:grid;gap:12px}
+    .square-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px}
+    .square-btn{display:flex;align-items:center;justify-content:center;gap:10px;aspect-ratio:1/1;border-radius:16px;border:1px solid rgba(255,255,255,.1);background:#1a2033;color:var(--text);cursor:pointer}
+    .panel{display:none;background:#11172a;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:12px}
+    .panel h3{margin:0 0 8px 0;font-size:15px}
+    .filebox{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+    .thumb-up{width:64px;height:64px;border-radius:10px;background:#0f1430;border:1px solid rgba(255,255,255,.08);overflow:hidden}
+    .thumb-up img{width:100%;height:100%;object-fit:cover}
+
+    .iconbtn{background:#1a2033;border:1px solid rgba(255,255,255,.1);border-radius:10px;display:flex;align-items:center;justify-content:center;padding:8px;cursor:pointer}
+    .iconbtn .icv{fill:var(--icon)}
+    .list-admin{display:flex;flex-direction:column;gap:8px}
+    .row-admin{display:flex;align-items:center;gap:8px;background:#161c2e;border:1px solid rgba(255,255,255,.06);padding:10px;border-radius:14px}
 
     .empty{color:var(--subtext);padding:10px 2px}
     .line{display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;background:#0f1430;border:1px solid #28306b}
@@ -131,15 +134,12 @@
     .line .t{flex:1}
     .muted{opacity:.85}
 
-    .toast{
-      position:fixed;left:50%;transform:translateX(-50%);bottom:72px;background:#11162a;border:1px solid #253058;color:var(--text);
-      padding:12px 14px;border-radius:12px;box-shadow:var(--shadow);z-index:50;display:none;max-width:86%;
-    }
+    .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:72px;background:#11162a;border:1px solid #253058;color:var(--text);padding:12px 14px;border-radius:12px;box-shadow:var(--shadow);z-index:50;display:none;max-width:86%}
     .toast.show{display:block;animation:pop .25s ease}
     @keyframes pop{from{transform:translateX(-50%) translateY(6px);opacity:.5} to{transform:translateX(-50%) translateY(0);opacity:1}}
   </style>
 
-  <!-- SVG sprite (монохром) -->
+  <!-- SVG sprite -->
   <svg width="0" height="0" style="position:absolute">
     <symbol id="i-home" viewBox="0 0 24 24"><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1v-9.5Z"/></symbol>
     <symbol id="i-grid" viewBox="0 0 24 24"><path d="M3 3h8v8H3V3Zm10 0h8v8h-8V3ZM3 13h8v8H3v-8Zm10 0h8v8h-8v-8Z"/></symbol>
@@ -147,18 +147,20 @@
     <symbol id="i-basket" viewBox="0 0 24 24"><path d="M7 10l5-7 5 7m-12 0h14l-1.6 9.2A2 2 0 0 1 15.5 21h-7a2 2 0 0 1-1.9-1.8L5 10Z"/></symbol>
     <symbol id="i-user" viewBox="0 0 24 24"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm7 8a7 7 0 0 0-14 0"/></symbol>
     <symbol id="i-edit" viewBox="0 0 24 24"><path d="M3 17.3 14.7 5.6l3.7 3.7L6.7 21H3v-3.7ZM16.8 3.6l3.6 3.6"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M6 7h12l-1 13a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L6 7Zm3-3h6l1 3H8l1-3Z"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M11 5h2v14h-2z"/><path d="M5 11h14v2H5z"/></symbol>
+    <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 11h14v2H5z"/></symbol>
+    <symbol id="i-camera" viewBox="0 0 24 24"><path d="M9 6h6l1 2h3a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h3l1-2Z"/><circle cx="12" cy="13" r="4"/></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 18 9 12l6-6"/></symbol>
+    <symbol id="i-save" viewBox="0 0 24 24"><path d="M5 21h14V7l-3-3H5v17Z"/><path d="M9 21v-6h6v6"/><path d="M9 3v4h6V3"/></symbol>
   </svg>
 </head>
 <body>
   <div class="wrap">
-
-    <!-- Top search + admin-only DB pill -->
     <div class="topbar">
       <div class="row">
         <input id="search" class="search" placeholder="Поиск по товарам…" />
-        <div id="pillDb" class="pill">
-          <span class="ok"></span><span>БД: ок</span>
-        </div>
+        <div id="pillDb" class="pill"><span class="ok"></span><span>БД: ок</span></div>
       </div>
     </div>
 
@@ -170,13 +172,14 @@
 
     <!-- Каталог -->
     <section id="scr_catalog" class="screen">
-      <!-- плитки верхних категорий -->
       <div id="catTiles" class="cat-tiles"></div>
       <div id="catTilesEmpty" class="empty" style="display:none">Категорий пока нет…</div>
 
-      <!-- список подкатегорий -->
       <div id="catSub" style="display:none">
-        <div class="cat-back"><button id="btnCatBack">← Назад</button><div id="catPath" class="muted"></div></div>
+        <div class="cat-back">
+          <button id="btnCatBack"><svg class="icv"><use href="#i-back"/></svg></button>
+          <div id="catPath" class="muted"></div>
+        </div>
         <div id="subList" class="sub-list"></div>
       </div>
     </section>
@@ -208,67 +211,68 @@
       </div>
       <div style="height:8px"></div>
       <div class="line">
-        <div class="t">
-          <div class="muted">API:</div>
-          <div style="word-break:break-all" id="apiShown"></div>
-        </div>
+        <div class="t"><div class="muted">API:</div><div style="word-break:break-all" id="apiShown"></div></div>
         <button id="btnChangeApi" class="add" style="max-width:160px">Сменить API</button>
       </div>
     </section>
 
-    <!-- Админ: CRUD -->
+    <!-- Админ -->
     <section id="scr_admin" class="screen">
-      <div class="grid" style="gap:12px">
-        <div class="line" style="flex-direction:column;align-items:stretch">
-          <b>Категории · CRUD</b>
+      <div class="admin-grid">
+        <!-- квадратные кнопки -->
+        <div class="square-btns">
+          <button id="btnOpenCreateProd" class="square-btn"><svg class="icv"><use href="#i-plus"/></svg>Создать товар</button>
+          <button id="btnOpenCreateCat" class="square-btn"><svg class="icv"><use href="#i-plus"/></svg>Создать категорию</button>
+        </div>
+
+        <!-- панель создания товара -->
+        <div id="panelCreateProd" class="panel">
+          <h3>Создание товара</h3>
+          <div class="row"><input id="cpTitle" class="search" placeholder="Название товара"/></div>
+          <div class="row"><textarea id="cpDesc" class="search" placeholder="Описание товара"></textarea></div>
+          <div class="row"><input id="cpPrice" class="search" type="number" min="0" step="0.01" placeholder="Цена"/></div>
+
           <div class="row">
-            <input id="catName" class="search" placeholder="Название (Обувь)" />
-            <input id="catSlug" class="search" placeholder="slug (shoes)" />
-            <input id="catParent" class="search" placeholder="parent_id (опц.)" />
+            <label class="iconbtn" for="cpImages"><svg class="icv"><use href="#i-camera"/></svg></label>
+            <input id="cpImages" type="file" accept="image/*" multiple style="display:none" />
+            <div id="cpPreviews" class="filebox"></div>
           </div>
+
           <div class="row">
-            <input id="catImage" class="search" placeholder="URL изображения (опц.)" />
-            <button id="btnCreateCat" class="add" style="max-width:160px">Создать</button>
-            <button id="btnUpdateCat" class="add" style="max-width:160px;background:#18d1a6" disabled>Сохранить</button>
-            <button id="btnCancelCat" class="add" style="max-width:120px;background:#303b57" disabled>Отмена</button>
+            <select id="cpCatRoot" class="search"><option value="">— Выбери категорию —</option></select>
+            <select id="cpCatChild" class="search" style="display:none"><option value="">— Подкатегория —</option></select>
           </div>
-          <div id="catsEmptyA" class="empty">Нет категорий</div>
-          <div id="catsTableAWrap" style="display:none">
-            <div id="catsTbodyA" class="sub-list"></div>
+
+          <div class="row">
+            <button id="cpCreate" class="add" style="max-width:200px"><svg class="icv"><use href="#i-save"/></svg>&nbsp;Сохранить</button>
           </div>
         </div>
 
-        <div class="line" style="flex-direction:column;align-items:stretch">
-          <b>Товары · CRUD</b>
+        <!-- панель создания категории -->
+        <div id="panelCreateCat" class="panel">
+          <h3>Создание категории</h3>
+          <div class="row"><input id="ccName" class="search" placeholder="Название"/></div>
           <div class="row">
-            <input id="pTitle" class="search" placeholder="Название"/>
-            <input id="pSlug" class="search" placeholder="slug"/>
-          </div>
-          <textarea id="pDesc" class="search" placeholder="Описание (опц.)" style="min-height:72px"></textarea>
-          <div class="row">
-            <input id="pPrice" class="search" type="number" min="0" step="0.01" placeholder="Цена"/>
-            <input id="pCurr" class="search" placeholder="Валюта" value="RUB"/>
-            <input id="pStock" class="search" type="number" min="0" step="1" placeholder="Остаток" value="0"/>
+            <label class="iconbtn" for="ccImage"><svg class="icv"><use href="#i-camera"/></svg></label>
+            <input id="ccImage" type="file" accept="image/*" style="display:none" />
+            <div id="ccPreview" class="filebox"></div>
           </div>
           <div class="row">
-            <select id="pCat" class="search"><option value="">— Категория —</option></select>
-            <select id="pActive" class="search">
-              <option value="true" selected>Активен</option>
-              <option value="false">Скрыт</option>
-            </select>
+            <select id="ccParent" class="search"><option value="">Основная</option></select>
           </div>
-          <textarea id="pImages" class="search" placeholder="Ссылки на изображения (по одному в строке)"></textarea>
-          <textarea id="pAttrs" class="search" placeholder='Атрибуты JSON: {"old_price":999,"rating":4.7,"ratings_count":42581}'></textarea>
-          <div class="row">
-            <button id="btnCreateProd" class="add" style="max-width:160px">Создать</button>
-            <button id="btnUpdateProd" class="add" style="max-width:160px;background:#18d1a6" disabled>Сохранить</button>
-            <button id="btnCancelProd" class="add" style="max-width:120px;background:#303b57" disabled>Отмена</button>
-          </div>
+          <div class="row"><button id="ccCreate" class="add" style="max-width:200px"><svg class="icv"><use href="#i-save"/></svg>&nbsp;Сохранить</button></div>
+        </div>
 
+        <!-- списки для редактирования/удаления -->
+        <div class="panel" style="display:block">
+          <h3>Категории</h3>
+          <div id="catsEmptyA" class="empty">Нет категорий</div>
+          <div id="catsTableAWrap" class="list-admin" style="display:none"></div>
+        </div>
+        <div class="panel" style="display:block">
+          <h3>Товары</h3>
           <div id="prodsEmptyA" class="empty">Нет товаров</div>
-          <div id="prodsTableAWrap" style="display:none">
-            <div id="prodsTbodyA" class="sub-list"></div>
-          </div>
+          <div id="prodsTableAWrap" class="list-admin" style="display:none"></div>
         </div>
       </div>
     </section>
@@ -284,67 +288,47 @@
       <span class="badge-dot" id="cartBadge">0</span>
     </button>
     <button class="tabbtn muted-ic" data-scr="account" title="Аккаунт"><svg class="icv"><use href="#i-user"/></svg></button>
-    <!-- Кнопка редактирования добавляется для админа -->
+    <!-- кнопка редактирования добавится для создателя -->
   </nav>
 
   <div class="toast" id="toast"></div>
 
   <script>
-    // ─────────────── API base
+    // ───────── Base / user
     const url = new URL(location.href);
     const qpApi = url.searchParams.get("api");
-    const API_BASE = (() => {
-      if (qpApi) return qpApi.replace(/\/+$/, "");
-      return "http://127.0.0.1:9010";
-    })();
+    const API_BASE = qpApi ? qpApi.replace(/\/+$/, "") : "http://127.0.0.1:9010";
     document.getElementById("apiShown").textContent = API_BASE;
 
-    // ─────────────── Telegram ID / admin
     let tgId = null, isAdmin = false;
     try { tgId = Telegram?.WebApp?.initDataUnsafe?.user?.id || null; } catch(e){}
-    if (!tgId) {
-      const saved = localStorage.getItem("debug_tg_id");
-      if (saved) tgId = parseInt(saved,10);
-    }
-    const whoEl = document.getElementById("whoAmI");
-    const roleEl = document.getElementById("whoRole");
-    if (tgId) whoEl.textContent = String(tgId);
+    if (!tgId) { const saved = localStorage.getItem("debug_tg_id"); if (saved) tgId = parseInt(saved,10); }
+    if (tgId) document.getElementById("whoAmI").textContent = String(tgId);
 
-    // ─────────────── helpers
     class ApiError extends Error{ constructor(status, message, raw){ super(message); this.status=status; this.raw=raw; } }
-    function headers(json=true, withTg=false){
-      const h={}; if(json) h["Content-Type"]="application/json"; if(withTg && tgId) h["X-Telegram-Id"]=String(tgId); return h;
-    }
-    function parseErrorText(text){
-      if (!text) return "Ошибка запроса";
-      try{ const j=JSON.parse(text);
-        if (j.detail){ if (typeof j.detail==="string") return j.detail; if (Array.isArray(j.detail)) return j.detail.map(x=>x.msg||x.detail||JSON.stringify(x)).join("; "); if (j.detail.message) return j.detail.message; }
-        if (j.message) return j.message; return typeof j==="string"?j:JSON.stringify(j);
-      }catch{ return text; }
-    }
-    async function apiGet(path, params) {
-      const u = new URL(API_BASE + path);
-      if (params) Object.entries(params).forEach(([k,v]) => (v ?? v===0) && u.searchParams.set(k,v));
-      const r = await fetch(u); const t = await r.text(); if(!r.ok) throw new ApiError(r.status, parseErrorText(t), t); return t?JSON.parse(t):null;
-    }
-    async function apiSend(method, path, body=null, withTg=false){
-      const r = await fetch(API_BASE+path,{method,headers:headers(true,withTg),body:body?JSON.stringify(body):null});
-      const t=await r.text(); if(!r.ok) throw new ApiError(r.status, parseErrorText(t), t); return t?JSON.parse(t):null;
-    }
+    function headers(json=true, withTg=false){ const h={}; if(json) h["Content-Type"]="application/json"; if(withTg && tgId) h["X-Telegram-Id"]=String(tgId); return h; }
+    function parseErrorText(text){ if (!text) return "Ошибка запроса"; try{ const j=JSON.parse(text); if (j.detail){ if (typeof j.detail==="string") return j.detail; if (Array.isArray(j.detail)) return j.detail.map(x=>x.msg||x.detail||JSON.stringify(x)).join("; "); if (j.detail.message) return j.detail.message; } if (j.message) return j.message; return typeof j==="string"?j:JSON.stringify(j);}catch{ return text; } }
+    async function apiGet(path, params){ const u=new URL(API_BASE+path); if(params) Object.entries(params).forEach(([k,v])=> (v ?? v===0) && u.searchParams.set(k,v)); const r=await fetch(u); const t=await r.text(); if(!r.ok) throw new ApiError(r.status, parseErrorText(t), t); return t?JSON.parse(t):null; }
+    async function apiSend(method, path, body=null, withTg=false){ const r=await fetch(API_BASE+path,{method,headers:headers(true,withTg),body:body?JSON.stringify(body):null}); const t=await r.text(); if(!r.ok) throw new ApiError(r.status, parseErrorText(t), t); return t?JSON.parse(t):null; }
     function toast(msg){ const el=document.getElementById("toast"); el.textContent=msg; el.className="toast show"; setTimeout(()=>el.className="toast",2200); }
     function money(v,c="RUB"){ return `${Number(v||0).toFixed(0)} ${c}`; }
     function escapeHtml(s){ return String(s).replace(/[&<>"'`]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','`':'&#96;'}[c])); }
     function formatCount(n){ n = Number(n||0); return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "\u202F"); }
 
-    // ─────────────── state (favorites, cart)
+    // ───────── visibility filter: показываем всем только общие или свои
+    function visibleToMe(obj){
+      const owner = obj?.attributes?.owner_tg_id ?? null;
+      return (owner === null) || (String(owner) === String(tgId));
+    }
+
+    // ───────── State
     const favKey="tgshop_fav_ids"; const cartKey="tgshop_cart";
     let fav = new Set(JSON.parse(localStorage.getItem(favKey)||"[]"));
     let cart = new Map(Object.entries(JSON.parse(localStorage.getItem(cartKey)||"{}")).map(([k,v])=>[Number(k),Number(v)]));
-
     function saveFav(){ localStorage.setItem(favKey, JSON.stringify([...fav])); }
     function saveCart(){ localStorage.setItem(cartKey, JSON.stringify(Object.fromEntries(cart))); }
 
-    // ─────────────── product card
+    // ───────── Product card
     function productCard(p){
       const img = (Array.isArray(p.images) && p.images[0]) ? p.images[0] : "";
       const currency = (p.currency||"RUB").toUpperCase();
@@ -368,33 +352,29 @@
               <div class="price">${money(p.price, currency)}</div>
               ${old?`<div class="old">${money(old,currency)}</div><span class="badge">-${Math.max(0, Math.round(100-(p.price/old*100)))}%</span>`:""}
             </div>
-            <div class="rating">
-              <span class="star">★</span>
-              ${rating?`${Number(rating).toFixed(1)} · ${formatCount(rcnt||0)} отзывов`:`Нет отзывов`}
-            </div>
+            <div class="rating"><span class="star">★</span>${rating?`${Number(rating).toFixed(1)} · ${formatCount(rcnt||0)} отзывов`:`Нет отзывов`}</div>
             <button class="add">В корзину</button>
           </div>
         </div>
       `;
     }
 
-    // bind handlers for cards
     function bindCardHandlers(rootEl){
       rootEl.querySelectorAll(".card").forEach(card=>{
         const id = Number(card.dataset.id);
-        card.querySelector(".fav")?.addEventListener("click", (e)=>{
+        card.querySelector(".fav")?.addEventListener("click",(e)=>{
           e.stopPropagation();
           if (fav.has(id)) fav.delete(id); else fav.add(id);
           saveFav();
-          syncAllGrids(); // синхронизируем сердечки везде
+          syncAllGrids();
         });
         card.querySelector(".add")?.addEventListener("click", ()=>{
-          cart.set(id, (cart.get(id)||0)+1); saveCart(); toast("Добавлено в корзину"); updateCartBadge();
+          cart.set(id,(cart.get(id)||0)+1); saveCart(); toast("Добавлено в корзину"); updateCartBadge();
         });
       });
     }
 
-    // ─────────────── screens/nav
+    // ───────── Screens/nav
     const screens = {
       home: document.getElementById("scr_home"),
       catalog: document.getElementById("scr_catalog"),
@@ -413,10 +393,10 @@
       });
     }
 
-    // ─────────────── data + renders
+    // ───────── Data + renders
     let allProducts = [];
     let allCategories = [];
-    let catIndexByParent = new Map(); // parent_id -> [cats]
+    let catIndexByParent = new Map();
     let selectedCat = null;
 
     function indexCategories(cats){
@@ -433,7 +413,7 @@
       try{
         const h = await apiGet("/health/db");
         const ok = (h?.db==="ok") || (h?.status==="ok");
-        pill.style.display = (isAdmin && ok) ? "inline-flex" : "none"; // только админам
+        pill.style.display = (isAdmin && ok) ? "inline-flex" : "none";
       }catch{ pill.style.display = isAdmin ? "inline-flex" : "none"; }
     }
     async function ensureUser(){
@@ -441,8 +421,7 @@
       try{
         const u = await apiSend("POST","/api/users/ensure",{tg_id:tgId},true);
         isAdmin = !!u.is_admin;
-        roleEl.textContent = isAdmin ? "Режим: админ" : "Режим: гость";
-        // кнопка "Редактирование"
+        document.getElementById("whoRole").textContent = isAdmin ? "Режим: админ" : "Режим: гость";
         if (isAdmin && !document.querySelector('.tabbtn[data-scr="admin"]')){
           const tb=document.getElementById("tabbar"); tb.classList.add("admin");
           const btn=document.createElement("button");
@@ -454,34 +433,36 @@
       }catch(e){ console.warn("ensure user failed",e); }
     }
     async function loadCategories(){
-      const cats = await apiGet("/api/categories");
+      let cats = await apiGet("/api/categories");
+      cats = cats.filter(visibleToMe); // скрываем чужие
       allCategories = cats;
       indexCategories(cats);
       renderCatTiles();
-      // заполнить селект в админке для товаров
-      const sel = document.getElementById("pCat");
-      sel.innerHTML = '<option value="">— Категория —</option>' + cats.map(c=>`<option value="${c.id}">${escapeHtml(c.name)} (#${c.id})</option>`).join("");
-      // перерисовать список категорий в админке
-      renderAdminCats();
+      // селекты в панелях
+      const cc = document.getElementById("ccParent");
+      cc.innerHTML = '<option value="">Основная</option>' + cats.map(c=>`<option value="${c.id}">${escapeHtml(c.name)}</option>`).join("");
+      const cpRoot = document.getElementById("cpCatRoot");
+      cpRoot.innerHTML = '<option value="">— Выбери категорию —</option>' + (catIndexByParent.get(null)||[]).map(c=>`<option value="${c.id}">${escapeHtml(c.name)}</option>`).join("");
     }
     async function loadProducts(params){
-      const list = await apiGet("/api/products", params);
+      let list = await apiGet("/api/products", params);
+      list = list.filter(visibleToMe); // скрываем чужие
       allProducts = list;
       renderHome(list);
       renderFav();
       renderCart();
       updateCartBadge();
-      renderAdminProds(); // чтобы видеть актуальные товары
+      renderAdminCats();
+      renderAdminProds();
     }
 
-    // -------- Catalog renders
+    // Catalog renders
     function renderCatTiles(){
       selectedCat = null;
       const tiles = document.getElementById("catTiles");
       const empty = document.getElementById("catTilesEmpty");
       const sub = document.getElementById("catSub");
-      sub.style.display = "none";
-      tiles.style.display = "grid";
+      sub.style.display = "none"; tiles.style.display = "grid";
       const roots = (catIndexByParent.get(null)||[]);
       if(!roots.length){ tiles.innerHTML=""; empty.style.display="block"; return; }
       empty.style.display="none";
@@ -514,12 +495,11 @@
         const img = c.attributes?.image || "";
         return `
           <div class="sub-item" data-id="${c.id}">
-            <div class="thumb">${img?`<img src="${escapeHtml(img)}" alt="">`:``}</div>
+            <div class="thumb">${img?`<img src="${escapeHtml(img)}" alt="">`:""}</div>
             <div class="t">${escapeHtml(c.name)}</div>
           </div>
         `;
       }).join("");
-      // клик по подкатегории — фильтруем товары по category_id и показываем "Главную"
       list.querySelectorAll(".sub-item").forEach(li=>{
         li.addEventListener("click", ()=>{
           const catId = Number(li.dataset.id);
@@ -530,7 +510,7 @@
     }
     document.getElementById("btnCatBack").addEventListener("click", renderCatTiles);
 
-    // -------- Product renders
+    // Product renders
     function renderHome(list){
       const g=document.getElementById("homeGrid"), e=document.getElementById("homeEmpty");
       if (!list.length){ g.innerHTML=""; e.style.display="block"; return; }
@@ -561,14 +541,11 @@
         return `
           <div class="line" data-id="${p.id}">
             <div class="thumb">${img?`<img src="${escapeHtml(img)}" alt="">`:""}</div>
-            <div class="t">
-              <div><b>${escapeHtml(p.title)}</b></div>
-              <div class="muted">${money(p.price,curr)} · Кол-во: <b>${q}</b></div>
-            </div>
+            <div class="t"><div><b>${escapeHtml(p.title)}</b></div><div class="muted">${money(p.price,curr)} · Кол-во: <b>${q}</b></div></div>
             <div class="row" style="gap:6px">
-              <button class="tabbtn" data-act="dec">−</button>
-              <button class="tabbtn" data-act="inc">+</button>
-              <button class="tabbtn" data-act="del">🗑</button>
+              <button class="iconbtn" data-act="dec" title="Минус"><svg class="icv"><use href="#i-minus"/></svg></button>
+              <button class="iconbtn" data-act="inc" title="Плюс"><svg class="icv"><use href="#i-plus"/></svg></button>
+              <button class="iconbtn" data-act="del" title="Удалить"><svg class="icv"><use href="#i-trash"/></svg></button>
             </div>
           </div>
         `;
@@ -588,16 +565,8 @@
       });
     }
 
-    // синхронизация сердечек на всех экранах
-    function syncAllGrids(){
-      renderHome(allProducts);
-      renderFav();
-      // если открыт каталог с товарами (после выбора подкатегории) — обновим товары
-      // (мы показываем товары на главной; каталогу ничего не нужно)
-      updateCartBadge();
-    }
+    function syncAllGrids(){ renderHome(allProducts); renderFav(); updateCartBadge(); }
 
-    // только корзина имеет счётчик
     function updateCartBadge(){
       const cartCount = [...cart.values()].reduce((a,b)=>a+b,0);
       const badge = document.getElementById("cartBadge");
@@ -605,203 +574,217 @@
       else { badge.style.display="none"; }
     }
 
-    // ─────────────── Admin CRUD (категории)
-    let editingCatId = null;
+    // ───────── Admin lists/edit
+    let editingCatId = null, editingProdId = null;
+
     function renderAdminCats(){
       const list = allCategories.slice().sort((a,b)=>a.id-b.id);
       const wrap = document.getElementById("catsTableAWrap");
       const empty = document.getElementById("catsEmptyA");
-      const body = document.getElementById("catsTbodyA");
-      if (!list.length){ wrap.style.display="none"; empty.style.display="block"; body.innerHTML=""; return; }
-      wrap.style.display="block"; empty.style.display="none";
-      body.innerHTML = list.map(c=>`
-        <div class="sub-item">
-          <div class="t"><b>#${c.id}</b> · ${escapeHtml(c.name)} <span class="muted">(${escapeHtml(c.slug)})</span> ${c.parent_id?`· parent:${c.parent_id}`:""}</div>
-          <div class="row" style="gap:6px">
-            <button class="tabbtn" data-act="editCat" data-id="${c.id}">✏️</button>
-            <button class="tabbtn" data-act="delCat" data-id="${c.id}">🗑️</button>
-          </div>
+      if (!list.length){ wrap.style.display="none"; empty.style.display="block"; wrap.innerHTML=""; return; }
+      wrap.style.display="flex"; wrap.style.flexDirection="column"; empty.style.display="none";
+      wrap.innerHTML = list.map(c=>`
+        <div class="row-admin">
+          <div class="t"><b>#${c.id}</b> · ${escapeHtml(c.name)} <span class="muted">(${escapeHtml(c.slug||'')})</span> ${c.parent_id?`· parent:${c.parent_id}`:""}</div>
+          <button class="iconbtn" data-act="editCat" data-id="${c.id}" title="Редактировать"><svg class="icv"><use href="#i-edit"/></svg></button>
+          <button class="iconbtn" data-act="delCat" data-id="${c.id}" title="Удалить"><svg class="icv"><use href="#i-trash"/></svg></button>
         </div>
       `).join("");
-      body.querySelectorAll("[data-act]").forEach(btn=>{
+      wrap.querySelectorAll("[data-act]").forEach(btn=>{
         btn.addEventListener("click", async ()=>{
-          const id = Number(btn.dataset.id);
-          const act = btn.dataset.act;
+          const id = Number(btn.dataset.id); const act=btn.dataset.act;
           if (act==="editCat"){
             const c = list.find(x=>x.id===id); if(!c) return;
+            openCreateCatPanel(true);
+            document.getElementById("ccName").value = c.name||"";
+            // превью
+            const img = c.attributes?.image||"";
+            document.getElementById("ccPreview").innerHTML = img?`<div class="thumb-up"><img src="${escapeHtml(img)}"></div>`:"";
+            document.getElementById("ccParent").value = c.parent_id ?? "";
             editingCatId = id;
-            document.getElementById("catName").value = c.name||"";
-            document.getElementById("catSlug").value = c.slug||"";
-            document.getElementById("catParent").value = c.parent_id ?? "";
-            document.getElementById("catImage").value = c.attributes?.image || "";
-            document.getElementById("btnUpdateCat").disabled = false;
-            document.getElementById("btnCancelCat").disabled = false;
-          }else if (act==="delCat"){
+          } else if (act==="delCat"){
             if(!confirm(`Удалить категорию #${id}?`)) return;
             const r = await fetch(API_BASE+`/api/categories/${id}`,{method:"DELETE",headers:headers(false,true)});
-            if (!r.ok){ const t=await r.text(); return toast(parseErrorText(t)); }
-            toast("Категория удалена");
-            await loadCategories();
+            if(!r.ok){ const t=await r.text(); return toast(parseErrorText(t)); }
+            toast("Категория удалена"); await loadCategories();
           }
         });
       });
-    }
-    document.getElementById("btnCreateCat").addEventListener("click", async ()=>{
-      const payload = {
-        name: document.getElementById("catName").value.trim(),
-        slug: document.getElementById("catSlug").value.trim(),
-        parent_id: document.getElementById("catParent").value.trim()?Number(document.getElementById("catParent").value.trim()):null,
-        attributes: (()=>{
-          const img = document.getElementById("catImage").value.trim();
-          return img ? {image: img} : null;
-        })()
-      };
-      if (!payload.name || !payload.slug) return toast("Укажи name и slug");
-      try{
-        await apiSend("POST","/api/categories",payload,true);
-        toast("Категория создана");
-        ["catName","catSlug","catParent","catImage"].forEach(id=>document.getElementById(id).value="");
-        await loadCategories();
-      }catch(e){ toast(e.message||"Ошибка создания категории"); }
-    });
-    document.getElementById("btnUpdateCat").addEventListener("click", async ()=>{
-      if (!editingCatId) return;
-      const payload = {
-        name: document.getElementById("catName").value.trim(),
-        slug: document.getElementById("catSlug").value.trim(),
-        parent_id: document.getElementById("catParent").value.trim()?Number(document.getElementById("catParent").value.trim()):null,
-        attributes: (()=>{
-          const img = document.getElementById("catImage").value.trim();
-          return img ? {image: img} : null;
-        })()
-      };
-      try{
-        await apiSend("PATCH", `/api/categories/${editingCatId}`, payload, true);
-        toast("Категория сохранена");
-        editingCatId=null; document.getElementById("btnUpdateCat").disabled=true; document.getElementById("btnCancelCat").disabled=true;
-        ["catName","catSlug","catParent","catImage"].forEach(id=>document.getElementById(id).value="");
-        await loadCategories();
-      }catch(e){ toast(e.message||"Ошибка обновления категории"); }
-    });
-    document.getElementById("btnCancelCat").addEventListener("click", ()=>{
-      editingCatId=null; document.getElementById("btnUpdateCat").disabled=true; document.getElementById("btnCancelCat").disabled=true;
-      ["catName","catSlug","catParent","catImage"].forEach(id=>document.getElementById(id).value="");
-    });
-
-    // ─────────────── Admin CRUD (товары)
-    let editingProdId = null;
-    function collectProdPayload(){
-      const title = document.getElementById("pTitle").value.trim();
-      let slug = document.getElementById("pSlug").value.trim();
-      const desc = document.getElementById("pDesc").value.trim();
-      if (!slug && title) slug = slugify(title);
-      const category_id = parseInt(document.getElementById("pCat").value,10);
-      if (!title || !slug || !category_id){ toast("Укажи title, slug и категорию"); return null; }
-      let price = parseFloat((document.getElementById("pPrice").value || "0").replace(",", ".")); if (Number.isNaN(price) || price < 0) price = 0;
-      const stock = parseInt(document.getElementById("pStock").value || "0",10);
-      const images = (()=>{
-        const v = document.getElementById("pImages").value.trim();
-        return v ? v.split("\n").map(s=>s.trim()).filter(Boolean) : null;
-      })();
-      let attributes = null; const rawAttrs = document.getElementById("pAttrs").value.trim();
-      if (rawAttrs){ try{ attributes = JSON.parse(rawAttrs); } catch{ toast("Некорректный JSON атрибутов"); return null; } }
-      return {
-        title, slug, description: desc || null, price,
-        currency:(document.getElementById("pCurr").value||"RUB").toUpperCase(),
-        stock:Number.isFinite(stock)?stock:0,
-        is_active: document.getElementById("pActive").value==="true",
-        images, attributes, category_id
-      };
-    }
-    function slugify(v){
-      return (v||"").toLowerCase().trim()
-        .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
-        .replace(/\s+/g,"-").replace(/[^a-z0-9\-]/g,"-")
-        .replace(/\-+/g,"-").replace(/^\-+|\-+$/g,"") || "item";
-    }
-    function clearProdForm(){
-      ["pTitle","pSlug","pDesc","pPrice","pCurr","pStock","pImages","pAttrs"].forEach(id=>document.getElementById(id).value="");
-      document.getElementById("pCurr").value="RUB";
-      document.getElementById("pStock").value="0";
-      document.getElementById("pCat").value="";
-      document.getElementById("pActive").value="true";
     }
 
     function renderAdminProds(){
       const list = allProducts.slice().sort((a,b)=>a.id-b.id);
       const wrap = document.getElementById("prodsTableAWrap");
       const empty = document.getElementById("prodsEmptyA");
-      const body = document.getElementById("prodsTbodyA");
-      if (!list.length){ wrap.style.display="none"; empty.style.display="block"; body.innerHTML=""; return; }
-      wrap.style.display="block"; empty.style.display="none";
-      body.innerHTML = list.map(p=>`
-        <div class="sub-item">
-          <div class="t"><b>#${p.id}</b> · ${escapeHtml(p.title)} <span class="muted">(${escapeHtml(p.slug)})</span> · ${money(p.price,(p.currency||"RUB").toUpperCase())} · cat:${p.category_id}</div>
-          <div class="row" style="gap:6px">
-            <button class="tabbtn" data-act="editProd" data-id="${p.id}">✏️</button>
-            <button class="tabbtn" data-act="delProd" data-id="${p.id}">🗑️</button>
-          </div>
+      if (!list.length){ wrap.style.display="none"; empty.style.display="block"; wrap.innerHTML=""; return; }
+      wrap.style.display="flex"; wrap.style.flexDirection="column"; empty.style.display="none";
+      wrap.innerHTML = list.map(p=>`
+        <div class="row-admin">
+          <div class="t"><b>#${p.id}</b> · ${escapeHtml(p.title)} <span class="muted">(${escapeHtml(p.slug||'')})</span> · ${money(p.price,(p.currency||"RUB").toUpperCase())}</div>
+          <button class="iconbtn" data-act="editProd" data-id="${p.id}" title="Редактировать"><svg class="icv"><use href="#i-edit"/></svg></button>
+          <button class="iconbtn" data-act="delProd" data-id="${p.id}" title="Удалить"><svg class="icv"><use href="#i-trash"/></svg></button>
         </div>
       `).join("");
-      body.querySelectorAll("[data-act]").forEach(btn=>{
+      wrap.querySelectorAll("[data-act]").forEach(btn=>{
         btn.addEventListener("click", async ()=>{
-          const id = Number(btn.dataset.id);
-          const act = btn.dataset.act;
+          const id = Number(btn.dataset.id); const act=btn.dataset.act;
           if (act==="editProd"){
             const p = list.find(x=>x.id===id); if(!p) return;
+            openCreateProdPanel(true);
+            document.getElementById("cpTitle").value = p.title||"";
+            document.getElementById("cpDesc").value = p.description||"";
+            document.getElementById("cpPrice").value = String(p.price ?? 0);
+            // Превью из существующих изображений
+            const prev = document.getElementById("cpPreviews"); prev.innerHTML="";
+            (Array.isArray(p.images)?p.images:[]).slice(0,5).forEach(src=>{
+              const d=document.createElement('div'); d.className='thumb-up'; d.innerHTML=`<img src="${escapeHtml(src)}">`; prev.appendChild(d);
+            });
+            // Категория/подкатегория
+            const parent = allCategories.find(c=>c.id===p.category_id)?.parent_id ?? null;
+            document.getElementById("cpCatRoot").value = parent ?? p.category_id;
+            updateCpChildSelect();
+            document.getElementById("cpCatChild").value = String(p.category_id);
             editingProdId = id;
-            document.getElementById("pTitle").value = p.title||"";
-            document.getElementById("pSlug").value = p.slug||"";
-            document.getElementById("pDesc").value = p.description||"";
-            document.getElementById("pPrice").value = String(p.price ?? 0);
-            document.getElementById("pCurr").value = p.currency||"RUB";
-            document.getElementById("pStock").value = String(p.stock ?? 0);
-            document.getElementById("pCat").value = String(p.category_id ?? "");
-            document.getElementById("pActive").value = p.is_active ? "true" : "false";
-            document.getElementById("pImages").value = Array.isArray(p.images) ? p.images.join("\n") : "";
-            document.getElementById("pAttrs").value = p.attributes ? JSON.stringify(p.attributes,null,2) : "";
-            document.getElementById("btnUpdateProd").disabled=false;
-            document.getElementById("btnCancelProd").disabled=false;
           } else if (act==="delProd"){
             if(!confirm(`Удалить товар #${id}?`)) return;
             const r = await fetch(API_BASE+`/api/products/${id}`,{method:"DELETE",headers:headers(false,true)});
-            if (!r.ok){ const t=await r.text(); return toast(parseErrorText(t)); }
-            toast("Товар удалён");
-            await loadProducts();
+            if(!r.ok){ const t=await r.text(); return toast(parseErrorText(t)); }
+            toast("Товар удалён"); await loadProducts();
           }
         });
       });
     }
-    document.getElementById("btnCreateProd").addEventListener("click", async ()=>{
-      const payload = collectProdPayload(); if (!payload) return;
-      try{
-        const r = await apiSend("POST","/api/products",payload,true);
-        toast(`Товар #${r.id} создан`);
-        clearProdForm();
-        await loadProducts();
-      }catch(e){ toast(e.message||"Ошибка создания товара"); }
+
+    // ───────── Panels toggle
+    function openCreateProdPanel(edit=false){
+      document.getElementById("panelCreateProd").style.display="block";
+      document.getElementById("panelCreateCat").style.display="none";
+      document.getElementById("cpTitle").focus();
+      if(!edit){ editingProdId=null; document.getElementById("cpTitle").value=""; document.getElementById("cpDesc").value=""; document.getElementById("cpPrice").value=""; document.getElementById("cpImages").value=""; document.getElementById("cpPreviews").innerHTML=""; document.getElementById("cpCatRoot").value=""; document.getElementById("cpCatChild").style.display="none"; }
+    }
+    function openCreateCatPanel(edit=false){
+      document.getElementById("panelCreateCat").style.display="block";
+      document.getElementById("panelCreateProd").style.display="none";
+      if(!edit){ editingCatId=null; document.getElementById("ccName").value=""; document.getElementById("ccImage").value=""; document.getElementById("ccPreview").innerHTML=""; document.getElementById("ccParent").value=""; }
+    }
+    document.getElementById("btnOpenCreateProd").addEventListener("click", ()=>openCreateProdPanel(false));
+    document.getElementById("btnOpenCreateCat").addEventListener("click", ()=>openCreateCatPanel(false));
+
+    // ───────── File handling (dataURL, до 5 фото)
+    async function filesToDataUrls(files, limit=5){
+      const list = [...files].slice(0,limit);
+      const readers = list.map(f=> new Promise(res=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.readAsDataURL(f); }));
+      return Promise.all(readers);
+    }
+    document.getElementById("cpImages").addEventListener("change", async (e)=>{
+      const urls = await filesToDataUrls(e.target.files,5);
+      const box = document.getElementById("cpPreviews"); box.innerHTML="";
+      urls.forEach(u=>{ const d=document.createElement("div"); d.className="thumb-up"; d.innerHTML=`<img src="${u}">`; box.appendChild(d); });
+      box.dataset.images = JSON.stringify(urls);
     });
-    document.getElementById("btnUpdateProd").addEventListener("click", async ()=>{
-      if (!editingProdId) return;
-      const payload = collectProdPayload(); if (!payload) return;
-      try{
-        const r = await apiSend("PATCH", `/api/products/${editingProdId}`, payload, true);
-        toast(`Товар #${r.id} сохранён`);
-        editingProdId=null; document.getElementById("btnUpdateProd").disabled=true; document.getElementById("btnCancelProd").disabled=true;
-        clearProdForm(); await loadProducts();
-      }catch(e){ toast(e.message||"Ошибка сохранения товара"); }
-    });
-    document.getElementById("btnCancelProd").addEventListener("click", ()=>{
-      editingProdId=null; document.getElementById("btnUpdateProd").disabled=true; document.getElementById("btnCancelProd").disabled=true; clearProdForm();
+    document.getElementById("ccImage").addEventListener("change", async (e)=>{
+      const [u] = await filesToDataUrls(e.target.files,1);
+      const box = document.getElementById("ccPreview"); box.innerHTML = u?`<div class="thumb-up"><img src="${u}"></div>`:"";
+      box.dataset.image = u || "";
     });
 
-    // ─────────────── events
+    // ───────── Create product
+    function updateCpChildSelect(){
+      const rootSel = document.getElementById("cpCatRoot");
+      const childSel = document.getElementById("cpCatChild");
+      const pid = rootSel.value ? Number(rootSel.value) : null;
+      const children = pid!==null ? (catIndexByParent.get(pid)||[]) : [];
+      if (children.length){
+        childSel.style.display="block";
+        childSel.innerHTML = '<option value="">— Подкатегория —</option>' + children.map(c=>`<option value="${c.id}">${escapeHtml(c.name)}</option>`).join("");
+      } else {
+        childSel.style.display="none";
+        childSel.innerHTML = '<option value="">— Подкатегория —</option>';
+      }
+    }
+    document.getElementById("cpCatRoot").addEventListener("change", updateCpChildSelect);
+
+    document.getElementById("cpCreate").addEventListener("click", async ()=>{
+      const title = document.getElementById("cpTitle").value.trim();
+      const description = document.getElementById("cpDesc").value.trim() || null;
+      let price = parseFloat((document.getElementById("cpPrice").value||"0").replace(",", "."));
+      if (!title) return toast("Укажи название");
+      if (Number.isNaN(price) || price<0) price = 0;
+
+      const root = document.getElementById("cpCatRoot").value.trim();
+      const child = document.getElementById("cpCatChild").value.trim();
+      const category_id = child ? Number(child) : (root?Number(root):null);
+      if (!category_id) return toast("Выбери категорию");
+
+      const imgBox = document.getElementById("cpPreviews");
+      const images = imgBox.dataset.images ? JSON.parse(imgBox.dataset.images) : null;
+
+      const payload = {
+        title,
+        slug: slugify(title),
+        description,
+        price,
+        currency: "RUB",
+        stock: 0,
+        is_active: true,
+        images,
+        attributes: { owner_tg_id: tgId }, // помечаем владельца
+        category_id
+      };
+
+      try{
+        if (editingProdId){
+          const r = await apiSend("PATCH", `/api/products/${editingProdId}`, payload, true);
+          toast(`Товар #${r.id} сохранён`);
+        } else {
+          const r = await apiSend("POST","/api/products",payload,true);
+          toast(`Товар #${r.id} создан`);
+        }
+        await loadProducts();
+      }catch(e){ toast(e.message||"Ошибка сохранения товара"); }
+    });
+
+    // ───────── Create category
+    document.getElementById("ccCreate").addEventListener("click", async ()=>{
+      const name = document.getElementById("ccName").value.trim();
+      if (!name) return toast("Укажи название категории");
+      const parentRaw = document.getElementById("ccParent").value.trim();
+      const parent_id = parentRaw ? Number(parentRaw) : null;
+      const image = document.getElementById("ccPreview").dataset.image || null;
+
+      const payload = {
+        name,
+        slug: slugify(name),
+        parent_id,
+        attributes: { owner_tg_id: tgId, ...(image?{image}: {}) }
+      };
+
+      try{
+        if (editingCatId){
+          const r = await apiSend("PATCH", `/api/categories/${editingCatId}`, payload, true);
+          toast(`Категория #${r.id||editingCatId} сохранена`);
+        } else {
+          const r = await apiSend("POST","/api/categories",payload,true);
+          toast(`Категория #${r.id} создана`);
+        }
+        await loadCategories();
+      }catch(e){ toast(e.message||"Ошибка сохранения категории"); }
+    });
+
+    // ───────── Utils
+    function slugify(v){
+      return (v||"").toLowerCase().trim()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+        .replace(/\s+/g,"-").replace(/[^a-z0-9\-]/g,"-")
+        .replace(/\-+/g,"-").replace(/^\-+|\-+$/g,"") || "item";
+    }
+
+    // ───────── Search / actions
     document.getElementById("search").addEventListener("input", (e)=>{
       const q = e.target.value.trim();
       const params = q ? { q } : undefined;
       loadProducts(params);
     });
-
     document.getElementById("btnResetLocal").addEventListener("click", ()=>{
       localStorage.removeItem(favKey); localStorage.removeItem(cartKey);
       fav = new Set(); cart = new Map(); syncAllGrids(); toast("Данные очищены");
@@ -811,16 +794,10 @@
       const u = new URL(location.href); u.searchParams.set("api", v); location.href=u.toString();
     });
 
-    document.querySelectorAll(".tabbtn").forEach(btn=>{
-      btn.addEventListener("click", ()=> show(btn.dataset.scr));
-    });
+    document.querySelectorAll(".tabbtn").forEach(btn=>{ btn.addEventListener("click", ()=> show(btn.dataset.scr)); });
+    document.getElementById("btnCheckout").addEventListener("click", ()=>{ if (!cart.size) return; toast("Заказ оформлен (заглушка)"); });
 
-    document.getElementById("btnCheckout").addEventListener("click", ()=>{
-      if (!cart.size) return;
-      toast("Заказ оформлен (заглушка)");
-    });
-
-    // tap-to-dismiss keyboard everywhere
+    // tap to dismiss keyboard
     ['pointerdown','touchstart'].forEach(evt=>{
       document.addEventListener(evt, (e)=>{
         const el = e.target;
@@ -832,10 +809,10 @@
       }, {passive:true});
     });
 
-    // ─────────────── init
+    // ───────── Init
     async function init(){
       await ensureUser();
-      await refreshHealth(); // после ensureUser
+      await refreshHealth();
       await loadCategories();
       await loadProducts();
       show('home');
