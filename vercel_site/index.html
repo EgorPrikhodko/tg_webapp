@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#0b0f1a" />
   <title>TG Shop · WebApp</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
@@ -16,6 +17,9 @@
       --grad:linear-gradient(135deg, rgba(110,168,255,.20), rgba(139,125,255,.15));
       --glow:0 0 0 2px rgba(110,168,255,.25), 0 10px 30px rgba(110,168,255,.15);
       --badge:#ff2f8e;
+
+      /* фиксированная высота контента карточки, чтобы все были одного размера */
+      --card-content-h: 168px;
     }
     *{box-sizing:border-box}
     html,body{height:100%}
@@ -24,9 +28,10 @@
         radial-gradient(1200px 600px at -10% -10%, rgba(139,125,255,.15), transparent 60%),
         radial-gradient(1000px 600px at 110% -10%, rgba(103,232,249,.12), transparent 60%),
         radial-gradient(1200px 800px at 50% 120%, rgba(110,168,255,.10), transparent 60%),
-        var(--bg);
+        var(--bg) !important; /* не меняем фон никогда */
       color:var(--text);
       font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;
+      -webkit-tap-highlight-color:transparent;
     }
 
     /* SVG icons */
@@ -44,6 +49,12 @@
     .search{
       flex:1;background:#0b1022;border:1px solid #27314d;border-radius:14px;padding:10px 12px;color:var(--text);outline:none;
     }
+    /* Фокус не меняет фон */
+    .search:focus{background:#0b1022;border-color:#2e3b62;box-shadow:0 0 0 2px rgba(62,102,255,.14)}
+    /* отключаем любые автозаполнение-подсветки */
+    input:-webkit-autofill,
+    input:-webkit-autofill:focus{transition:background-color 99999s ease-in-out 0s}
+
     .pill{display:none;background:var(--muted);padding:8px 10px;border-radius:999px;color:var(--subtext);border:var(--border);font-size:12px;gap:8px;align-items:center}
     .pill .ok{width:10px;height:10px;border-radius:50%;background:var(--ok)}
 
@@ -53,11 +64,12 @@
     @media(min-width:560px){ .grid.cards{grid-template-columns:1fr 1fr 1fr} }
 
     .card{
+      display:flex;flex-direction:column;
       background:linear-gradient(180deg, rgba(18,24,42,.95), rgba(12,16,30,.92));
       border-radius:16px;border:var(--border);overflow:hidden;position:relative
     }
     .card .pic{
-      width:100%;padding-top:100%;background:#0f1430;position:relative;overflow:hidden
+      width:100%;padding-top:100%;background:#0f1430;position:relative;overflow:hidden;flex:0 0 auto;
     }
     .card .pic img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
     .card .fav{
@@ -65,16 +77,31 @@
       border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(4px);border-radius:999px;padding:6px;cursor:pointer
     }
     .card .fav .icv{fill:var(--icon)}
-    .card .fav[aria-pressed="true"] .icv{fill:#d9deee} /* активное – всё ещё монохром */
+    /* активное избранное — тот же розовый, что и бэйдж корзины */
+    .card .fav[aria-pressed="true"] .icv{fill:var(--badge)}
 
-    .card .cnt{padding:10px 10px 12px}
-    .title{font-size:13px;line-height:1.25;margin:0 0 6px;min-height:2.5em}
+    .card .cnt{
+      padding:10px 10px 12px;display:flex;flex-direction:column;gap:6px;
+      min-height:var(--card-content-h); /* фиксируем высоту, чтобы карточки были одинаковые */
+      flex:1 1 auto;
+    }
+    .title{
+      font-size:13px;line-height:1.25;margin:0;
+      display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.6em;
+    }
+    .desc{
+      color:#c9cff1;font-size:12px;opacity:.9;
+      display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.4em;
+    }
     .price-row{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
     .price{font-weight:800;font-size:15px}
     .old{color:#939bb7;text-decoration:line-through;font-size:12px}
     .badge{font-size:11px;padding:3px 6px;border-radius:8px;border:1px solid #2a335e;background:#0f1430}
-    .rating{font-size:12px;color:#cbd3ff;margin-top:6px;display:flex;align-items:center;gap:6px}
-    .add{margin-top:8px;width:100%;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;border:none;padding:9px 10px;border-radius:12px;font-weight:700;cursor:pointer}
+    .rating{
+      font-size:12px;color:#cbd3ff;display:flex;align-items:center;gap:6px;min-height:1.2em;
+    }
+    .rating .star{width:14px;height:14px;display:inline-block}
+    .add{margin-top:auto;width:100%;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;border:none;padding:9px 10px;border-radius:12px;font-weight:700;cursor:pointer}
 
     /* screens */
     .screen{display:none}
@@ -253,6 +280,10 @@
     function toast(msg){ const el=document.getElementById("toast"); el.textContent=msg; el.className="toast show"; setTimeout(()=>el.className="toast",2200); }
     function money(v,c="RUB"){ return `${Number(v||0).toFixed(0)} ${c}`; }
     function escapeHtml(s){ return String(s).replace(/[&<>"'`]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','`':'&#96;'}[c])); }
+    function formatCount(n){
+      n = Number(n||0);
+      return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "\u202F"); // узкий неразрывный пробел
+    }
 
     // ─────────────── state (favorites, cart)
     const favKey="tgshop_fav_ids"; const cartKey="tgshop_cart";
@@ -267,9 +298,10 @@
       const img = (Array.isArray(p.images) && p.images[0]) ? p.images[0] : "";
       const currency = (p.currency||"RUB").toUpperCase();
       const old = p.attributes?.old_price ?? null;
-      const rating = p.attributes?.rating ?? null;
-      const rcnt = p.attributes?.ratings_count ?? null;
+      const rating = p.attributes?.rating ?? null;           // например 4.7
+      const rcnt = p.attributes?.ratings_count ?? null;      // например 42581
       const liked = fav.has(p.id);
+      const desc = p.description || "";
       return `
         <div class="card" data-id="${p.id}">
           <div class="pic">
@@ -280,11 +312,15 @@
           </div>
           <div class="cnt">
             <div class="title">${escapeHtml(p.title||"Товар")}</div>
+            <div class="desc">${escapeHtml(desc)}</div>
             <div class="price-row">
               <div class="price">${money(p.price, currency)}</div>
               ${old?`<div class="old">${money(old,currency)}</div><span class="badge">-${Math.max(0, Math.round(100-(p.price/old*100)))}%</span>`:""}
             </div>
-            ${rating?`<div class="rating">★ ${Number(rating).toFixed(1)} ${rcnt?`· ${rcnt} отзывов`:""}</div>`:""}
+            <div class="rating">
+              <span class="star">★</span>
+              ${rating?`${Number(rating).toFixed(1)} · ${formatCount(rcnt||0)} отзывов`:`Нет отзывов`}
+            </div>
             <button class="add">В корзину</button>
           </div>
         </div>
@@ -300,7 +336,7 @@
           if (fav.has(id)) fav.delete(id); else fav.add(id);
           saveFav();
           e.currentTarget.setAttribute("aria-pressed", fav.has(id) ? "true" : "false");
-          renderFav(); // синхронизируем вкладку избранного
+          renderFav(); // синхронизация
         });
         card.querySelector(".add")?.addEventListener("click", ()=>{
           cart.set(id, (cart.get(id)||0)+1); saveCart(); toast("Добавлено в корзину"); updateCartBadge();
@@ -414,9 +450,9 @@
               <div class="muted">${money(p.price,curr)} · Кол-во: <b>${q}</b></div>
             </div>
             <div class="row" style="gap:6px">
-              <button class="tabbtn" data-act="dec"><svg class="icv"><use href="#i-minus"/></svg>−</button>
-              <button class="tabbtn" data-act="inc"><svg class="icv"><use href="#i-plus"/></svg>+</button>
-              <button class="tabbtn" data-act="del"><svg class="icv"><use href="#i-trash"/></svg>🗑</button>
+              <button class="tabbtn" data-act="dec">−</button>
+              <button class="tabbtn" data-act="inc">+</button>
+              <button class="tabbtn" data-act="del">🗑</button>
             </div>
           </div>
         `;
@@ -484,19 +520,12 @@
     // ─────────────── init
     async function init(){
       await ensureUser();
-      await refreshHealth(); // после ensureUser, чтобы знать показывать ли админ-пилюлю
+      await refreshHealth(); // после ensureUser
       await loadCategories();
       await loadProducts();
       show('home');
     }
     init();
   </script>
-
-  <!-- небольшие монохромные иконки для кнопок в корзине -->
-  <svg width="0" height="0" style="position:absolute">
-    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M11 5h2v14h-2z"/><path d="M5 11h14v2H5z"/></symbol>
-    <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 11h14v2H5z"/></symbol>
-    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M6 7h12l-1 13a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L6 7Zm3-3h6l1 3H8l1-3Z"/></symbol>
-  </svg>
 </body>
 </html>
