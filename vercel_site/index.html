@@ -10,10 +10,12 @@
       --bg:#0b0f1a; --bg2:#0f1424; --card:#12182a; --muted:#1a2036;
       --text:#e9ecff; --subtext:#9aa3c2; --accent:#6ea8ff; --accent-2:#8b7dff;
       --ok:#2dd4bf; --warn:#ffc857; --err:#ff6b6b; --info:#67e8f9;
+      --icon:#a5aec9; --icon-active:#ffffff;
       --radius:16px; --radius-sm:12px; --shadow:0 12px 36px rgba(0,0,0,.45);
       --border:1px solid rgba(255,255,255,.06);
       --grad:linear-gradient(135deg, rgba(110,168,255,.20), rgba(139,125,255,.15));
       --glow:0 0 0 2px rgba(110,168,255,.25), 0 10px 30px rgba(110,168,255,.15);
+      --badge:#ff2f8e;
     }
     *{box-sizing:border-box}
     html,body{height:100%}
@@ -27,7 +29,12 @@
       font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;
     }
 
-    .wrap{max-width:760px;margin:0 auto;padding:12px 12px 82px}
+    /* SVG icons */
+    .icv{width:22px;height:22px;fill:var(--icon);display:block}
+    .muted-ic .icv{fill:var(--icon)}
+    .active-ic .icv{fill:var(--icon-active)}
+
+    .wrap{max-width:760px;margin:0 auto;padding:12px 12px 84px}
     .topbar{
       position:sticky;top:0;z-index:10;padding:10px 12px;margin:-12px -12px 10px;
       background:linear-gradient(180deg, rgba(11,15,26,.92), rgba(11,15,26,.75) 60%, transparent);
@@ -37,7 +44,8 @@
     .search{
       flex:1;background:#0b1022;border:1px solid #27314d;border-radius:14px;padding:10px 12px;color:var(--text);outline:none;
     }
-    .pill{background:var(--muted);padding:8px 10px;border-radius:999px;color:var(--subtext);border:var(--border);font-size:12px}
+    .pill{display:none;background:var(--muted);padding:8px 10px;border-radius:999px;color:var(--subtext);border:var(--border);font-size:12px;gap:8px;align-items:center}
+    .pill .ok{width:10px;height:10px;border-radius:50%;background:var(--ok)}
 
     /* grid like Ozon */
     .grid{display:grid;gap:10px}
@@ -56,7 +64,9 @@
       position:absolute;top:8px;right:8px;z-index:2;background:rgba(17,22,42,.7);
       border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(4px);border-radius:999px;padding:6px;cursor:pointer
     }
-    .card .fav[aria-pressed="true"]{background:#25173a;border-color:#6e4fff}
+    .card .fav .icv{fill:var(--icon)}
+    .card .fav[aria-pressed="true"] .icv{fill:#d9deee} /* активное – всё ещё монохром */
+
     .card .cnt{padding:10px 10px 12px}
     .title{font-size:13px;line-height:1.25;margin:0 0 6px;min-height:2.5em}
     .price-row{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
@@ -77,13 +87,18 @@
     }
     .tabbar.admin{grid-template-columns:repeat(6,1fr)}
     .tabbtn{
-      display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 6px;border-radius:12px;color:#b8c3e6;border:1px solid transparent;background:transparent;
-      font-size:11px;cursor:pointer
+      position:relative;display:flex;align-items:center;justify-content:center;padding:10px;border-radius:12px;border:1px solid transparent;background:transparent;cursor:pointer
     }
-    .tabbtn[aria-selected="true"]{background:var(--grad);box-shadow:var(--glow);color:#fff;border:var(--border)}
-    .ic{font-size:18px;line-height:1}
+    .tabbtn[aria-selected="true"]{background:var(--grad);box-shadow:var(--glow);border:var(--border)}
+    .tabbtn[aria-selected="true"] .icv{fill:var(--icon-active)}
 
-    /* simple tables/lists for other tabs */
+    /* cart badge like screenshot */
+    .tabbtn .badge-dot{
+      position:absolute;right:6px;top:4px;min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--badge);color:#fff;
+      font-weight:800;font-size:12px;display:none;align-items:center;justify-content:center;line-height:1;border:2px solid #0c1122;
+    }
+
+    /* simple lists */
     .empty{color:var(--subtext);padding:10px 2px}
     .line{display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;background:#0f1430;border:1px solid #28306b}
     .line .thumb{width:54px;height:54px;border-radius:10px;background:#121735;overflow:hidden}
@@ -98,15 +113,27 @@
     .toast.show{display:block;animation:pop .25s ease}
     @keyframes pop{from{transform:translateX(-50%) translateY(6px);opacity:.5} to{transform:translateX(-50%) translateY(0);opacity:1}}
   </style>
+
+  <!-- SVG sprite (монохром) -->
+  <svg width="0" height="0" style="position:absolute">
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1v-9.5Z"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24"><path d="M3 3h8v8H3V3Zm10 0h8v8h-8V3ZM3 13h8v8H3v-8Zm10 0h8v8h-8v-8Z"/></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 21s-6.5-4.4-8.6-7.4A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 8.6 7.6C18.5 16.6 12 21 12 21Z"/></symbol>
+    <symbol id="i-basket" viewBox="0 0 24 24"><path d="M7 10l5-7 5 7m-12 0h14l-1.6 9.2A2 2 0 0 1 15.5 21h-7a2 2 0 0 1-1.9-1.8L5 10Z"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm7 8a7 7 0 0 0-14 0"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="M3 17.3 14.7 5.6l3.7 3.7L6.7 21H3v-3.7ZM16.8 3.6l3.6 3.6"/></symbol>
+  </svg>
 </head>
 <body>
   <div class="wrap">
 
-    <!-- Top search + status -->
+    <!-- Top search + admin-only DB pill -->
     <div class="topbar">
       <div class="row">
         <input id="search" class="search" placeholder="Поиск по товарам…" />
-        <div id="pillDb" class="pill">БД: проверка…</div>
+        <div id="pillDb" class="pill">
+          <span class="ok"></span><span>БД: ок</span>
+        </div>
       </div>
     </div>
 
@@ -128,7 +155,7 @@
     <!-- Избранное -->
     <section id="scr_fav" class="screen">
       <div class="grid cards" id="favGrid"></div>
-      <div class="empty" id="favEmpty" style="display:none">Добавляйте товары в избранное ❤️</div>
+      <div class="empty" id="favEmpty" style="display:none">Добавляйте товары в избранное</div>
     </section>
 
     <!-- Корзина -->
@@ -160,20 +187,23 @@
       </div>
     </section>
 
-    <!-- Редактирование (админ) — пока заглушка -->
+    <!-- Редактирование (админ) — заглушка -->
     <section id="scr_admin" class="screen">
-      <div class="empty">Админ-режим: сюда вынесем CRUD. (Кнопка видна только администраторам.)</div>
+      <div class="empty">Админ-режим: сюда вынесем CRUD.</div>
     </section>
   </div>
 
-  <!-- Bottom Tabbar -->
+  <!-- Bottom Tabbar (icons only) -->
   <nav id="tabbar" class="tabbar">
-    <button class="tabbtn" data-scr="home" aria-selected="true"><div class="ic">🏠</div>Главная</button>
-    <button class="tabbtn" data-scr="catalog"><div class="ic">🗂️</div>Каталог</button>
-    <button class="tabbtn" data-scr="fav"><div class="ic">❤️</div>Избранное</button>
-    <button class="tabbtn" data-scr="cart"><div class="ic">🛒</div>Корзина</button>
-    <button class="tabbtn" data-scr="account"><div class="ic">👤</div>Аккаунт</button>
-    <!-- админ-кнопка добавляется динамически -->
+    <button class="tabbtn active-ic" data-scr="home" aria-selected="true" title="Главная"><svg class="icv"><use href="#i-home"/></svg></button>
+    <button class="tabbtn muted-ic" data-scr="catalog" title="Каталог"><svg class="icv"><use href="#i-grid"/></svg></button>
+    <button class="tabbtn muted-ic" data-scr="fav" title="Избранное"><svg class="icv"><use href="#i-heart"/></svg></button>
+    <button class="tabbtn muted-ic" data-scr="cart" title="Корзина" id="tabCart">
+      <svg class="icv"><use href="#i-basket"/></svg>
+      <span class="badge-dot" id="cartBadge">0</span>
+    </button>
+    <button class="tabbtn muted-ic" data-scr="account" title="Аккаунт"><svg class="icv"><use href="#i-user"/></svg></button>
+    <!-- Кнопка редактирования добавляется для админа -->
   </nav>
 
   <div class="toast" id="toast"></div>
@@ -244,7 +274,9 @@
         <div class="card" data-id="${p.id}">
           <div class="pic">
             ${img?`<img alt="" src="${escapeHtml(img)}">`:``}
-            <button class="fav" aria-pressed="${liked?'true':'false'}" title="Избранное">🤍</button>
+            <button class="fav" aria-pressed="${liked?'true':'false'}" title="Избранное">
+              <svg class="icv"><use href="#i-heart"/></svg>
+            </button>
           </div>
           <div class="cnt">
             <div class="title">${escapeHtml(p.title||"Товар")}</div>
@@ -252,7 +284,7 @@
               <div class="price">${money(p.price, currency)}</div>
               ${old?`<div class="old">${money(old,currency)}</div><span class="badge">-${Math.max(0, Math.round(100-(p.price/old*100)))}%</span>`:""}
             </div>
-            ${rating?`<div class="rating">⭐ ${Number(rating).toFixed(1)} ${rcnt?`· ${rcnt} отзывов`:""}</div>`:""}
+            ${rating?`<div class="rating">★ ${Number(rating).toFixed(1)} ${rcnt?`· ${rcnt} отзывов`:""}</div>`:""}
             <button class="add">В корзину</button>
           </div>
         </div>
@@ -268,10 +300,10 @@
           if (fav.has(id)) fav.delete(id); else fav.add(id);
           saveFav();
           e.currentTarget.setAttribute("aria-pressed", fav.has(id) ? "true" : "false");
-          updateBadges();
+          renderFav(); // синхронизируем вкладку избранного
         });
         card.querySelector(".add")?.addEventListener("click", ()=>{
-          cart.set(id, (cart.get(id)||0)+1); saveCart(); toast("Добавлено в корзину"); updateBadges();
+          cart.set(id, (cart.get(id)||0)+1); saveCart(); toast("Добавлено в корзину"); updateCartBadge();
         });
       });
     }
@@ -287,7 +319,12 @@
     };
     function show(scr){
       Object.entries(screens).forEach(([k,el])=>el.classList.toggle("active", k===scr));
-      document.querySelectorAll(".tabbtn").forEach(b=>b.setAttribute("aria-selected", b.dataset.scr===scr ? "true":"false"));
+      document.querySelectorAll(".tabbtn").forEach(b=>{
+        const selected = b.dataset.scr===scr;
+        b.setAttribute("aria-selected", selected ? "true":"false");
+        b.classList.toggle("active-ic", selected);
+        b.classList.toggle("muted-ic", !selected);
+      });
     }
 
     // ─────────────── fetch data + renders
@@ -297,8 +334,9 @@
       try{
         const h = await apiGet("/health/db");
         const ok = (h?.db==="ok") || (h?.status==="ok");
-        pill.textContent = ok ? "БД: ok" : "БД: fail";
-      }catch{ pill.textContent = "БД: fail"; }
+        if (isAdmin && ok){ pill.style.display="inline-flex"; } // только админам
+        else { pill.style.display="none"; }
+      }catch{ pill.style.display = isAdmin ? "inline-flex" : "none"; }
     }
     async function ensureUser(){
       if (!tgId) return;
@@ -306,11 +344,12 @@
         const u = await apiSend("POST","/api/users/ensure",{tg_id:tgId},true);
         isAdmin = !!u.is_admin;
         roleEl.textContent = isAdmin ? "Режим: админ" : "Режим: гость";
-        // добавить кнопку "Редактирование" в таббар
+        // кнопка "Редактирование" в таббар
         if (isAdmin && !document.querySelector('.tabbtn[data-scr="admin"]')){
           const tb=document.getElementById("tabbar"); tb.classList.add("admin");
           const btn=document.createElement("button");
-          btn.className="tabbtn"; btn.dataset.scr="admin"; btn.innerHTML='<div class="ic">✏️</div>Редакт.';
+          btn.className="tabbtn muted-ic"; btn.dataset.scr="admin"; btn.title="Редактирование";
+          btn.innerHTML='<svg class="icv"><use href="#i-edit"/></svg>';
           tb.appendChild(btn);
           btn.addEventListener("click",()=>show("admin"));
         }
@@ -329,6 +368,7 @@
       renderCatalog(list);
       renderFav();
       renderCart();
+      updateCartBadge();
     }
 
     // renders
@@ -374,15 +414,14 @@
               <div class="muted">${money(p.price,curr)} · Кол-во: <b>${q}</b></div>
             </div>
             <div class="row" style="gap:6px">
-              <button class="tabbtn" data-act="dec">−</button>
-              <button class="tabbtn" data-act="inc">+</button>
-              <button class="tabbtn" data-act="del">🗑️</button>
+              <button class="tabbtn" data-act="dec"><svg class="icv"><use href="#i-minus"/></svg>−</button>
+              <button class="tabbtn" data-act="inc"><svg class="icv"><use href="#i-plus"/></svg>+</button>
+              <button class="tabbtn" data-act="del"><svg class="icv"><use href="#i-trash"/></svg>🗑</button>
             </div>
           </div>
         `;
       }).join("");
       sumEl.textContent = money(sum, curr);
-      // handlers
       listEl.querySelectorAll(".line").forEach(line=>{
         const id = Number(line.dataset.id);
         line.querySelectorAll("[data-act]").forEach(b=>{
@@ -391,17 +430,18 @@
             if (act==="inc"){ cart.set(id,(cart.get(id)||0)+1); }
             else if (act==="dec"){ const n=(cart.get(id)||0)-1; if (n>0) cart.set(id,n); else cart.delete(id); }
             else if (act==="del"){ cart.delete(id); }
-            saveCart(); renderCart(); updateBadges();
+            saveCart(); renderCart(); updateCartBadge();
           });
         });
       });
     }
-    function updateBadges(){
-      // маленький бейдж в таббаре: избранное / корзина
-      const favCount = fav.size;
+
+    // только корзина имеет счётчик
+    function updateCartBadge(){
       const cartCount = [...cart.values()].reduce((a,b)=>a+b,0);
-      document.querySelectorAll('.tabbtn[data-scr="fav"] .ic')[0].textContent = favCount?`❤️${favCount}`:`❤️`;
-      document.querySelectorAll('.tabbtn[data-scr="cart"] .ic')[0].textContent = cartCount?`🛒${cartCount}`:`🛒`;
+      const badge = document.getElementById("cartBadge");
+      if (cartCount>0){ badge.style.display="flex"; badge.textContent=String(cartCount); }
+      else { badge.style.display="none"; }
     }
 
     // ─────────────── events
@@ -413,7 +453,7 @@
     });
     document.getElementById("btnResetLocal").addEventListener("click", ()=>{
       localStorage.removeItem(favKey); localStorage.removeItem(cartKey);
-      fav = new Set(); cart = new Map(); renderFav(); renderCart(); updateBadges(); toast("Данные очищены");
+      fav = new Set(); cart = new Map(); renderFav(); renderCart(); updateCartBadge(); toast("Данные очищены");
     });
     document.getElementById("btnChangeApi").addEventListener("click", ()=>{
       const v = prompt("Укажи новый API Base URL", API_BASE); if(!v) return;
@@ -426,21 +466,37 @@
 
     document.getElementById("btnCheckout").addEventListener("click", ()=>{
       if (!cart.size) return;
-      toast("Заказ оформлен (заглушка)"); // подключим реальную оплату позже
+      toast("Заказ оформлен (заглушка)");
+    });
+
+    // tap-to-dismiss keyboard everywhere
+    ['pointerdown','touchstart'].forEach(evt=>{
+      document.addEventListener(evt, (e)=>{
+        const el = e.target;
+        const tag = (el?.tagName||"").toLowerCase();
+        const isInput = ['input','textarea','select'].includes(tag) || el?.isContentEditable;
+        if (!isInput && document.activeElement && (['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName) || document.activeElement.isContentEditable)){
+          document.activeElement.blur();
+        }
+      }, {passive:true});
     });
 
     // ─────────────── init
     async function init(){
-      // DB health + admin/user
-      await refreshHealth();
       await ensureUser();
-      // load data
+      await refreshHealth(); // после ensureUser, чтобы знать показывать ли админ-пилюлю
       await loadCategories();
       await loadProducts();
-      // finalize
-      updateBadges();
+      show('home');
     }
     init();
   </script>
+
+  <!-- небольшие монохромные иконки для кнопок в корзине -->
+  <svg width="0" height="0" style="position:absolute">
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M11 5h2v14h-2z"/><path d="M5 11h14v2H5z"/></symbol>
+    <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 11h14v2H5z"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M6 7h12l-1 13a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L6 7Zm3-3h6l1 3H8l1-3Z"/></symbol>
+  </svg>
 </body>
 </html>
