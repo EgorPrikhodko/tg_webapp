@@ -211,8 +211,10 @@
       </div>
       <div style="height:8px"></div>
       <div class="line">
-        <div class="t"><div class="muted">API:</div><div style="word-break:break-all" id="apiShown"></div></div>
-        <button id="btnChangeApi" class="add" style="max-width:160px">Сменить API</button>
+        <div class="t">
+          <div class="muted">API:</div>
+          <div style="word-break:break-all" id="apiShown"></div>
+        </div>
       </div>
     </section>
 
@@ -265,12 +267,18 @@
 
         <!-- списки для редактирования/удаления -->
         <div class="panel" style="display:block">
-          <h3>Категории</h3>
+          <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:4px;">
+            <h3 style="margin:0">Категории</h3>
+            <button id="toggleCatsList" type="button" style="background:none;border:none;color:var(--subtext);font-size:12px;cursor:pointer;padding:4px 4px;">Скрыть</button>
+          </div>
           <div id="catsEmptyA" class="empty">Нет категорий</div>
           <div id="catsTableAWrap" class="list-admin" style="display:none"></div>
         </div>
         <div class="panel" style="display:block">
-          <h3>Товары</h3>
+          <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:4px;">
+            <h3 style="margin:0">Товары</h3>
+            <button id="toggleProdsList" type="button" style="background:none;border:none;color:var(--subtext);font-size:12px;cursor:pointer;padding:4px 4px;">Скрыть</button>
+          </div>
           <div id="prodsEmptyA" class="empty">Нет товаров</div>
           <div id="prodsTableAWrap" class="list-admin" style="display:none"></div>
         </div>
@@ -315,10 +323,9 @@
     function escapeHtml(s){ return String(s).replace(/[&<>"'`]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','`':'&#96;'}[c])); }
     function formatCount(n){ n = Number(n||0); return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "\u202F"); }
 
-    // ───────── visibility filter: показываем всем только общие или свои
+    // ───────── visibility filter: теперь не ограничиваем по owner_tg_id
     function visibleToMe(obj){
-      const owner = obj?.attributes?.owner_tg_id ?? null;
-      return (owner === null) || (String(owner) === String(tgId));
+      return true;
     }
 
     // ───────── State
@@ -434,7 +441,7 @@
     }
     async function loadCategories(){
       let cats = await apiGet("/api/categories");
-      cats = cats.filter(visibleToMe); // скрываем чужие
+      // больше не фильтруем по owner_tg_id
       allCategories = cats;
       indexCategories(cats);
       renderCatTiles();
@@ -446,7 +453,7 @@
     }
     async function loadProducts(params){
       let list = await apiGet("/api/products", params);
-      list = list.filter(visibleToMe); // скрываем чужие
+      // больше не фильтруем по owner_tg_id
       allProducts = list;
       renderHome(list);
       renderFav();
@@ -575,17 +582,30 @@
     }
 
     // ───────── Admin lists/edit
-    let editingCatId = null, editingProdId = null;
+    let editingCatId = null, editingProdId = null, adminCatsVisible = true, adminProdsVisible = true;
 
     function renderAdminCats(){
       const list = allCategories.slice().sort((a,b)=>a.id-b.id);
       const wrap = document.getElementById("catsTableAWrap");
       const empty = document.getElementById("catsEmptyA");
-      if (!list.length){ wrap.style.display="none"; empty.style.display="block"; wrap.innerHTML=""; return; }
-      wrap.style.display="flex"; wrap.style.flexDirection="column"; empty.style.display="none";
+      const toggle = document.getElementById("toggleCatsList");
+      if (!list.length){
+        wrap.style.display="none";
+        empty.style.display="block";
+        wrap.innerHTML="";
+        if (toggle) { toggle.style.display="none"; }
+        return;
+      }
+      empty.style.display="none";
+      wrap.style.flexDirection="column";
+      wrap.style.display = adminCatsVisible ? "flex" : "none";
+      if (toggle){
+        toggle.style.display="inline-block";
+        toggle.textContent = adminCatsVisible ? "Скрыть" : "Показать";
+      }
       wrap.innerHTML = list.map(c=>`
         <div class="row-admin">
-          <div class="t"><b>#${c.id}</b> · ${escapeHtml(c.name)} <span class="muted">(${escapeHtml(c.slug||'')})</span> ${c.parent_id?`· parent:${c.parent_id}`:""}</div>
+          <div class="t"><b>${escapeHtml(c.name)}</b>${c.parent_id?` <span class="muted">· parent:${c.parent_id}</span>`:""}</div>
           <button class="iconbtn" data-act="editCat" data-id="${c.id}" title="Редактировать"><svg class="icv"><use href="#i-edit"/></svg></button>
           <button class="iconbtn" data-act="delCat" data-id="${c.id}" title="Удалить"><svg class="icv"><use href="#i-trash"/></svg></button>
         </div>
@@ -597,9 +617,9 @@
             const c = list.find(x=>x.id===id); if(!c) return;
             openCreateCatPanel(true);
             document.getElementById("ccName").value = c.name||"";
-            // превью
             const img = c.attributes?.image||"";
             document.getElementById("ccPreview").innerHTML = img?`<div class="thumb-up"><img src="${escapeHtml(img)}"></div>`:"";
+            document.getElementById("ccPreview").dataset.image = img || "";
             document.getElementById("ccParent").value = c.parent_id ?? "";
             editingCatId = id;
           } else if (act==="delCat"){
@@ -616,11 +636,24 @@
       const list = allProducts.slice().sort((a,b)=>a.id-b.id);
       const wrap = document.getElementById("prodsTableAWrap");
       const empty = document.getElementById("prodsEmptyA");
-      if (!list.length){ wrap.style.display="none"; empty.style.display="block"; wrap.innerHTML=""; return; }
-      wrap.style.display="flex"; wrap.style.flexDirection="column"; empty.style.display="none";
+      const toggle = document.getElementById("toggleProdsList");
+      if (!list.length){
+        wrap.style.display="none";
+        empty.style.display="block";
+        wrap.innerHTML="";
+        if (toggle) { toggle.style.display="none"; }
+        return;
+      }
+      empty.style.display="none";
+      wrap.style.flexDirection="column";
+      wrap.style.display = adminProdsVisible ? "flex" : "none";
+      if (toggle){
+        toggle.style.display="inline-block";
+        toggle.textContent = adminProdsVisible ? "Скрыть" : "Показать";
+      }
       wrap.innerHTML = list.map(p=>`
         <div class="row-admin">
-          <div class="t"><b>#${p.id}</b> · ${escapeHtml(p.title)} <span class="muted">(${escapeHtml(p.slug||'')})</span> · ${money(p.price,(p.currency||"RUB").toUpperCase())}</div>
+          <div class="t"><b>${escapeHtml(p.title)}</b> · ${money(p.price,(p.currency||"RUB").toUpperCase())}</div>
           <button class="iconbtn" data-act="editProd" data-id="${p.id}" title="Редактировать"><svg class="icv"><use href="#i-edit"/></svg></button>
           <button class="iconbtn" data-act="delProd" data-id="${p.id}" title="Удалить"><svg class="icv"><use href="#i-trash"/></svg></button>
         </div>
@@ -634,16 +667,15 @@
             document.getElementById("cpTitle").value = p.title||"";
             document.getElementById("cpDesc").value = p.description||"";
             document.getElementById("cpPrice").value = String(p.price ?? 0);
-            // Превью из существующих изображений
             const prev = document.getElementById("cpPreviews"); prev.innerHTML="";
             (Array.isArray(p.images)?p.images:[]).slice(0,5).forEach(src=>{
               const d=document.createElement('div'); d.className='thumb-up'; d.innerHTML=`<img src="${escapeHtml(src)}">`; prev.appendChild(d);
             });
-            // Категория/подкатегория
-            const parent = allCategories.find(c=>c.id===p.category_id)?.parent_id ?? null;
-            document.getElementById("cpCatRoot").value = parent ?? p.category_id;
+            const cat = allCategories.find(c=>c.id===p.category_id) || null;
+            const parentId = cat ? (cat.parent_id ?? null) : null;
+            document.getElementById("cpCatRoot").value = parentId ?? p.category_id ?? "";
             updateCpChildSelect();
-            document.getElementById("cpCatChild").value = String(p.category_id);
+            document.getElementById("cpCatChild").value = String(p.category_id ?? "");
             editingProdId = id;
           } else if (act==="delProd"){
             if(!confirm(`Удалить товар #${id}?`)) return;
@@ -660,15 +692,46 @@
       document.getElementById("panelCreateProd").style.display="block";
       document.getElementById("panelCreateCat").style.display="none";
       document.getElementById("cpTitle").focus();
-      if(!edit){ editingProdId=null; document.getElementById("cpTitle").value=""; document.getElementById("cpDesc").value=""; document.getElementById("cpPrice").value=""; document.getElementById("cpImages").value=""; document.getElementById("cpPreviews").innerHTML=""; document.getElementById("cpCatRoot").value=""; document.getElementById("cpCatChild").style.display="none"; }
+      if(!edit){
+        editingProdId=null;
+        document.getElementById("cpTitle").value="";
+        document.getElementById("cpDesc").value="";
+        document.getElementById("cpPrice").value="";
+        document.getElementById("cpImages").value="";
+        document.getElementById("cpPreviews").innerHTML="";
+        document.getElementById("cpCatRoot").value="";
+        document.getElementById("cpCatChild").style.display="none";
+      }
     }
     function openCreateCatPanel(edit=false){
       document.getElementById("panelCreateCat").style.display="block";
       document.getElementById("panelCreateProd").style.display="none";
-      if(!edit){ editingCatId=null; document.getElementById("ccName").value=""; document.getElementById("ccImage").value=""; document.getElementById("ccPreview").innerHTML=""; document.getElementById("ccParent").value=""; }
+      if(!edit){
+        editingCatId=null;
+        document.getElementById("ccName").value="";
+        document.getElementById("ccImage").value="";
+        document.getElementById("ccPreview").innerHTML="";
+        document.getElementById("ccPreview").dataset.image="";
+        document.getElementById("ccParent").value="";
+      }
     }
     document.getElementById("btnOpenCreateProd").addEventListener("click", ()=>openCreateProdPanel(false));
     document.getElementById("btnOpenCreateCat").addEventListener("click", ()=>openCreateCatPanel(false));
+
+    const toggleCatsBtn = document.getElementById("toggleCatsList");
+    const toggleProdsBtn = document.getElementById("toggleProdsList");
+    if (toggleCatsBtn){
+      toggleCatsBtn.addEventListener("click", ()=>{
+        adminCatsVisible = !adminCatsVisible;
+        renderAdminCats();
+      });
+    }
+    if (toggleProdsBtn){
+      toggleProdsBtn.addEventListener("click", ()=>{
+        adminProdsVisible = !adminProdsVisible;
+        renderAdminProds();
+      });
+    }
 
     // ───────── File handling (dataURL, до 5 фото)
     async function filesToDataUrls(files, limit=5){
@@ -728,7 +791,7 @@
         stock: 0,
         is_active: true,
         images,
-        attributes: { owner_tg_id: tgId }, // помечаем владельца
+        attributes: { owner_tg_id: tgId },
         category_id
       };
 
@@ -752,9 +815,12 @@
       const parent_id = parentRaw ? Number(parentRaw) : null;
       const image = document.getElementById("ccPreview").dataset.image || null;
 
+      const baseSlug = slugify(name);
+      const slug = parent_id ? slugify(name + "-" + String(parent_id)) : baseSlug;
+
       const payload = {
         name,
-        slug: slugify(name),
+        slug,
         parent_id,
         attributes: { owner_tg_id: tgId, ...(image?{image}: {}) }
       };
@@ -764,7 +830,7 @@
           const r = await apiSend("PATCH", `/api/categories/${editingCatId}`, payload, true);
           toast(`Категория #${r.id||editingCatId} сохранена`);
         } else {
-          const r = await apiSend("POST","/api/categories",payload,true);
+          const r = await apiSend("POST","/api/categories",payload, true);
           toast(`Категория #${r.id} создана`);
         }
         await loadCategories();
@@ -788,10 +854,6 @@
     document.getElementById("btnResetLocal").addEventListener("click", ()=>{
       localStorage.removeItem(favKey); localStorage.removeItem(cartKey);
       fav = new Set(); cart = new Map(); syncAllGrids(); toast("Данные очищены");
-    });
-    document.getElementById("btnChangeApi").addEventListener("click", ()=>{
-      const v = prompt("Укажи новый API Base URL", API_BASE); if(!v) return;
-      const u = new URL(location.href); u.searchParams.set("api", v); location.href=u.toString();
     });
 
     document.querySelectorAll(".tabbtn").forEach(btn=>{ btn.addEventListener("click", ()=> show(btn.dataset.scr)); });
