@@ -184,14 +184,22 @@
       overflow-y:hidden;
     }
 
-    /* выбор категорий в товаре/категории: одинаковая ширина и отступы */
+    /* выбор категорий в товаре/категории: одинаковая ширина и расстояние между селектами */
     .cat-select-row{
       display:flex;
-      flex-wrap:wrap;
+      flex-wrap:nowrap;
       gap:10px;
     }
-    .cat-select-row .search{
+    .cat-select-row select{
       flex:1 1 0;
+      width:auto;
+    }
+
+    .admin-prod-group{
+      margin-top:6px;
+      display:flex;
+      flex-direction:column;
+      gap:6px;
     }
   </style>
 
@@ -240,6 +248,9 @@
         <div id="catPath" class="muted"></div>
       </div>
       <div id="subList" class="sub-list"></div>
+
+      <div id="catProducts" class="grid cards" style="margin-top:10px;display:none"></div>
+      <div id="catProductsEmpty" class="empty" style="display:none">В этой категории пока нет товаров…</div>
     </div>
   </section>
 
@@ -462,7 +473,11 @@
         syncAllGrids();
       });
       card.querySelector(".add")?.addEventListener("click", ()=>{
-        cart.set(id,(cart.get(id)||0)+1); saveCart(); toast("Добавлено в корзину"); updateCartBadge();
+        cart.set(id,(cart.get(id)||0)+1);
+        saveCart();
+        toast("Добавлено в корзину");
+        updateCartBadge();
+        renderCart();
       });
     });
   }
@@ -523,6 +538,7 @@
       }
     }catch(e){ console.warn("ensure user failed",e); }
   }
+
   async function loadCategories(){
     let cats = await apiGet("/api/categories");
     cats = cats.filter(visibleToMe);
@@ -532,14 +548,28 @@
     fillCategorySelects();
     renderAdminCats();
   }
-  async function loadProducts(params){
-    let list = await apiGet("/api/products", params);
+
+  function filteredProductsForHome(){
+    const q = document.getElementById("search").value.trim().toLowerCase();
+    if (!q) return allProducts;
+    return allProducts.filter(p=>{
+      const t = (p.title || "").toLowerCase();
+      const d = (p.description || "").toLowerCase();
+      return t.includes(q) || d.includes(q);
+    });
+  }
+
+  async function loadProducts(){
+    let list = await apiGet("/api/products");
     list = list.filter(visibleToMe);
     allProducts = list;
-    renderHome(list);
+
+    const forHome = filteredProductsForHome();
+    renderHome(forHome);
     renderFav();
     renderCart();
     updateCartBadge();
+    renderAdminCats();
   }
 
   function renderCatTiles(){
@@ -547,10 +577,25 @@
     const tiles = document.getElementById("catTiles");
     const empty = document.getElementById("catTilesEmpty");
     const sub = document.getElementById("catSub");
-    sub.style.display = "none"; tiles.style.display = "grid";
+    const prodGrid = document.getElementById("catProducts");
+    const prodEmpty = document.getElementById("catProductsEmpty");
+    const subList = document.getElementById("subList");
+
+    sub.style.display = "none";
+    tiles.style.display = "grid";
+    subList.innerHTML = "";
+    subList.style.display = "flex";
+    prodGrid.style.display = "none";
+    prodEmpty.style.display = "none";
+
     const roots = (catIndexByParent.get(null)||[]);
-    if(!roots.length){ tiles.innerHTML=""; empty.style.display="block"; return; }
+    if(!roots.length){
+      tiles.innerHTML="";
+      empty.style.display="block";
+      return;
+    }
     empty.style.display="none";
+
     tiles.innerHTML = roots.map(c=>{
       const img = c.attributes?.image || "";
       return `
@@ -560,6 +605,7 @@
         </div>
       `;
     }).join("");
+
     tiles.querySelectorAll(".cat-tile").forEach(t=>{
       t.addEventListener("click", ()=>{
         selectedCat = Number(t.dataset.id);
@@ -567,20 +613,43 @@
       });
     });
   }
+
   function renderSubcats(parentId){
     const tiles = document.getElementById("catTiles");
     const sub = document.getElementById("catSub");
     const list = document.getElementById("subList");
     const path = document.getElementById("catPath");
+    const prodGrid = document.getElementById("catProducts");
+    const prodEmpty = document.getElementById("catProductsEmpty");
+
     const parent = allCategories.find(x=>x.id===parentId);
-    tiles.style.display="none"; sub.style.display="block";
+    tiles.style.display="none";
+    sub.style.display="block";
     path.textContent = parent ? parent.name : "";
+
     const children = (catIndexByParent.get(parentId)||[]);
+    const productsInCat = allProducts.filter(p => p.category_id === parentId);
+
     if (!children.length){
-      show('home');
-      loadProducts({category_id:parentId});
+      list.innerHTML = "";
+      list.style.display = "none";
+
+      if (!productsInCat.length){
+        prodGrid.style.display = "none";
+        prodEmpty.style.display = "block";
+      } else {
+        prodEmpty.style.display = "none";
+        prodGrid.style.display = "grid";
+        prodGrid.innerHTML = productsInCat.map(productCard).join("");
+        bindCardHandlers(prodGrid);
+      }
       return;
     }
+
+    prodGrid.style.display = "none";
+    prodEmpty.style.display = "none";
+    list.style.display = "flex";
+
     list.innerHTML = children.map(c=>{
       const img = c.attributes?.image || "";
       return `
@@ -590,17 +659,24 @@
         </div>
       `;
     }).join("");
+
     list.querySelectorAll(".sub-item").forEach(li=>{
       li.addEventListener("click", ()=>{
         const catId = Number(li.dataset.id);
+        selectedCat = catId;
         renderSubcats(catId);
       });
     });
   }
+
   document.getElementById("btnCatBack").addEventListener("click", ()=>{
     const parent = allCategories.find(c=>c.id===selectedCat)?.parent_id ?? null;
-    if (parent===null){ renderCatTiles(); }
-    else{ renderSubcats(parent); selectedCat = parent; }
+    if (parent===null){
+      renderCatTiles();
+    } else {
+      selectedCat = parent;
+      renderSubcats(parent);
+    }
   });
 
   function renderHome(list){
@@ -657,7 +733,14 @@
     });
   }
 
-  function syncAllGrids(){ renderHome(allProducts); renderFav(); updateCartBadge(); }
+  function syncAllGrids(){
+    const list = filteredProductsForHome();
+    renderHome(list);
+    renderFav();
+    renderCart();
+    updateCartBadge();
+  }
+
   function updateCartBadge(){
     const cartCount = [...cart.values()].reduce((a,b)=>a+b,0);
     const badge = document.getElementById("cartBadge");
@@ -671,54 +754,109 @@
   function renderAdminCats(){
     const wrap = document.getElementById("catsTableAWrap");
     const empty = document.getElementById("catsEmptyA");
+
     const roots = (catIndexByParent.get(null)||[]).slice().sort((a,b)=>a.id-b.id);
-    if (!roots.length){ wrap.style.display="none"; empty.style.display="block"; wrap.innerHTML=""; return; }
-    empty.style.display="none"; wrap.style.display="flex"; wrap.style.flexDirection="column";
+    if (!roots.length){
+      wrap.style.display="none";
+      empty.style.display="block";
+      wrap.innerHTML="";
+      return;
+    }
+
+    empty.style.display="none";
+    wrap.style.display="flex";
+    wrap.style.flexDirection="column";
+
     wrap.innerHTML = roots.map(c=>renderAdminCatRow(c,0)).join("");
+
     wrap.querySelectorAll("[data-act]").forEach(btn=>{
       btn.addEventListener("click", async ()=>{
-        const id = Number(btn.dataset.id); const act=btn.dataset.act;
-        if (act==="toggle"){
+        const id  = Number(btn.dataset.id);
+        const act = btn.dataset.act;
+
+        if (act === "toggle"){
           catOpenState.set(id, !catOpenState.get(id));
           renderAdminCats();
-        } else if (act==="edit"){
-          const c = allCategories.find(x=>x.id===id); if(!c) return;
+        } else if (act === "edit"){
+          const c = allCategories.find(x=>x.id===id);
+          if (!c) return;
           openCreateCatPanel(true);
-          document.getElementById("ccName").value = c.name||"";
-          const img = c.attributes?.image||"";
+          document.getElementById("ccName").value = c.name || "";
+          const img = c.attributes?.image || "";
           const prevBox = document.getElementById("ccPreview");
-          prevBox.innerHTML = img?`<div class="thumb-up"><img src="${escapeHtml(img)}"></div>`:"";
+          prevBox.innerHTML = img ? `<div class="thumb-up"><img src="${escapeHtml(img)}"></div>` : "";
           if (img) prevBox.dataset.image = img;
           fillCategoryParentsForEdit(c);
           editingCatId = id;
-        } else if (act==="del"){
-          if(!confirm(`Удалить категорию #${id}?`)) return;
-          const r = await fetch(API_BASE+`/api/categories/${id}`,{method:"DELETE",headers:headers(false,true)});
-          if(!r.ok){ const t=await r.text(); return toast(parseErrorText(t)); }
-          toast("Категория удалена"); await loadCategories();
+        } else if (act === "del"){
+          if (!confirm(`Удалить категорию #${id}?`)) return;
+          const r = await fetch(API_BASE+`/api/categories/${id}`, {method:"DELETE", headers:headers(false,true)});
+          if (!r.ok){
+            const t = await r.text();
+            return toast(parseErrorText(t));
+          }
+          toast("Категория удалена");
+          await loadCategories();
+        } else if (act === "edit-prod"){
+          const p = allProducts.find(x=>x.id === id);
+          if (!p) return;
+          openProductEdit(p);
         }
       });
     });
   }
+
   function renderAdminCatRow(cat, level){
     const children = (catIndexByParent.get(cat.id)||[]).slice().sort((a,b)=>a.id-b.id);
-    const isOpen = catOpenState.get(cat.id) ?? false;
-    const indent = "&nbsp;".repeat(level*4);
+    const productsInCat = allProducts.filter(p => p.category_id === cat.id);
+    const isOpen   = catOpenState.get(cat.id) ?? false;
+    const indent   = "&nbsp;".repeat(level*4);
+
+    const hasToggle = children.length > 0 || productsInCat.length > 0;
+
     let html = `
       <div class="row-admin">
         <div class="t"><span class="name">${indent}${escapeHtml(cat.name)}</span></div>
         <div class="actions">
-          ${children.length?`<button class="cat-toggle" data-act="toggle" data-id="${cat.id}">${isOpen?"Скрыть":"Показать"}</button>`:""}
+          ${hasToggle ? `<button class="cat-toggle" data-act="toggle" data-id="${cat.id}">${isOpen?"Скрыть":"Показать"}</button>` : ""}
           <button class="iconbtn" data-act="edit" data-id="${cat.id}" title="Редактировать"><svg class="icv"><use href="#i-edit"/></svg></button>
-          <button class="iconbtn" data-act="del" data-id="${cat.id}" title="Удалить"><svg class="icv"><use href="#i-trash"/></svg></button>
+          <button class="iconbtn" data-act="del"  data-id="${cat.id}" title="Удалить"><svg class="icv"><use href="#i-trash"/></svg></button>
         </div>
       </div>
     `;
+
     if (isOpen){
-      children.forEach(ch=>{
-        html += renderAdminCatRow(ch, level+1);
-      });
+      if (children.length){
+        children.forEach(ch=>{
+          html += renderAdminCatRow(ch, level+1);
+        });
+      } else if (productsInCat.length){
+        const marginLeft = (level+1) * 12;
+        html += `
+          <div class="admin-prod-group" style="margin-left:${marginLeft}px">
+            ${productsInCat.map(p=>{
+              const img = (Array.isArray(p.images) && p.images[0]) ? p.images[0] : "";
+              const curr = (p.currency || "RUB").toUpperCase();
+              return `
+                <div class="line" data-prod-id="${p.id}">
+                  <div class="thumb">${img ? `<img src="${escapeHtml(img)}" alt="">` : ""}</div>
+                  <div class="t">
+                    <div><b>${escapeHtml(p.title || "Товар")}</b></div>
+                    <div class="muted">${money(p.price, curr)} · ID: ${p.id}</div>
+                  </div>
+                  <div class="row" style="gap:6px">
+                    <button class="iconbtn" data-act="edit-prod" data-id="${p.id}" title="Редактировать товар">
+                      <svg class="icv"><use href="#i-edit"/></svg>
+                    </button>
+                  </div>
+                </div>
+              `;
+            }).join("")}
+          </div>
+        `;
+      }
     }
+
     return html;
   }
 
@@ -1015,14 +1153,92 @@
     }
   });
 
-  document.getElementById("search").addEventListener("input", (e)=>{
-    const q = e.target.value.trim();
-    const params = q ? { q } : undefined;
-    loadProducts(params);
+  document.getElementById("search").addEventListener("input", ()=>{
+    const list = filteredProductsForHome();
+    renderHome(list);
   });
 
-  document.querySelectorAll(".tabbtn").forEach(btn=>{ btn.addEventListener("click", ()=> show(btn.dataset.scr)); });
-  document.getElementById("btnCheckout").addEventListener("click", ()=>{ if (!cart.size) return; toast("Заказ оформлен (заглушка)"); });
+  function fillProductCategoryForEdit(categoryId){
+    const rootSel  = document.getElementById("cpCatRoot");
+    const childSel = document.getElementById("cpCatChild");
+    const child2   = document.getElementById("cpCatChild2");
+
+    rootSel.value = "";
+    childSel.style.display = "none";
+    childSel.innerHTML = '<option value="">Выбери подкатегорию</option>';
+    child2.style.display = "none";
+    child2.innerHTML = '<option value="">Выбери подкатегорию</option>';
+
+    if (!categoryId) return;
+
+    let chain = [];
+    let cur = allCategories.find(c => c.id === categoryId);
+    while (cur){
+      chain.unshift(cur);
+      if (!cur.parent_id) break;
+      cur = allCategories.find(c => c.id === cur.parent_id);
+    }
+
+    if (chain[0]){
+      rootSel.value = chain[0].id;
+      updateCpChildSelect();
+    }
+    if (chain[1]){
+      childSel.value = chain[1].id;
+      updateCpChild2Select();
+    }
+    if (chain[2]){
+      child2.value = chain[2].id;
+    }
+  }
+
+  function openProductEdit(prod){
+    openCreateProdPanel(true);
+    editingProdId = prod.id;
+
+    const titleEl = document.getElementById("cpTitle");
+    const descEl  = document.getElementById("cpDesc");
+    const priceEl = document.getElementById("cpPrice");
+    const imgInput = document.getElementById("cpImages");
+    const box = document.getElementById("cpPreviews");
+
+    titleEl.value = prod.title || "";
+    descEl.value  = prod.description || "";
+    autoGrowTextarea(descEl);
+
+    priceEl.value = prod.price != null ? String(prod.price) : "";
+
+    imgInput.value = "";
+    box.innerHTML = "";
+    const imgs = Array.isArray(prod.images) ? prod.images : [];
+    if (imgs.length){
+      imgs.forEach(u=>{
+        const d = document.createElement("div");
+        d.className = "thumb-up";
+        d.innerHTML = `<img src="${escapeHtml(u)}">`;
+        box.appendChild(d);
+      });
+      box.dataset.images = JSON.stringify(imgs);
+    } else {
+      delete box.dataset.images;
+    }
+
+    fillProductCategoryForEdit(prod.category_id || null);
+  }
+
+  document.querySelectorAll(".tabbtn").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      if (btn.dataset.scr === "cart"){
+        renderCart();
+      }
+      show(btn.dataset.scr);
+    });
+  });
+
+  document.getElementById("btnCheckout").addEventListener("click", ()=>{
+    if (!cart.size) return;
+    toast("Заказ оформлен (заглушка)");
+  });
 
   ['pointerdown','touchstart'].forEach(evt=>{
     document.addEventListener(evt, (e)=>{
