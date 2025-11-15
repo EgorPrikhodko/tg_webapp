@@ -59,8 +59,8 @@
     .card .pic{width:100%;padding-top:100%;background:#0f1430;position:relative;overflow:hidden;flex:0 0 auto}
     .card .pic img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
     .card .fav{
-      position:absolute;top:8px;right:8px;z-index:2;background:rgba(17,22,42,.7);
-      border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(4px);border-radius:999px;padding:6px;cursor:pointer
+      position:absolute;top:8px;right:8px;z-index:2;
+      background:transparent;border:none;padding:0;cursor:pointer;
     }
     .card .fav .icv{fill:var(--icon)}
     .card .fav[aria-pressed="true"] .icv{fill:var(--badge)} /* активное избранное — розовое */
@@ -137,6 +137,19 @@
     .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:72px;background:#11162a;border:1px solid #253058;color:var(--text);padding:12px 14px;border-radius:12px;box-shadow:var(--shadow);z-index:50;display:none;max-width:86%}
     .toast.show{display:block;animation:pop .25s ease}
     @keyframes pop{from{transform:translateX(-50%) translateY(6px);opacity:.5} to{transform:translateX(-50%) translateY(0);opacity:1}}
+
+    /* Доп. правки форм */
+    .panel .row{margin-bottom:8px}
+    .panel .add{width:100%;max-width:none;display:block;text-align:center}
+    textarea.search{min-height:44px}
+    .textarea-auto{resize:none;overflow:hidden}
+
+    input[type=number]::-webkit-outer-spin-button,
+    input[type=number]::-webkit-inner-spin-button{
+      -webkit-appearance:none;
+      margin:0;
+    }
+    input[type=number]{-moz-appearance:textfield;}
   </style>
 
   <!-- SVG sprite -->
@@ -147,12 +160,12 @@
     <symbol id="i-basket" viewBox="0 0 24 24"><path d="M7 10l5-7 5 7m-12 0h14l-1.6 9.2A2 2 0 0 1 15.5 21h-7a2 2 0 0 1-1.9-1.8L5 10Z"/></symbol>
     <symbol id="i-user" viewBox="0 0 24 24"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm7 8a7 7 0 0 0-14 0"/></symbol>
     <symbol id="i-edit" viewBox="0 0 24 24"><path d="M3 17.3 14.7 5.6l3.7 3.7L6.7 21H3v-3.7ZM16.8 3.6l3.6 3.6"/></symbol>
-    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M6 7h12l-1 13a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L6 7Zm3-3h6l1 3H8l1-3Z"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M6 7h12l-1 13a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L6 7Zm3-3h6l1 3H8л1-3Z"/></symbol>
     <symbol id="i-plus" viewBox="0 0 24 24"><path d="M11 5h2v14h-2z"/><path d="M5 11h14v2H5z"/></symbol>
     <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 11h14v2H5z"/></symbol>
     <symbol id="i-camera" viewBox="0 0 24 24"><path d="M9 6h6l1 2h3a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h3l1-2Z"/><circle cx="12" cy="13" r="4"/></symbol>
     <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 18 9 12l6-6"/></symbol>
-    <symbol id="i-save" viewBox="0 0 24 24"><path d="M5 21h14V7l-3-3H5v17Z"/><path d="M9 21v-6h6v6"/><path d="M9 3v4h6V3"/></symbol>
+    <symbol id="i-save" viewBox="0 0 24 24"><path d="M5 21h14V7l-3-3H5v17З"/><path d="M9 21v-6h6v6"/><path d="M9 3v4h6V3"/></symbol>
   </svg>
 </head>
 <body>
@@ -181,6 +194,8 @@
           <div id="catPath" class="muted"></div>
         </div>
         <div id="subList" class="sub-list"></div>
+        <div id="subProdGrid" class="grid cards" style="margin-top:10px"></div>
+        <div id="subProdEmpty" class="empty" style="display:none">Пока товаров нет…</div>
       </div>
     </section>
 
@@ -209,13 +224,6 @@
         </div>
         <button id="btnResetLocal" class="add" style="max-width:160px;background:#44506f">Сбросить локальные данные</button>
       </div>
-      <div style="height:8px"></div>
-      <div class="line">
-        <div class="t">
-          <div class="muted">API:</div>
-          <div style="word-break:break-all" id="apiShown"></div>
-        </div>
-      </div>
     </section>
 
     <!-- Админ -->
@@ -231,22 +239,28 @@
         <div id="panelCreateProd" class="panel">
           <h3>Создание товара</h3>
           <div class="row"><input id="cpTitle" class="search" placeholder="Название товара"/></div>
-          <div class="row"><textarea id="cpDesc" class="search" placeholder="Описание товара"></textarea></div>
+          <div class="row"><textarea id="cpDesc" class="search textarea-auto" placeholder="Описание товара"></textarea></div>
           <div class="row"><input id="cpPrice" class="search" type="number" min="0" step="0.01" placeholder="Цена"/></div>
 
           <div class="row">
-            <label class="iconbtn" for="cpImages"><svg class="icv"><use href="#i-camera"/></svg></label>
+            <label class="iconbtn" for="cpImages">
+              <svg class="icv"><use href="#i-camera"/></svg>
+              <span style="margin-left:6px;font-size:12px;">Добавить фото товара</span>
+            </label>
             <input id="cpImages" type="file" accept="image/*" multiple style="display:none" />
             <div id="cpPreviews" class="filebox"></div>
           </div>
 
-          <div class="row">
-            <select id="cpCatRoot" class="search"><option value="">— Выбери категорию —</option></select>
-            <select id="cpCatChild" class="search" style="display:none"><option value="">— Подкатегория —</option></select>
+          <div class="row" id="cpCatRow">
+            <div id="cpCatSelects" style="width:100%">
+              <select class="search cp-cat-select" data-level="0">
+                <option value="">Выбери категорию</option>
+              </select>
+            </div>
           </div>
 
           <div class="row">
-            <button id="cpCreate" class="add" style="max-width:200px"><svg class="icv"><use href="#i-save"/></svg>&nbsp;Сохранить</button>
+            <button id="cpCreate" class="add">Сохранить</button>
           </div>
         </div>
 
@@ -255,14 +269,17 @@
           <h3>Создание категории</h3>
           <div class="row"><input id="ccName" class="search" placeholder="Название"/></div>
           <div class="row">
-            <label class="iconbtn" for="ccImage"><svg class="icv"><use href="#i-camera"/></svg></label>
+            <label class="iconbtn" for="ccImage">
+              <svg class="icv"><use href="#i-camera"/></svg>
+              <span style="margin-left:6px;font-size:12px;">Добавить фото категории</span>
+            </label>
             <input id="ccImage" type="file" accept="image/*" style="display:none" />
             <div id="ccPreview" class="filebox"></div>
           </div>
           <div class="row">
             <select id="ccParent" class="search"><option value="">Основная</option></select>
           </div>
-          <div class="row"><button id="ccCreate" class="add" style="max-width:200px"><svg class="icv"><use href="#i-save"/></svg>&nbsp;Сохранить</button></div>
+          <div class="row"><button id="ccCreate" class="add">Сохранить</button></div>
         </div>
 
         <!-- списки для редактирования/удаления -->
@@ -306,7 +323,6 @@
     const url = new URL(location.href);
     const qpApi = url.searchParams.get("api");
     const API_BASE = qpApi ? qpApi.replace(/\/+$/, "") : "http://127.0.0.1:9010";
-    document.getElementById("apiShown").textContent = API_BASE;
 
     let tgId = null, isAdmin = false;
     try { tgId = Telegram?.WebApp?.initDataUnsafe?.user?.id || null; } catch(e){}
@@ -315,15 +331,39 @@
 
     class ApiError extends Error{ constructor(status, message, raw){ super(message); this.status=status; this.raw=raw; } }
     function headers(json=true, withTg=false){ const h={}; if(json) h["Content-Type"]="application/json"; if(withTg && tgId) h["X-Telegram-Id"]=String(tgId); return h; }
-    function parseErrorText(text){ if (!text) return "Ошибка запроса"; try{ const j=JSON.parse(text); if (j.detail){ if (typeof j.detail==="string") return j.detail; if (Array.isArray(j.detail)) return j.detail.map(x=>x.msg||x.detail||JSON.stringify(x)).join("; "); if (j.detail.message) return j.detail.message; } if (j.message) return j.message; return typeof j==="string"?j:JSON.stringify(j);}catch{ return text; } }
-    async function apiGet(path, params){ const u=new URL(API_BASE+path); if(params) Object.entries(params).forEach(([k,v])=> (v ?? v===0) && u.searchParams.set(k,v)); const r=await fetch(u); const t=await r.text(); if(!r.ok) throw new ApiError(r.status, parseErrorText(t), t); return t?JSON.parse(t):null; }
-    async function apiSend(method, path, body=null, withTg=false){ const r=await fetch(API_BASE+path,{method,headers:headers(true,withTg),body:body?JSON.stringify(body):null}); const t=await r.text(); if(!r.ok) throw new ApiError(r.status, parseErrorText(t), t); return t?JSON.parse(t):null; }
+    function parseErrorText(text){
+      if (!text) return "Ошибка запроса";
+      try{
+        const j=JSON.parse(text);
+        if (j.detail){
+          if (typeof j.detail==="string") return j.detail;
+          if (Array.isArray(j.detail)) return j.detail.map(x=>x.msg||x.detail||JSON.stringify(x)).join("; ");
+          if (j.detail.message) return j.detail.message;
+        }
+        if (j.message) return j.message;
+        return typeof j==="string"?j:JSON.stringify(j);
+      }catch{ return text; }
+    }
+    async function apiGet(path, params){
+      const u=new URL(API_BASE+path);
+      if(params) Object.entries(params).forEach(([k,v])=> (v ?? v===0) && u.searchParams.set(k,v));
+      const r=await fetch(u);
+      const t=await r.text();
+      if(!r.ok) throw new ApiError(r.status, parseErrorText(t), t);
+      return t?JSON.parse(t):null;
+    }
+    async function apiSend(method, path, body=null, withTg=false){
+      const r=await fetch(API_BASE+path,{method,headers:headers(true,withTg),body:body?JSON.stringify(body):null});
+      const t=await r.text();
+      if(!r.ok) throw new ApiError(r.status, parseErrorText(t), t);
+      return t?JSON.parse(t):null;
+    }
     function toast(msg){ const el=document.getElementById("toast"); el.textContent=msg; el.className="toast show"; setTimeout(()=>el.className="toast",2200); }
     function money(v,c="RUB"){ return `${Number(v||0).toFixed(0)} ${c}`; }
     function escapeHtml(s){ return String(s).replace(/[&<>"'`]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','`':'&#96;'}[c])); }
     function formatCount(n){ n = Number(n||0); return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "\u202F"); }
 
-    // ───────── visibility filter: теперь не ограничиваем по owner_tg_id
+    // ───────── visibility filter: показываем всем
     function visibleToMe(obj){
       return true;
     }
@@ -404,16 +444,130 @@
     let allProducts = [];
     let allCategories = [];
     let catIndexByParent = new Map();
-    let selectedCat = null;
+    let catById = new Map();
+    let catStack = []; // путь в каталоге (массив id)
 
     function indexCategories(cats){
       catIndexByParent = new Map();
+      catById = new Map();
       cats.forEach(c=>{
+        catById.set(c.id, c);
         const pid = (c.parent_id??null);
         if(!catIndexByParent.has(pid)) catIndexByParent.set(pid,[]);
         catIndexByParent.get(pid).push(c);
       });
     }
+
+    function getCategoryPath(catId){
+      const path=[];
+      const guard = new Set();
+      let currentId = catId;
+      while(currentId!=null && !guard.has(currentId)){
+        guard.add(currentId);
+        const c = catById.get(currentId);
+        if (!c) break;
+        path.unshift(c.id);
+        currentId = c.parent_id ?? null;
+      }
+      return path;
+    }
+
+    function showCatLevel(){
+      const tiles = document.getElementById("catTiles");
+      const tilesEmpty = document.getElementById("catTilesEmpty");
+      const subWrap = document.getElementById("catSub");
+      const subList = document.getElementById("subList");
+      const prodGrid = document.getElementById("subProdGrid");
+      const prodEmpty = document.getElementById("subProdEmpty");
+      const pathEl = document.getElementById("catPath");
+
+      const roots = (catIndexByParent.get(null)||[]);
+
+      if (catStack.length===0){
+        // корневые категории: плитки
+        subWrap.style.display="none";
+        tiles.style.display="grid";
+        if (!roots.length){
+          tiles.innerHTML="";
+          tilesEmpty.style.display="block";
+        } else {
+          tilesEmpty.style.display="none";
+          tiles.innerHTML = roots.map(c=>{
+            const img = (c.attributes?.image || c.image || "");
+            return `
+              <div class="cat-tile" data-id="${c.id}">
+                <div class="tt">${escapeHtml(c.name)}</div>
+                ${img?`<img class="img" src="${escapeHtml(img)}" alt="">`:``}
+              </div>
+            `;
+          }).join("");
+          tiles.querySelectorAll(".cat-tile").forEach(t=>{
+            t.addEventListener("click", ()=>{
+              catStack=[Number(t.dataset.id)];
+              showCatLevel();
+            });
+          });
+        }
+        return;
+      }
+
+      // Не корень
+      tiles.style.display="none";
+      tilesEmpty.style.display="none";
+      subWrap.style.display="block";
+
+      const currentId = catStack[catStack.length-1];
+      const current = catById.get(currentId) || null;
+      const pathNames = catStack.map(id=>catById.get(id)?.name).filter(Boolean);
+      pathEl.textContent = pathNames.join(" / ") || (current?.name || "");
+
+      const children = (catIndexByParent.get(currentId)||[]);
+
+      if (children.length){
+        // есть подкатегории
+        subList.style.display="flex";
+        subList.innerHTML = children.map(c=>{
+          const img = (c.attributes?.image || c.image || "");
+          return `
+            <div class="sub-item" data-id="${c.id}">
+              <div class="thumb">${img?`<img src="${escapeHtml(img)}" alt="">`:""}</div>
+              <div class="t">${escapeHtml(c.name)}</div>
+            </div>
+          `;
+        }).join("");
+        prodGrid.style.display="none";
+        prodGrid.innerHTML="";
+        prodEmpty.style.display="none";
+
+        subList.querySelectorAll(".sub-item").forEach(li=>{
+          li.addEventListener("click", ()=>{
+            const id = Number(li.dataset.id);
+            catStack.push(id);
+            showCatLevel();
+          });
+        });
+      } else {
+        // лист — показываем товары
+        subList.style.display="none";
+        subList.innerHTML="";
+        const products = allProducts.filter(p=>p.category_id===currentId);
+        if (!products.length){
+          prodGrid.style.display="none";
+          prodGrid.innerHTML="";
+          prodEmpty.style.display="block";
+        } else {
+          prodEmpty.style.display="none";
+          prodGrid.style.display="grid";
+          prodGrid.innerHTML = products.map(productCard).join("");
+          bindCardHandlers(prodGrid);
+        }
+      }
+    }
+
+    document.getElementById("btnCatBack").addEventListener("click", ()=>{
+      if (catStack.length>0) catStack.pop();
+      showCatLevel();
+    });
 
     async function refreshHealth(){
       const pill = document.getElementById("pillDb");
@@ -439,83 +593,110 @@
         }
       }catch(e){ console.warn("ensure user failed",e); }
     }
+
+    // cpCat selects (многоуровневые)
+    let cpCatPath = [];
+
+    function rebuildCpSelects(initPathIds){
+      const container = document.getElementById("cpCatSelects");
+      if (!container) return;
+      container.innerHTML = "";
+      cpCatPath = initPathIds && initPathIds.length ? [...initPathIds] : [];
+
+      function createSelect(level, parentId, selectedId){
+        const sel = document.createElement("select");
+        sel.className = "search cp-cat-select";
+        sel.dataset.level = String(level);
+        const children = (catIndexByParent.get(parentId ?? null) || []);
+        const placeholder = level===0 ? "Выбери категорию" : "Выбери подкатегорию";
+        sel.innerHTML = `<option value="">${placeholder}</option>` +
+          children.map(c=>`<option value="${c.id}">${escapeHtml(c.name)}</option>`).join("");
+        if (selectedId != null) sel.value = String(selectedId);
+        sel.addEventListener("change", onCpSelectChange);
+        container.appendChild(sel);
+        return children;
+      }
+
+      if (!cpCatPath.length){
+        createSelect(0, null, null);
+        return;
+      }
+
+      let parentId = null;
+      for (let level=0; level<cpCatPath.length; level++){
+        const id = cpCatPath[level];
+        const children = createSelect(level, parentId, id);
+        parentId = id;
+        if (!children.length && level < cpCatPath.length-1){
+          cpCatPath = cpCatPath.slice(0, level+1);
+          break;
+        }
+      }
+
+      const lastId = cpCatPath[cpCatPath.length-1];
+      const moreChildren = catIndexByParent.get(lastId) || [];
+      if (moreChildren.length){
+        createSelect(cpCatPath.length, lastId, null);
+      }
+    }
+
+    function onCpSelectChange(e){
+      const sel = e.target;
+      const level = Number(sel.dataset.level || "0");
+      const val = sel.value ? Number(sel.value) : null;
+      const container = document.getElementById("cpCatSelects");
+      container.querySelectorAll(".cp-cat-select").forEach(s=>{
+        const lv = Number(s.dataset.level || "0");
+        if (lv>level) s.remove();
+      });
+      if (!val){
+        cpCatPath = cpCatPath.slice(0, level);
+        return;
+      }
+      cpCatPath = cpCatPath.slice(0, level);
+      cpCatPath[level] = val;
+
+      const children = catIndexByParent.get(val) || [];
+      if (children.length){
+        const nextLevel = level+1;
+        const selNext = document.createElement("select");
+        selNext.className="search cp-cat-select";
+        selNext.dataset.level=String(nextLevel);
+        selNext.innerHTML = `<option value="">Выбери подкатегорию</option>` +
+          children.map(c=>`<option value="${c.id}">${escapeHtml(c.name)}</option>`).join("");
+        selNext.addEventListener("change", onCpSelectChange);
+        container.appendChild(selNext);
+      }
+    }
+
     async function loadCategories(){
       let cats = await apiGet("/api/categories");
-      // больше не фильтруем по owner_tg_id
       allCategories = cats;
       indexCategories(cats);
-      renderCatTiles();
+      catStack = [];
+      showCatLevel();
+
       // селекты в панелях
       const cc = document.getElementById("ccParent");
-      cc.innerHTML = '<option value="">Основная</option>' + cats.map(c=>`<option value="${c.id}">${escapeHtml(c.name)}</option>`).join("");
-      const cpRoot = document.getElementById("cpCatRoot");
-      cpRoot.innerHTML = '<option value="">— Выбери категорию —</option>' + (catIndexByParent.get(null)||[]).map(c=>`<option value="${c.id}">${escapeHtml(c.name)}</option>`).join("");
+      cc.innerHTML = '<option value="">Основная</option>' +
+        cats.map(c=>`<option value="${c.id}">${escapeHtml(c.name)}</option>`).join("");
+
+      rebuildCpSelects(cpCatPath);
     }
+
     async function loadProducts(params){
       let list = await apiGet("/api/products", params);
-      // больше не фильтруем по owner_tg_id
-      allProducts = list;
-      renderHome(list);
+      allProducts = list.filter(visibleToMe);
+      renderHome(allProducts);
       renderFav();
       renderCart();
       updateCartBadge();
       renderAdminCats();
       renderAdminProds();
+      if (catStack.length>0) showCatLevel();
     }
 
-    // Catalog renders
-    function renderCatTiles(){
-      selectedCat = null;
-      const tiles = document.getElementById("catTiles");
-      const empty = document.getElementById("catTilesEmpty");
-      const sub = document.getElementById("catSub");
-      sub.style.display = "none"; tiles.style.display = "grid";
-      const roots = (catIndexByParent.get(null)||[]);
-      if(!roots.length){ tiles.innerHTML=""; empty.style.display="block"; return; }
-      empty.style.display="none";
-      tiles.innerHTML = roots.map(c=>{
-        const img = c.attributes?.image || "";
-        return `
-          <div class="cat-tile" data-id="${c.id}">
-            <div class="tt">${escapeHtml(c.name)}</div>
-            ${img?`<img class="img" src="${escapeHtml(img)}" alt="">`:``}
-          </div>
-        `;
-      }).join("");
-      tiles.querySelectorAll(".cat-tile").forEach(t=>{
-        t.addEventListener("click", ()=>{
-          selectedCat = Number(t.dataset.id);
-          renderSubcats(selectedCat);
-        });
-      });
-    }
-    function renderSubcats(parentId){
-      const tiles = document.getElementById("catTiles");
-      const sub = document.getElementById("catSub");
-      const list = document.getElementById("subList");
-      const path = document.getElementById("catPath");
-      const parent = allCategories.find(x=>x.id===parentId);
-      tiles.style.display="none"; sub.style.display="block";
-      path.textContent = parent ? parent.name : "";
-      const children = (catIndexByParent.get(parentId)||[]);
-      list.innerHTML = children.map(c=>{
-        const img = c.attributes?.image || "";
-        return `
-          <div class="sub-item" data-id="${c.id}">
-            <div class="thumb">${img?`<img src="${escapeHtml(img)}" alt="">`:""}</div>
-            <div class="t">${escapeHtml(c.name)}</div>
-          </div>
-        `;
-      }).join("");
-      list.querySelectorAll(".sub-item").forEach(li=>{
-        li.addEventListener("click", ()=>{
-          const catId = Number(li.dataset.id);
-          show('home');
-          loadProducts({category_id:catId});
-        });
-      });
-    }
-    document.getElementById("btnCatBack").addEventListener("click", renderCatTiles);
+    // Catalog root render uses showCatLevel()
 
     // Product renders
     function renderHome(list){
@@ -605,7 +786,7 @@
       }
       wrap.innerHTML = list.map(c=>`
         <div class="row-admin">
-          <div class="t"><b>${escapeHtml(c.name)}</b>${c.parent_id?` <span class="muted">· parent:${c.parent_id}</span>`:""}</div>
+          <div class="t"><b>${escapeHtml(c.name)}</b></div>
           <button class="iconbtn" data-act="editCat" data-id="${c.id}" title="Редактировать"><svg class="icv"><use href="#i-edit"/></svg></button>
           <button class="iconbtn" data-act="delCat" data-id="${c.id}" title="Удалить"><svg class="icv"><use href="#i-trash"/></svg></button>
         </div>
@@ -617,9 +798,10 @@
             const c = list.find(x=>x.id===id); if(!c) return;
             openCreateCatPanel(true);
             document.getElementById("ccName").value = c.name||"";
-            const img = c.attributes?.image||"";
-            document.getElementById("ccPreview").innerHTML = img?`<div class="thumb-up"><img src="${escapeHtml(img)}"></div>`:"";
-            document.getElementById("ccPreview").dataset.image = img || "";
+            const img = (c.attributes?.image || c.image || "");
+            const prevEl = document.getElementById("ccPreview");
+            prevEl.innerHTML = img?`<div class="thumb-up"><img src="${escapeHtml(img)}"></div>`:"";
+            prevEl.dataset.image = img || "";
             document.getElementById("ccParent").value = c.parent_id ?? "";
             editingCatId = id;
           } else if (act==="delCat"){
@@ -671,11 +853,10 @@
             (Array.isArray(p.images)?p.images:[]).slice(0,5).forEach(src=>{
               const d=document.createElement('div'); d.className='thumb-up'; d.innerHTML=`<img src="${escapeHtml(src)}">`; prev.appendChild(d);
             });
-            const cat = allCategories.find(c=>c.id===p.category_id) || null;
-            const parentId = cat ? (cat.parent_id ?? null) : null;
-            document.getElementById("cpCatRoot").value = parentId ?? p.category_id ?? "";
-            updateCpChildSelect();
-            document.getElementById("cpCatChild").value = String(p.category_id ?? "");
+
+            const path = p.category_id ? getCategoryPath(p.category_id) : [];
+            rebuildCpSelects(path);
+            cpCatPath = path;
             editingProdId = id;
           } else if (act==="delProd"){
             if(!confirm(`Удалить товар #${id}?`)) return;
@@ -699,8 +880,8 @@
         document.getElementById("cpPrice").value="";
         document.getElementById("cpImages").value="";
         document.getElementById("cpPreviews").innerHTML="";
-        document.getElementById("cpCatRoot").value="";
-        document.getElementById("cpCatChild").style.display="none";
+        cpCatPath = [];
+        rebuildCpSelects(cpCatPath);
       }
     }
     function openCreateCatPanel(edit=false){
@@ -710,8 +891,9 @@
         editingCatId=null;
         document.getElementById("ccName").value="";
         document.getElementById("ccImage").value="";
-        document.getElementById("ccPreview").innerHTML="";
-        document.getElementById("ccPreview").dataset.image="";
+        const prev = document.getElementById("ccPreview");
+        prev.innerHTML="";
+        prev.dataset.image="";
         document.getElementById("ccParent").value="";
       }
     }
@@ -751,22 +933,17 @@
       box.dataset.image = u || "";
     });
 
-    // ───────── Create product
-    function updateCpChildSelect(){
-      const rootSel = document.getElementById("cpCatRoot");
-      const childSel = document.getElementById("cpCatChild");
-      const pid = rootSel.value ? Number(rootSel.value) : null;
-      const children = pid!==null ? (catIndexByParent.get(pid)||[]) : [];
-      if (children.length){
-        childSel.style.display="block";
-        childSel.innerHTML = '<option value="">— Подкатегория —</option>' + children.map(c=>`<option value="${c.id}">${escapeHtml(c.name)}</option>`).join("");
-      } else {
-        childSel.style.display="none";
-        childSel.innerHTML = '<option value="">— Подкатегория —</option>';
-      }
+    // авто-рост textarea
+    function autoResizeTextarea(el){
+      el.style.height = "auto";
+      el.style.height = (el.scrollHeight) + "px";
     }
-    document.getElementById("cpCatRoot").addEventListener("change", updateCpChildSelect);
+    document.querySelectorAll(".textarea-auto").forEach(el=>{
+      autoResizeTextarea(el);
+      el.addEventListener("input", ()=>autoResizeTextarea(el));
+    });
 
+    // ───────── Create product
     document.getElementById("cpCreate").addEventListener("click", async ()=>{
       const title = document.getElementById("cpTitle").value.trim();
       const description = document.getElementById("cpDesc").value.trim() || null;
@@ -774,9 +951,7 @@
       if (!title) return toast("Укажи название");
       if (Number.isNaN(price) || price<0) price = 0;
 
-      const root = document.getElementById("cpCatRoot").value.trim();
-      const child = document.getElementById("cpCatChild").value.trim();
-      const category_id = child ? Number(child) : (root?Number(root):null);
+      const category_id = cpCatPath.length ? cpCatPath[cpCatPath.length-1] : null;
       if (!category_id) return toast("Выбери категорию");
 
       const imgBox = document.getElementById("cpPreviews");
@@ -815,14 +990,18 @@
       const parent_id = parentRaw ? Number(parentRaw) : null;
       const image = document.getElementById("ccPreview").dataset.image || null;
 
-      const baseSlug = slugify(name);
-      const slug = parent_id ? slugify(name + "-" + String(parent_id)) : baseSlug;
+      let slug = slugify(name);
+      if (parent_id) slug = slugify(name + "-" + String(parent_id));
+
+      const attrs = { owner_tg_id: tgId };
+      if (image) attrs.image = image;
 
       const payload = {
         name,
         slug,
         parent_id,
-        attributes: { owner_tg_id: tgId, ...(image?{image}: {}) }
+        attributes: attrs,
+        image
       };
 
       try{
@@ -834,7 +1013,21 @@
           toast(`Категория #${r.id} создана`);
         }
         await loadCategories();
-      }catch(e){ toast(e.message||"Ошибка сохранения категории"); }
+      }catch(e){
+        if (e instanceof ApiError && e.status===409 && !editingCatId){
+          try{
+            const slug2 = slug + "-" + Date.now().toString(36);
+            payload.slug = slug2;
+            const r2 = await apiSend("POST","/api/categories",payload,true);
+            toast(`Категория #${r2.id} создана`);
+            await loadCategories();
+          }catch(e2){
+            toast(e2.message||"Ошибка сохранения категории");
+          }
+        } else {
+          toast(e.message||"Ошибка сохранения категории");
+        }
+      }
     });
 
     // ───────── Utils
