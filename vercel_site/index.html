@@ -115,7 +115,7 @@
     .panel{display:none;background:#11172a;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:12px}
     .panel h3{margin:0 0 8px 0;font-size:15px}
     .filebox{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
-    .thumb-up{width:64px;height:64px;border-radius:10px;background:#0f1430;border:1px solid rgba(255,255,255,.08);overflow:hidden}
+    .thumb-up{width:64px;height:64px;border-radius:10px;background:#0f1430;border:1px солид rgba(255,255,255,.08);overflow:hidden}
     .thumb-up img{width:100%;height:100%;object-fit:cover}
 
     .file-btn{
@@ -160,6 +160,12 @@
     @keyframes pop{from{transform:translateX(-50%) translateY(6px);opacity:.5} to{transform:translateX(-50%) translateY(0);opacity:1}}
 
     /* формы создания: одинаковые отступы и ширина */
+    #panelCreateProd,
+    #panelCreateCat{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
     #panelCreateProd .row,
     #panelCreateCat .row{
       flex-wrap:nowrap;
@@ -210,7 +216,7 @@
     <symbol id="i-basket" viewBox="0 0 24 24"><path d="M7 10l5-7 5 7m-12 0h14l-1.6 9.2A2 2 0 0 1 15.5 21h-7a2 2 0 0 1-1.9-1.8L5 10Z"/></symbol>
     <symbol id="i-user" viewBox="0 0 24 24"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm7 8a7 7 0 0 0-14 0"/></symbol>
     <symbol id="i-edit" viewBox="0 0 24 24"><path d="M3 17.3 14.7 5.6l3.7 3.7L6.7 21H3v-3.7ZM16.8 3.6l3.6 3.6"/></symbol>
-    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M6 7h12l-1 13a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L6 7Zm3-3h6l1 3H8l1-3Z"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M6 7h12l-1 13a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L6 7Zm3-3h6l1 3H8l1-3З"/></symbol>
     <symbol id="i-plus" viewBox="0 0 24 24"><path d="M11 5h2v14h-2z"/><path d="M5 11h14v2H5z"/></symbol>
     <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 11h14v2H5z"/></symbol>
     <symbol id="i-camera" viewBox="0 0 24 24"><path d="M9 6h6l1 2h3a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h3l1-2Z"/><circle cx="12" cy="13" r="4"/></symbol>
@@ -422,16 +428,18 @@
   function escapeHtml(s){ return String(s).replace(/[&<>"'`]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','`':'&#96;'}[c])); }
   function formatCount(n){ n = Number(n||0); return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "\u202F"); }
 
-  function visibleToMe(obj){
-    const owner = obj?.attributes?.owner_tg_id ?? null;
-    return (owner === null) || (String(owner) === String(tgId));
-  }
-
   const favKey="tgshop_fav_ids"; const cartKey="tgshop_cart";
   let fav = new Set(JSON.parse(localStorage.getItem(favKey)||"[]"));
   let cart = new Map(Object.entries(JSON.parse(localStorage.getItem(cartKey)||"{}")).map(([k,v])=>[Number(k),Number(v)]));
   function saveFav(){ localStorage.setItem(favKey, JSON.stringify([...fav])); }
   function saveCart(){ localStorage.setItem(cartKey, JSON.stringify(Object.fromEntries(cart))); }
+
+  function syncFavButtonsFor(id){
+    const pressed = fav.has(id) ? "true" : "false";
+    document.querySelectorAll(`.card[data-id="${id}"] .fav`).forEach(btn=>{
+      btn.setAttribute("aria-pressed", pressed);
+    });
+  }
 
   function productCard(p){
     const img = (Array.isArray(p.images) && p.images[0]) ? p.images[0] : "";
@@ -470,7 +478,8 @@
         e.stopPropagation();
         if (fav.has(id)) fav.delete(id); else fav.add(id);
         saveFav();
-        syncAllGrids();
+        syncFavButtonsFor(id);
+        renderFav();
       });
       card.querySelector(".add")?.addEventListener("click", ()=>{
         cart.set(id,(cart.get(id)||0)+1);
@@ -540,8 +549,7 @@
   }
 
   async function loadCategories(){
-    let cats = await apiGet("/api/categories");
-    cats = cats.filter(visibleToMe);
+    const cats = await apiGet("/api/categories");
     allCategories = cats;
     indexCategories(cats);
     renderCatTiles();
@@ -560,8 +568,7 @@
   }
 
   async function loadProducts(){
-    let list = await apiGet("/api/products");
-    list = list.filter(visibleToMe);
+    const list = await apiGet("/api/products");
     allProducts = list;
 
     const forHome = filteredProductsForHome();
@@ -801,6 +808,15 @@
           const p = allProducts.find(x=>x.id === id);
           if (!p) return;
           openProductEdit(p);
+        } else if (act === "del-prod"){
+          if (!confirm(`Удалить товар #${id}?`)) return;
+          const r = await fetch(API_BASE+`/api/products/${id}`, {method:"DELETE", headers:headers(false,true)});
+          if (!r.ok){
+            const t = await r.text();
+            return toast(parseErrorText(t));
+          }
+          toast("Товар удалён");
+          await loadProducts();
         }
       });
     });
@@ -831,9 +847,8 @@
           html += renderAdminCatRow(ch, level+1);
         });
       } else if (productsInCat.length){
-        const marginLeft = (level+1) * 12;
         html += `
-          <div class="admin-prod-group" style="margin-left:${marginLeft}px">
+          <div class="admin-prod-group">
             ${productsInCat.map(p=>{
               const img = (Array.isArray(p.images) && p.images[0]) ? p.images[0] : "";
               const curr = (p.currency || "RUB").toUpperCase();
@@ -842,11 +857,14 @@
                   <div class="thumb">${img ? `<img src="${escapeHtml(img)}" alt="">` : ""}</div>
                   <div class="t">
                     <div><b>${escapeHtml(p.title || "Товар")}</b></div>
-                    <div class="muted">${money(p.price, curr)} · ID: ${p.id}</div>
+                    <div class="muted">${money(p.price, curr)}</div>
                   </div>
                   <div class="row" style="gap:6px">
                     <button class="iconbtn" data-act="edit-prod" data-id="${p.id}" title="Редактировать товар">
                       <svg class="icv"><use href="#i-edit"/></svg>
+                    </button>
+                    <button class="iconbtn" data-act="del-prod" data-id="${p.id}" title="Удалить товар">
+                      <svg class="icv"><use href="#i-trash"/></svg>
                     </button>
                   </div>
                 </div>
