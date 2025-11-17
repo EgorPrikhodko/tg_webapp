@@ -423,8 +423,7 @@
   function formatCount(n){ n = Number(n||0); return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "\u202F"); }
 
   function visibleToMe(obj){
-    const owner = obj?.attributes?.owner_tg_id ?? null;
-    return (owner === null) || (String(owner) === String(tgId));
+    return true;
   }
 
   const favKey="tgshop_fav_ids"; const cartKey="tgshop_cart";
@@ -1262,3 +1261,4 @@
 </script>
 </body>
 </html>
+
