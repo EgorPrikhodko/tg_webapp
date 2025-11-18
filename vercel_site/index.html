@@ -1112,20 +1112,23 @@
     throw new Error("Не удалось подобрать уникальный адрес категории");
   }
 
+  // ИСПРАВЛЕННАЯ ФУНКЦИЯ: при редактировании slug не меняем
   async function saveProductWithAutoSlug(basePayload, productId = null) {
+    // Если редактируем товар — просто PATCH без slug
+    if (productId) {
+      return await apiSend("PATCH", `/api/products/${productId}`, basePayload, true);
+    }
+
+    // Если создаём новый товар — подбираем уникальный slug
     const baseSlug = slugify(basePayload.title || "item");
     let attempt = 0;
     while (attempt < 5) {
       const slug = attempt === 0 ? baseSlug : `${baseSlug}-${attempt + 1}`;
       const payload = { ...basePayload, slug };
       try {
-        if (productId) {
-          return await apiSend("PATCH", `/api/products/${productId}`, payload, true);
-        } else {
-          return await apiSend("POST", "/api/products", payload, true);
-        }
+        return await apiSend("POST", "/api/products", payload, true);
       } catch (e) {
-        if (!( !productId && e instanceof ApiError && e.status === 409 )) {
+        if (!(e instanceof ApiError && e.status === 409)) {
           throw e;
         }
         attempt += 1;
