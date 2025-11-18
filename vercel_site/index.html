@@ -568,7 +568,12 @@
   }
 
   async function loadCategories(){
-    let cats = await apiGet("/api/categories", null, true);
+    let cats = await apiGet("/api/categories"); // без X-Telegram-Id
+    cats = cats || [];
+    if (!Array.isArray(cats)) {
+      console.warn("Unexpected categories response", cats);
+      cats = [];
+    }
     cats = cats.filter(visibleToMe);
     allCategories = cats;
     indexCategories(cats);
@@ -588,7 +593,12 @@
   }
 
   async function loadProducts(){
-    let list = await apiGet("/api/products", null, true);
+    let list = await apiGet("/api/products"); // без X-Telegram-Id
+    list = list || [];
+    if (!Array.isArray(list)) {
+      console.warn("Unexpected products response", list);
+      list = [];
+    }
     list = list.filter(visibleToMe);
     allProducts = list;
 
@@ -1160,7 +1170,7 @@
       stock: 0,
       is_active: true,
       images,
-      attributes: { owner_tg_id: tgId },
+      attributes: {},          // БЕЗ owner_tg_id
       category_id
     };
 
@@ -1193,7 +1203,7 @@
     const basePayload = {
       name,
       parent_id,
-      attributes: { owner_tg_id: tgId, ...(image?{image}: {}) }
+      attributes: { ...(image ? {image} : {}) } // БЕЗ owner_tg_id
     };
 
     try{
