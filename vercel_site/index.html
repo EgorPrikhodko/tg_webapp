@@ -110,8 +110,25 @@
     .sub-item .thumb img{width:100%;height:100%;object-fit:cover}
 
     .admin-grid{display:grid;gap:12px}
-    .square-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px}
-    .square-btn{display:flex;align-items:center;justify-content:center;gap:10px;aspect-ratio:1/1;border-radius:16px;border:1px solid rgba(255,255,255,.1);background:#1a2033;color:var(--text);cursor:pointer}
+    .square-btns{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      margin-bottom:8px;
+    }
+    .square-btn{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.1);
+      background:#1a2033;
+      color:var(--text);
+      cursor:pointer;
+      padding:12px;
+      width:100%;
+    }
     .panel{display:none;background:#11172a;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:12px}
     .panel h3{margin:0 0 8px 0;font-size:15px}
     .filebox{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
@@ -175,6 +192,12 @@
       max-width:100%;
       justify-content:center;
       display:flex;
+    }
+
+    /* вертикальное расстояние между элементами форм */
+    #panelCreateProd .row + .row,
+    #panelCreateCat .row + .row{
+      margin-top:10px;
     }
 
     #cpDesc{
@@ -285,8 +308,14 @@
   <section id="scr_admin" class="screen">
     <div class="admin-grid">
       <div class="square-btns">
-        <button id="btnOpenCreateProd" class="square-btn"><svg class="icv"><use href="#i-plus"/></svg>Создать товар</button>
-        <button id="btnOpenCreateCat" class="square-btn"><svg class="icv"><use href="#i-plus"/></svg>Создать категорию</button>
+        <button id="btnOpenCreateCat" class="square-btn">
+          <svg class="icv"><use href="#i-plus"/></svg>
+          Создать категорию
+        </button>
+        <button id="btnOpenCreateProd" class="square-btn">
+          <svg class="icv"><use href="#i-plus"/></svg>
+          Создать товар
+        </button>
       </div>
 
       <!-- Создание товара -->
@@ -462,7 +491,8 @@
     `;
   }
 
-  function bindCardHandlers(rootEl){
+  function bindCardHandlers(rootEl, onFavToggle){
+    const cb = typeof onFavToggle === "function" ? onFavToggle : null;
     rootEl.querySelectorAll(".card").forEach(card=>{
       const id = Number(card.dataset.id);
       card.querySelector(".fav")?.addEventListener("click",(e)=>{
@@ -470,6 +500,7 @@
         if (fav.has(id)) fav.delete(id); else fav.add(id);
         saveFav();
         syncAllGrids();
+        if (cb) cb();
       });
       card.querySelector(".add")?.addEventListener("click", ()=>{
         cart.set(id,(cart.get(id)||0)+1);
@@ -640,7 +671,11 @@
         prodEmpty.style.display = "none";
         prodGrid.style.display = "grid";
         prodGrid.innerHTML = productsInCat.map(productCard).join("");
-        bindCardHandlers(prodGrid);
+        bindCardHandlers(prodGrid, ()=> {
+          if (selectedCat != null) {
+            renderSubcats(selectedCat);
+          }
+        });
       }
       return;
     }
@@ -796,6 +831,14 @@
           }
           toast("Категория удалена");
           await loadCategories();
+        } else if (act === "add-cart"){
+          const p = allProducts.find(x=>x.id === id);
+          if (!p) return;
+          cart.set(id,(cart.get(id)||0)+1);
+          saveCart();
+          toast("Добавлено в корзину");
+          updateCartBadge();
+          renderCart();
         } else if (act === "edit-prod"){
           const p = allProducts.find(x=>x.id === id);
           if (!p) return;
@@ -822,7 +865,7 @@
           <button class="iconbtn" data-act="del"  data-id="${cat.id}" title="Удалить"><svg class="icv"><use href="#i-trash"/></svg></button>
         </div>
       </div>
-    `;
+   `;
 
     if (isOpen){
       if (children.length){
@@ -841,9 +884,12 @@
                   <div class="thumb">${img ? `<img src="${escapeHtml(img)}" alt="">` : ""}</div>
                   <div class="t">
                     <div><b>${escapeHtml(p.title || "Товар")}</b></div>
-                    <div class="muted">${money(p.price, curr)} · ID: ${p.id}</div>
+                    <div class="muted">${money(p.price, curr)}</div>
                   </div>
                   <div class="row" style="gap:6px">
+                    <button class="iconbtn" data-act="add-cart" data-id="${p.id}" title="Добавить в корзину">
+                      <svg class="icv"><use href="#i-basket"/></svg>
+                    </button>
                     <button class="iconbtn" data-act="edit-prod" data-id="${p.id}" title="Редактировать товар">
                       <svg class="icv"><use href="#i-edit"/></svg>
                     </button>
@@ -860,9 +906,13 @@
   }
 
   function openCreateProdPanel(edit=false){
-    document.getElementById("panelCreateProd").style.display="block";
-    document.getElementById("panelCreateCat").style.display="none";
-    if(!edit){
+    const panel = document.getElementById("panelCreateProd");
+    if (!edit){
+      const isVisible = panel.style.display === "block";
+      if (isVisible){
+        panel.style.display = "none";
+        return;
+      }
       editingProdId=null;
       document.getElementById("cpTitle").value="";
       document.getElementById("cpDesc").value="";
@@ -874,11 +924,16 @@
       document.getElementById("cpCatChild").style.display="none";
       document.getElementById("cpCatChild2").style.display="none";
     }
+    panel.style.display="block";
   }
   function openCreateCatPanel(edit=false){
-    document.getElementById("panelCreateCat").style.display="block";
-    document.getElementById("panelCreateProd").style.display="none";
-    if(!edit){
+    const panel = document.getElementById("panelCreateCat");
+    if (!edit){
+      const isVisible = panel.style.display === "block";
+      if (isVisible){
+        panel.style.display = "none";
+        return;
+      }
       editingCatId=null;
       document.getElementById("ccName").value="";
       document.getElementById("ccImage").value="";
@@ -888,6 +943,7 @@
       document.getElementById("ccParent2").style.display="none";
       document.getElementById("ccParent3").style.display="none";
     }
+    panel.style.display="block";
   }
   document.getElementById("btnOpenCreateProd").addEventListener("click", ()=>openCreateProdPanel(false));
   document.getElementById("btnOpenCreateCat").addEventListener("click", ()=>openCreateCatPanel(false));
@@ -1261,4 +1317,3 @@
 </script>
 </body>
 </html>
-
