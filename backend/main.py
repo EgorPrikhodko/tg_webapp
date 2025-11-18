@@ -28,31 +28,35 @@ STATIC_DIR.mkdir(exist_ok=True)
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 # ────────────────────────────────────────────────────────────────────────────────
-# CORS — максимально либеральный, чтобы ничего не блокировало WebApp
+# CORS — максимально простой и широкий
 # ────────────────────────────────────────────────────────────────────────────────
+# Разрешаем ЛЮБОЙ origin, любые методы и заголовки.
+# Это безопасно в твоём случае, потому что у тебя нет cookie-сессий
+# и весь доступ к админке всё равно идёт через проверку Telegram user / is_admin.
 app.add_middleware(
     CORSMiddleware,
-    allow_origin_regex=r"https?://.*",  # разрешаем любые http/https origin'ы
-    allow_credentials=False,            # куки не используем
-    allow_methods=["*"],                # GET, POST, PATCH, DELETE, OPTIONS и т.д.
-    allow_headers=["*"],                # любые заголовки, включая X-Telegram-Id
+    allow_origins=["*"],      # любой домен
+    allow_credentials=False,  # cookies не используем, поэтому False
+    allow_methods=["*"],      # GET, POST, PATCH, DELETE, OPTIONS и т.д.
+    allow_headers=["*"],      # любые заголовки (включая X-Telegram-Id)
 )
 
 # ────────────────────────────────────────────────────────────────────────────────
 # Database (asyncpg + TLS)
 # ────────────────────────────────────────────────────────────────────────────────
-# В .env у тебя, например:
-# DATABASE_URL=postgresql+asyncpg://user:pass@host:port/dbname?
+# В .env у тебя:
+# DATABASE_URL=postgresql+asyncpg://tg_shop_db_jerq_user:...@.../tg_shop_db_jerq?
 DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
 
-engine: create_async_engine | None = None
+engine = None
 SessionLocal: async_sessionmaker[AsyncSession] | None = None
 
 if DATABASE_URL:
+    # Для asyncpg нужен объект ssl, а не sslmode в URL
     connect_args: dict = {}
 
-    # Для asyncpg нужен ssl-объект, а не sslmode в URL
     if DATABASE_URL.startswith("postgresql+asyncpg://"):
+        # стандартный TLS-контекст — Render/Neon/Managed Postgres такое любят
         connect_args["ssl"] = ssl.create_default_context()
 
     engine = create_async_engine(
@@ -68,9 +72,8 @@ if DATABASE_URL:
         class_=AsyncSession,
     )
 
-    # кладём фабрику сессий в state — backend/api.py её использует
+    # кладём фабрику сессий в state — backend/api.py её подхватит
     app.state.sessionmaker = SessionLocal
-
 
 # ────────────────────────────────────────────────────────────────────────────────
 # API router
@@ -78,7 +81,6 @@ if DATABASE_URL:
 from backend import api as api_module  # noqa: E402
 
 app.include_router(api_module.router, prefix="/api")
-
 
 # ────────────────────────────────────────────────────────────────────────────────
 # Routes
