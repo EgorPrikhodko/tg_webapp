@@ -428,10 +428,10 @@
       return typeof j==="string"?j:JSON.stringify(j);
     }catch{ return text; }
   }
-  async function apiGet(path, params){
+  async function apiGet(path, params, withTg=false){
     const u=new URL(API_BASE+path);
     if(params) Object.entries(params).forEach(([k,v])=> (v ?? v===0) && u.searchParams.set(k,v));
-    const r=await fetch(u);
+    const r=await fetch(u, {method:"GET", headers: headers(false, withTg)});
     const t=await r.text();
     if(!r.ok) throw new ApiError(r.status, parseErrorText(t), t);
     return t?JSON.parse(t):null;
@@ -568,7 +568,7 @@
   }
 
   async function loadCategories(){
-    let cats = await apiGet("/api/categories");
+    let cats = await apiGet("/api/categories", null, true);
     cats = cats.filter(visibleToMe);
     allCategories = cats;
     indexCategories(cats);
@@ -588,7 +588,7 @@
   }
 
   async function loadProducts(){
-    let list = await apiGet("/api/products");
+    let list = await apiGet("/api/products", null, true);
     list = list.filter(visibleToMe);
     allProducts = list;
 
