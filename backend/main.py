@@ -27,42 +27,33 @@ STATIC_DIR = BASE_DIR / "static"
 STATIC_DIR.mkdir(exist_ok=True)
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
-
 # ────────────────────────────────────────────────────────────────────────────────
-# CORS
+# CORS — жёстко прописываем все нужные origin'ы
 # ────────────────────────────────────────────────────────────────────────────────
-def split_env_list(name: str) -> list[str]:
-    raw = os.getenv(name, "")
-    return [x.strip() for x in raw.split(",") if x.strip()]
-
-
-# Домены фронта/вебхуков по умолчанию
-DEFAULT_ALLOWED_ORIGINS: list[str] = [
-    # Vercel фронтенд WebApp
+# Твой фронт на Vercel + сам backend + локалка для отладки
+ALLOWED_ORIGINS = [
     "https://tgwebapp-chi.vercel.app",
-    # Render-бэкенд как origin (если вдруг будешь открывать оттуда что-то в браузере)
     "https://tg-webapp-e4pr.onrender.com",
+    "http://127.0.0.1:9000",
+    "http://localhost:9000",
+    "http://127.0.0.1:9010",
+    "http://localhost:9010",
 ]
 
-ALLOWED_ORIGINS = split_env_list("ALLOWED_ORIGINS") or DEFAULT_ALLOWED_ORIGINS
-
-# Здесь без allow_origin_regex — он тебе не нужен сейчас
-# И без credentials, чтобы можно было спокойно использовать любой набор доменов
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,   # либо из .env, либо DEFAULT_ALLOWED_ORIGINS
-    allow_credentials=False,         # cookies/авторизацию не используем → отключаем
-    allow_methods=["*"],             # разрешаем все методы: GET, POST, OPTIONS и т.д.
-    allow_headers=["*"],             # разрешаем все заголовки, включая X-Telegram-Id
+    allow_origins=ALLOWED_ORIGINS,
+    allow_credentials=False,      # cookies не используем
+    allow_methods=["*"],          # GET, POST, OPTIONS, DELETE, PATCH и т.д.
+    allow_headers=["*"],          # X-Telegram-Id в том числе
 )
-
 
 # ────────────────────────────────────────────────────────────────────────────────
 # Database (asyncpg + TLS)
 # ────────────────────────────────────────────────────────────────────────────────
 # В .env у тебя:
-# DATABASE_URL=postgresql+asyncpg://.../tg_shop_db_jerq?
-DATABASE_URL = os.getenv("DATABASE_URL", "").strip()  # postgresql+asyncpg://...
+# DATABASE_URL=postgresql+asyncpg://tg_shop_db_jerq_user:...@.../tg_shop_db_jerq?
+DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
 
 engine = None
 SessionLocal: async_sessionmaker[AsyncSession] | None = None
@@ -71,7 +62,6 @@ if DATABASE_URL:
     # Для asyncpg нужен объект ssl, а не sslmode в URL
     connect_args: dict = {}
 
-    # На всякий случай включаем TLS только для asyncpg-схемы
     if DATABASE_URL.startswith("postgresql+asyncpg://"):
         connect_args["ssl"] = ssl.create_default_context()
 
@@ -82,11 +72,14 @@ if DATABASE_URL:
         pool_size=5,
         max_overflow=0,
     )
-    SessionLocal = async_sessionmaker(bind=engine, expire_on_commit=False, class_=AsyncSession)
+    SessionLocal = async_sessionmaker(
+        bind=engine,
+        expire_on_commit=False,
+        class_=AsyncSession,
+    )
 
-    # положим фабрику сессий в state — её подхватывает backend/api.py
+    # кладём фабрику сессий в state — backend/api.py её использует
     app.state.sessionmaker = SessionLocal
-
 
 # ────────────────────────────────────────────────────────────────────────────────
 # API router
@@ -94,7 +87,6 @@ if DATABASE_URL:
 from backend import api as api_module  # noqa: E402
 
 app.include_router(api_module.router, prefix="/api")
-
 
 # ────────────────────────────────────────────────────────────────────────────────
 # Routes
@@ -120,7 +112,7 @@ async def root() -> str:
 
 @app.get("/health")
 async def health() -> dict:
-    # совместимость со старым фронтом: возвращаем и status, и pseudo-database
+    # совместимость со старым фронтом
     return {"status": "ok", "database": "ok"}
 
 
