@@ -491,8 +491,7 @@
     `;
   }
 
-  function bindCardHandlers(rootEl, onFavToggle){
-    const cb = typeof onFavToggle === "function" ? onFavToggle : null;
+  function bindCardHandlers(rootEl){
     rootEl.querySelectorAll(".card").forEach(card=>{
       const id = Number(card.dataset.id);
       card.querySelector(".fav")?.addEventListener("click",(e)=>{
@@ -500,7 +499,6 @@
         if (fav.has(id)) fav.delete(id); else fav.add(id);
         saveFav();
         syncAllGrids();
-        if (cb) cb();
       });
       card.querySelector(".add")?.addEventListener("click", ()=>{
         cart.set(id,(cart.get(id)||0)+1);
@@ -671,11 +669,7 @@
         prodEmpty.style.display = "none";
         prodGrid.style.display = "grid";
         prodGrid.innerHTML = productsInCat.map(productCard).join("");
-        bindCardHandlers(prodGrid, ()=> {
-          if (selectedCat != null) {
-            renderSubcats(selectedCat);
-          }
-        });
+        bindCardHandlers(prodGrid);
       }
       return;
     }
@@ -773,6 +767,9 @@
     renderFav();
     renderCart();
     updateCartBadge();
+    if (selectedCat != null){
+      renderSubcats(selectedCat);
+    }
   }
 
   function updateCartBadge(){
@@ -831,14 +828,15 @@
           }
           toast("Категория удалена");
           await loadCategories();
-        } else if (act === "add-cart"){
-          const p = allProducts.find(x=>x.id === id);
-          if (!p) return;
-          cart.set(id,(cart.get(id)||0)+1);
-          saveCart();
-          toast("Добавлено в корзину");
-          updateCartBadge();
-          renderCart();
+        } else if (act === "del-prod"){
+          if (!confirm(`Удалить товар #${id}?`)) return;
+          const r = await fetch(API_BASE+`/api/products/${id}`, {method:"DELETE", headers:headers(false,true)});
+          if (!r.ok){
+            const t = await r.text();
+            return toast(parseErrorText(t));
+          }
+          toast("Товар удалён");
+          await loadProducts();
         } else if (act === "edit-prod"){
           const p = allProducts.find(x=>x.id === id);
           if (!p) return;
@@ -887,11 +885,11 @@
                     <div class="muted">${money(p.price, curr)}</div>
                   </div>
                   <div class="row" style="gap:6px">
-                    <button class="iconbtn" data-act="add-cart" data-id="${p.id}" title="Добавить в корзину">
-                      <svg class="icv"><use href="#i-basket"/></svg>
-                    </button>
                     <button class="iconbtn" data-act="edit-prod" data-id="${p.id}" title="Редактировать товар">
                       <svg class="icv"><use href="#i-edit"/></svg>
+                    </button>
+                    <button class="iconbtn" data-act="del-prod" data-id="${p.id}" title="Удалить товар">
+                      <svg class="icv"><use href="#i-trash"/></svg>
                     </button>
                   </div>
                 </div>
