@@ -28,40 +28,30 @@ STATIC_DIR.mkdir(exist_ok=True)
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 # ────────────────────────────────────────────────────────────────────────────────
-# CORS — жёстко прописываем все нужные origin'ы
+# CORS — максимально либеральный, чтобы ничего не блокировало WebApp
 # ────────────────────────────────────────────────────────────────────────────────
-# Твой фронт на Vercel + сам backend + локалка для отладки
-ALLOWED_ORIGINS = [
-    "https://tgwebapp-chi.vercel.app",
-    "https://tg-webapp-e4pr.onrender.com",
-    "http://127.0.0.1:9000",
-    "http://localhost:9000",
-    "http://127.0.0.1:9010",
-    "http://localhost:9010",
-]
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,
-    allow_credentials=False,      # cookies не используем
-    allow_methods=["*"],          # GET, POST, OPTIONS, DELETE, PATCH и т.д.
-    allow_headers=["*"],          # X-Telegram-Id в том числе
+    allow_origin_regex=r"https?://.*",  # разрешаем любые http/https origin'ы
+    allow_credentials=False,            # куки не используем
+    allow_methods=["*"],                # GET, POST, PATCH, DELETE, OPTIONS и т.д.
+    allow_headers=["*"],                # любые заголовки, включая X-Telegram-Id
 )
 
 # ────────────────────────────────────────────────────────────────────────────────
 # Database (asyncpg + TLS)
 # ────────────────────────────────────────────────────────────────────────────────
-# В .env у тебя:
-# DATABASE_URL=postgresql+asyncpg://tg_shop_db_jerq_user:...@.../tg_shop_db_jerq?
+# В .env у тебя, например:
+# DATABASE_URL=postgresql+asyncpg://user:pass@host:port/dbname?
 DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
 
-engine = None
+engine: create_async_engine | None = None
 SessionLocal: async_sessionmaker[AsyncSession] | None = None
 
 if DATABASE_URL:
-    # Для asyncpg нужен объект ssl, а не sslmode в URL
     connect_args: dict = {}
 
+    # Для asyncpg нужен ssl-объект, а не sslmode в URL
     if DATABASE_URL.startswith("postgresql+asyncpg://"):
         connect_args["ssl"] = ssl.create_default_context()
 
@@ -81,12 +71,14 @@ if DATABASE_URL:
     # кладём фабрику сессий в state — backend/api.py её использует
     app.state.sessionmaker = SessionLocal
 
+
 # ────────────────────────────────────────────────────────────────────────────────
 # API router
 # ────────────────────────────────────────────────────────────────────────────────
 from backend import api as api_module  # noqa: E402
 
 app.include_router(api_module.router, prefix="/api")
+
 
 # ────────────────────────────────────────────────────────────────────────────────
 # Routes
@@ -112,7 +104,7 @@ async def root() -> str:
 
 @app.get("/health")
 async def health() -> dict:
-    # совместимость со старым фронтом
+    # совместимость со старым фронтом: и status, и database
     return {"status": "ok", "database": "ok"}
 
 
